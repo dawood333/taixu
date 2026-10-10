@@ -86,11 +86,11 @@ class GitManager(
                     ),
                 )
                 if (result.isSuccess) {
-                    GitOpResult.Ok("已补全完整提交历史")
+                    GitOpResult.Ok("Full commit history fetched")
                 } else {
                     val output = (result.stderr + "\n" + result.stdout).trim().takeLast(300)
                     GitOpResult.Failed(
-                        "补全历史失败：" + output.ifBlank { "请确认沙箱已安装 Git 且网络可用（私有仓库需先在终端配置凭据）" },
+                        "Failed to fetch history: " + output.ifBlank { "Ensure Git is installed in the sandbox and network access is available (private repositories require credentials configured in the terminal)" },
                     )
                 }
             }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
@@ -117,7 +117,7 @@ class GitManager(
         val staged: Boolean,
     )
 
-    /** 工作区全部改动（暂存区 + 未暂存 + 未跟踪），按路径排序 */
+    /** 工作区全部改动（暂存区 + 未暂存 + Untracked），按路径排序 */
     suspend fun listChanges(hostPath: String): List<GitFileChange> = withContext(Dispatchers.IO) {
         withGit(hostPath) { git ->
             val status = git.status().call()
@@ -156,7 +156,7 @@ class GitManager(
             }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
         }
 
-    /** 暂存全部改动（冲突文件除外，需手动解决） */
+    /** 暂存全部改动（Conflict文件除外，需手动解决） */
     suspend fun stageAll(hostPath: String): GitOpResult = withContext(Dispatchers.IO) {
         runCatching {
             withGit(hostPath) { git ->
@@ -169,11 +169,11 @@ class GitManager(
     /** 提交暂存区；message 为空则失败（不产生空信息提交） */
     suspend fun commit(hostPath: String, message: String): GitOpResult = withContext(Dispatchers.IO) {
         runCatching {
-            if (message.isBlank()) return@withContext GitOpResult.Failed("提交信息不能为空")
+            if (message.isBlank()) return@withContext GitOpResult.Failed("Commit message cannot be empty")
             withGit(hostPath) { git ->
                 ensureUserIdent(git.repository)
                 val result = git.commit().setMessage(message.trim()).call()
-                GitOpResult.Ok("已提交 ${result.id.abbreviate(7).name()}：${result.shortMessage}")
+                GitOpResult.Ok("Committed ${result.id.abbreviate(7).name()}: ${result.shortMessage}")
             }
         }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
     }
@@ -186,24 +186,24 @@ class GitManager(
         withContext(Dispatchers.IO) {
             runCatching {
                 val changes = listChanges(hostPath)
-                if (changes.isEmpty()) return@withContext "（无改动）"
+                if (changes.isEmpty()) return@withContext "(No changes)"
                 val sb = StringBuilder()
-                sb.append("改动文件：\n")
+                sb.append("Changed files:\n")
                 changes.forEach { c ->
                     sb.append("- [").append(
                         when (c.changeType) {
-                            ChangeType.ADDED -> "新增"
-                            ChangeType.MODIFIED -> "修改"
-                            ChangeType.DELETED -> "删除"
-                            ChangeType.UNTRACKED -> "未跟踪"
-                            ChangeType.CONFLICT -> "冲突"
+                            ChangeType.ADDED -> "Added"
+                            ChangeType.MODIFIED -> "Modified"
+                            ChangeType.DELETED -> "Deleted"
+                            ChangeType.UNTRACKED -> "Untracked"
+                            ChangeType.CONFLICT -> "Conflict"
                         },
                     ).append("] ").append(c.path).append('\n')
                 }
-                sb.append("\n工作区 diff（含未暂存改动）：\n")
+                sb.append("\nWorkspace diff (including unstaged changes):\n")
                 sb.append(formatWorkingDiff(hostPath, maxTotalChars))
                 sb.toString()
-            }.getOrDefault("（无法生成改动摘要）")
+            }.getOrDefault("(Unable to generate change summary)")
         }
 
     /** 工作区 unified diff 文本；单文件 1500 字符截断、总量 [maxTotalChars] 截断 */
@@ -220,7 +220,7 @@ class GitManager(
                     runCatching { formatter.format(entry) }
                 }
                 var chunk = entryOut.toString("UTF-8")
-                if (chunk.length > 1500) chunk = chunk.take(1500) + "\n…（该文件 diff 已截断）\n"
+                if (chunk.length > 1500) chunk = chunk.take(1500) + "\n… (file diff truncated)\n"
                 sb.append(chunk)
             }
             return sb.toString().take(maxTotalChars)
@@ -234,7 +234,7 @@ class GitManager(
             withGit(hostPath) { git ->
                 val repo = git.repository
                 val walk = RevWalk(repo)
-                val commit = walk.parseCommit(repo.resolve(hash) ?: return@withGit "提交不存在")
+                val commit = walk.parseCommit(repo.resolve(hash) ?: return@withGit "Commit not found")
                 walk.use {
                     val sb = StringBuilder()
                     sb.append("commit ").append(commit.id.name()).append('\n')
@@ -286,7 +286,7 @@ class GitManager(
     /**
      * 丢弃单个文件的改动（危险操作）：
      * - 已跟踪文件：checkout 恢复到 HEAD 版本；
-     * - 未跟踪文件：直接删除。
+     * - Untracked文件：直接Deleted。
      */
     suspend fun discardFile(hostPath: String, path: String): GitOpResult = withContext(Dispatchers.IO) {
         runCatching {
@@ -297,7 +297,7 @@ class GitManager(
                 if (change.changeType == ChangeType.UNTRACKED) {
                     val target = File(File(hostPath).canonicalFile, path)
                     if (target.exists()) target.delete()
-                    GitOpResult.Ok("已删除未跟踪文件 $path")
+                    GitOpResult.Ok("已DeletedUntracked文件 $path")
                 } else {
                     git.checkout().addPath(path).call()
                     GitOpResult.Ok("已还原 $path")
@@ -384,7 +384,7 @@ class GitManager(
         runCatching {
             withGit(hostPath) { git ->
                 git.tagDelete().setTags(name).call()
-                GitOpResult.Ok("已删除标签 $name")
+                GitOpResult.Ok("已Deleted标签 $name")
             }
         }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
     }
@@ -655,9 +655,9 @@ class GitManager(
             withGit(hostPath) { git ->
                 val results = git.branchDelete().setBranchNames(branch.fullName).call()
                 if (results.isEmpty()) {
-                    GitOpResult.Failed("未能删除 ${branch.shortName}（可能包含未合并提交）")
+                    GitOpResult.Failed("未能Deleted ${branch.shortName}（可能包含未合并提交）")
                 } else {
-                    GitOpResult.Ok("已删除分支 ${branch.shortName}")
+                    GitOpResult.Ok("已Deleted分支 ${branch.shortName}")
                 }
             }
         }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
@@ -732,7 +732,7 @@ class GitManager(
                         MergeResult.MergeStatus.MERGED ->
                             GitOpResult.Ok("已拉取并合并（产生合并提交）")
                         MergeResult.MergeStatus.CONFLICTING ->
-                            GitOpResult.Failed("拉取完成但存在冲突（${merge.conflicts.size} 个文件），请手动解决")
+                            GitOpResult.Failed("拉取完成但存在Conflict（${merge.conflicts.size} 个文件），请手动解决")
                         else -> GitOpResult.Ok("拉取完成")
                     }
                 }
@@ -774,8 +774,8 @@ class GitManager(
         fun friendlyError(e: Throwable): String = when (e) {
             is GitNotARepoException -> "NOT_A_GIT_REPO"
             is RepositoryNotFoundException -> "NOT_A_GIT_REPO"
-            is CannotDeleteCurrentBranchException -> "不能删除当前所在的分支，请先切换到其他分支"
-            is CheckoutConflictException -> "工作区有未提交改动与目标分支冲突，请先提交或暂存"
+            is CannotDeleteCurrentBranchException -> "不能Deleted当前所在的分支，请先切换到其他分支"
+            is CheckoutConflictException -> "工作区有未提交改动与目标分支Conflict，请先提交或暂存"
             is RefAlreadyExistsException -> "分支已存在"
             is InvalidRemoteException -> "未配置 origin 远程仓库，无法推送/拉取"
             is TransportException -> {
