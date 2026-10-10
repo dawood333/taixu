@@ -70,7 +70,7 @@ private val SPONSOR_WECHAT_QR_RES = R.mipmap.settings_qr_wechat
 private val SponsorAccent: Color = Color(0xFFFF4D6D)
 
 /**
- * 二级子页 5：赞助支持（鸣谢名单来自 GitHub 上的 sponsors.json，进入页面时才拉取）
+ * 二级子页 5：Support the project（鸣谢名单来自 GitHub 上的 sponsors.json，进入页面时才拉取）
  */
 @Composable
 fun SponsorScreen(
@@ -84,7 +84,7 @@ fun SponsorScreen(
 
     if (showAlipayQrDialog) {
         SponsorQrDialog(
-            title = "支付宝赞赏码",
+            title = "Alipay donation QR code",
             qrRes = SPONSOR_ALIPAY_QR_RES,
             accent = Color(0xFF1677FF),
             onDismiss = { showAlipayQrDialog = false },
@@ -92,7 +92,7 @@ fun SponsorScreen(
     }
     if (showWeChatQrDialog) {
         SponsorQrDialog(
-            title = "微信赞赏码",
+            title = "WeChat donation QR code",
             qrRes = SPONSOR_WECHAT_QR_RES,
             accent = SponsorAccent,
             onDismiss = { showWeChatQrDialog = false },
@@ -103,10 +103,10 @@ fun SponsorScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "赞助支持",
+                title = "Support the project",
                 onBack = onBack,
                 actions = {
-                    IconButton(onClick = viewModel::refresh, contentDescription = "刷新名单") {
+                    IconButton(onClick = viewModel::refresh, contentDescription = "Refresh acknowledgements") {
                         RuntimeIcon(
                             RuntimeIconName.Refresh,
                             Modifier.size(20.dp),
@@ -142,12 +142,12 @@ fun SponsorScreen(
                                 RuntimeIcon(RuntimeIconName.Sponsor, Modifier.size(22.dp), tint = SponsorAccent)
                             }
                             Text(
-                                "感谢你考虑赞助太墟",
+                                "Thank you for considering supporting TaiXu",
                                 style = MaterialTheme.typography.titleMedium,
                             )
                         }
                         Text(
-                            "太墟（TaiXu）完全免费且开源，由作者在业余时间独立维护。你的每一份赞助都将用于购买 API Token 与持续的开发迭代，帮助我们把项目做得更好。",
+                            "TaiXu is free and open source, maintained independently in the author's spare time. Contributions help cover API token costs and ongoing development.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -155,10 +155,10 @@ fun SponsorScreen(
                 }
             }
 
-            // 赞助方式
+            // Ways to support
             item {
                 Text(
-                    text = "赞助方式",
+                    text = "Ways to support",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -166,31 +166,31 @@ fun SponsorScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Sponsor,
-                        title = "支付宝赞赏码",
-                        subtitle = "支付宝扫一扫，随心赞赏",
+                        title = "Alipay donation QR code",
+                        subtitle = "Scan with Alipay to donate",
                         onClick = { showAlipayQrDialog = true },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Sponsor,
-                        title = "微信赞赏码",
-                        subtitle = "微信扫一扫，随心赞赏",
+                        title = "WeChat donation QR code",
+                        subtitle = "Scan with WeChat to donate",
                         onClick = { showWeChatQrDialog = true },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Mail,
-                        title = "Token 赞助",
-                        subtitle = "邮箱: wangkebin1997@gmail.com · 发邮件即可",
+                        title = "API token sponsorship",
+                        subtitle = "Email wangkebin1997@gmail.com to contribute",
                         onClick = { sendSponsorEmail(context) },
                     )
                 }
             }
 
-            // 回馈与鸣谢
+            // Supporters & Acknowledgements
             item {
                 Text(
-                    text = "回馈与鸣谢",
+                    text = "Supporters & Acknowledgements",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -206,7 +206,7 @@ fun SponsorScreen(
                                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                                 Spacer(Modifier.size(10.dp))
                                 Text(
-                                    "正在加载鸣谢名单…",
+                                    "Loading acknowledgements…",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -218,21 +218,21 @@ fun SponsorScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 Text(
-                                    "名单加载失败：${s.message}",
+                                    "Failed to load acknowledgements: ${s.message}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 TextButton(onClick = viewModel::refresh) {
-                                    Text("重试")
+                                    Text("Retry")
                                 }
                             }
                         }
                         is SponsorListUiState.Success -> {
-                            SponsorKindGroup("资金赞助", s.entries.filter { it.kind == SponsorKind.Funding })
+                            SponsorKindGroup("Financial support", s.entries.filter { it.kind == SponsorKind.Funding })
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                            SponsorKindGroup("资源赞助", s.entries.filter { it.kind == SponsorKind.Resource })
+                            SponsorKindGroup("Resource contributions", s.entries.filter { it.kind == SponsorKind.Resource })
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                            SponsorKindGroup("贡献者", s.entries.filter { it.kind == SponsorKind.Contribution })
+                            SponsorKindGroup("Contributors", s.entries.filter { it.kind == SponsorKind.Contribution })
                         }
                     }
                 }
@@ -316,7 +316,7 @@ private fun SponsorQrDialog(
                             ) {
                                 RuntimeIcon(RuntimeIconName.Sponsor, Modifier.size(32.dp), tint = accent.copy(alpha = 0.6f))
                                 Text(
-                                    "二维码加载失败，请稍后重试",
+                                    "二维码加载失败，请稍后Retry",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -325,7 +325,7 @@ private fun SponsorQrDialog(
                     )
                 }
                 Text(
-                    "打开对应 App 扫一扫即可赞赏，感谢支持",
+                    "Open对应 App 扫一扫即可赞赏，感谢支持",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -339,7 +339,7 @@ private fun SponsorQrDialog(
                     if (success) {
                         Toast.makeText(context, "二维码已保存至相册", Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(context, "保存失败，请稍后重试", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "保存失败，请稍后Retry", Toast.LENGTH_SHORT).show()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = accent),
@@ -361,7 +361,7 @@ private fun SponsorQrDialog(
     )
 }
 
-/** 唤起邮件客户端撰写 Token 赞助邮件（正文预填模板）；无邮件客户端时复制邮箱兜底 */
+/** 唤起邮件客户端撰写 API token sponsorship邮件（正文预填模板）；无邮件客户端时Copy邮箱兜底 */
 private fun sendSponsorEmail(context: Context) {
     val body = buildString {
         appendLine("你好，我想赞助太墟一个 Token，支持你继续开发：")
@@ -373,7 +373,7 @@ private fun sendSponsorEmail(context: Context) {
         appendLine("感谢你的付出！")
     }
     val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$SPONSOR_EMAIL")).apply {
-        putExtra(Intent.EXTRA_SUBJECT, "太墟 Token 赞助")
+        putExtra(Intent.EXTRA_SUBJECT, "太墟 API token sponsorship")
         putExtra(Intent.EXTRA_TEXT, body)
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
@@ -382,7 +382,7 @@ private fun sendSponsorEmail(context: Context) {
     }.onFailure {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         clipboard?.setPrimaryClip(ClipData.newPlainText("太墟赞助邮箱", SPONSOR_EMAIL))
-        Toast.makeText(context, "已复制赞助邮箱：$SPONSOR_EMAIL，请打开邮箱写信", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "已Copy赞助邮箱：$SPONSOR_EMAIL，请Open邮箱写信", Toast.LENGTH_LONG).show()
     }
 }
 
