@@ -24,7 +24,7 @@ class AppManagementViewModel(
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
-    /** 当前 message 是否为失败结果（类型化标记，避免 UI 用字符串匹配判断样式）。 */
+    /** Whether the current message represents a failure (typed flag, so the UI does not infer styling from message text). */
     private val _messageIsError = MutableStateFlow(false)
     val messageIsError: StateFlow<Boolean> = _messageIsError.asStateFlow()
 
