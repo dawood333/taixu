@@ -35,8 +35,8 @@ class AppManagementViewModel(
             val result = appManager.synchronize()
             _syncing.value = false
             _message.value = result.fold(
-                onSuccess = { "已同步 ${it.total} 个应用：${it.userApps} 个用户应用、${it.systemApps} 个系统应用。" },
-                onFailure = { it.message ?: "应用同步失败" },
+                onSuccess = { "Synced ${it.total} apps: ${it.userApps} user apps and ${it.systemApps} system apps." },
+                onFailure = { it.message ?: "App synchronization failed" },
             )
             _messageIsError.value = result.isFailure
         }
