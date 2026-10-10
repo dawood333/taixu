@@ -379,15 +379,15 @@ class WorkspaceBuildRunner(
                     val reason = (probe.stderr + "\n" + probe.stdout).trim().takeLast(800)
                     // 按实际失败项点名，避免把 cmake/ninja/java 等失败误导成"缺 Gradle"
                     val missing = BuildEnvironmentPreflight.describeFailure(reason)
-                    log("[TaiXu Build] ⚠️ 未检测到 Android 构建环境${missing?.let { "：$it" } ?: ""}")
+                    log("[TaiXu Build] ⚠️ Android build environment not detected${missing?.let { ": $it" } ?: ""}")
                     log("[TaiXu Build] Preflight reason: $reason")
-                    log("[TaiXu Build] 💡 提示：请先在【插件与工具中心】中装配【Android & 移动全栈开发套件】")
+                    log("[TaiXu Build] 💡 Install the Android & Mobile Development bundle from the Tool Center first.")
                     send(
                         BuildRunProgress(
                             step = "Android build environment missing",
                             isRunning = false,
                             isSuccess = false,
-                            message = "Android 构建前置检查失败：${missing ?: reason.ifBlank { "工具链不完整" }}",
+                            message = "Android build preflight failed: ${missing ?: reason.ifBlank { "toolchain incomplete" }}",
                             logOutput = snapshotLogs(),
                             suggestedSuiteId = "android-suite",
                         )
@@ -583,7 +583,7 @@ class WorkspaceBuildRunner(
                 if (!artifactVerification.isValid) {
                     send(
                         BuildRunProgress(
-                            step = "APK 架构校验失败",
+                            step = "APK architecture validation failed",
                             isRunning = false,
                             isSuccess = false,
                             message = artifactVerification.message,
@@ -623,7 +623,7 @@ class WorkspaceBuildRunner(
                         embeddedAdbManager.executeShell("monkey -p ${project.packageName} -c android.intent.category.LAUNCHER 1")
                     }
                 } else {
-                    log("[TaiXu Build] 自动调起系统应用安装器 (PackageInstaller)...")
+                    log("[TaiXu Build] Opening the system package installer (PackageInstaller)...")
                     val installerLaunched = launchPackageInstaller(targetApk)
                     if (installerLaunched) {
                         installNotice = "System package installer opened. Tap Install in the dialog."
@@ -676,15 +676,15 @@ class WorkspaceBuildRunner(
                     val reason = (probeFlutter.stderr + "\n" + probeFlutter.stdout).trim().takeLast(800)
                     // 按实际失败项点名，避免把工具链单项缺失误导成整体环境缺失
                     val missing = BuildEnvironmentPreflight.describeFailure(reason)
-                    log("[TaiXu Build] ⚠️ 未检测到 Flutter 构建环境${missing?.let { "：$it" } ?: ""}")
+                    log("[TaiXu Build] ⚠️ Flutter build environment not detected${missing?.let { ": $it" } ?: ""}")
                     log("[TaiXu Build] Preflight reason: $reason")
-                    log("[TaiXu Build] 💡 提示：请先在【插件与工具中心】中装配【Android & 移动全栈开发套件 (含 Flutter)】")
+                    log("[TaiXu Build] 💡 Install the Android & Mobile Development bundle (including Flutter) from the Tool Center first.")
                     send(
                         BuildRunProgress(
                             step = "Flutter build environment missing",
                             isRunning = false,
                             isSuccess = false,
-                            message = "Flutter 构建前置检查失败：${missing ?: reason.ifBlank { "工具链不完整" }}",
+                            message = "Flutter build preflight failed: ${missing ?: reason.ifBlank { "toolchain incomplete" }}",
                             logOutput = snapshotLogs(),
                             suggestedSuiteId = "flutter-suite",
                         )
@@ -769,14 +769,14 @@ class WorkspaceBuildRunner(
                         .take(8)
                         .joinToString("\n")
                     val errLog = (diagnostic.ifBlank { rawFailureLog.takeLast(1600) }).takeLast(1600)
-                    log("[TaiXu Build] ❌ Flutter 构建失败，Exit Code: ${outcome.exitCode}")
+                    log("[TaiXu Build] ❌ Flutter build failed (exit code ${outcome.exitCode})")
                     flushLogBuffer()
                     send(
                         BuildRunProgress(
                             step = "Flutter Compilation failed",
                             isRunning = false,
                             isSuccess = false,
-                            message = errLog.ifBlank { "Flutter 构建失败 (exit code ${outcome.exitCode})" },
+                            message = errLog.ifBlank { "Flutter build failed (exit code ${outcome.exitCode})" },
                             logOutput = snapshotLogs(),
                             totalDurationMs = outcome.durationMs,
                         )
@@ -784,7 +784,7 @@ class WorkspaceBuildRunner(
                     return@channelFlow
                 }
 
-                log("[TaiXu Build] ✅ Flutter 编译完成，耗时: ${outcome.durationMs}ms")
+                log("[TaiXu Build] ✅ Flutter compilation completed in ${outcome.durationMs}ms")
                 send(BuildRunProgress(step = "Compilation succeeded; exporting APK...", progress = 0.8f, logOutput = snapshotLogs()))
 
                 // 取最新 mtime 的 APK（理由同 Android 路径）：flutter-apk 目录可能
@@ -800,7 +800,7 @@ class WorkspaceBuildRunner(
                     .maxByOrNull { it.lastModified() }
 
                 if (apkFile == null || !apkFile.exists()) {
-                    log("[TaiXu Build] ❌ 未在 outputs 目录找到 Flutter APK 产物")
+                    log("[TaiXu Build] ❌ No Flutter APK artifact found in the outputs directory")
                     send(
                         BuildRunProgress(
                             step = "Generated Flutter APK artifact not found",
@@ -842,7 +842,7 @@ class WorkspaceBuildRunner(
                         ),
                     )
                 }
-                log("[TaiXu Build] Flutter APK 已导出至: ${targetApk.absolutePath}")
+                log("[TaiXu Build] Flutter APK exported to: ${targetApk.absolutePath}")
 
                 send(BuildRunProgress(step = "Installing on the phone...", progress = 0.95f, logOutput = snapshotLogs()))
                 var installNotice = "Flutter APK exported to the phone's Downloads/${targetApk.name}"
@@ -851,7 +851,7 @@ class WorkspaceBuildRunner(
                     log("[TaiXu Build] ✅ Flutter app installed directly via built-in ADB!")
                     installNotice = "Flutter app installed directly via built-in ADB!"
                 } else {
-                    log("[TaiXu Build] 自动调起系统应用安装器 (PackageInstaller)...")
+                    log("[TaiXu Build] Opening the system package installer (PackageInstaller)...")
                     val installerLaunched = launchPackageInstaller(targetApk)
                     if (installerLaunched) {
                         installNotice = "System package installer opened. Tap Install in the dialog."
@@ -876,10 +876,10 @@ class WorkspaceBuildRunner(
                 log("[TaiXu Build] APK reverse-engineering project; no build is required. Providing jadx/apktool analysis instructions.")
                 send(
                     BuildRunProgress(
-                        step = "APK 逆向工程",
+                        step = "APK reverse-engineering project",
                         isRunning = false,
                         isSuccess = true,
-                        message = "逆向工程无需编译。打开专属终端或对话 Agent，使用 jadx / apktool 对工程内 APK 进行解包反编译（详见工程内 REVERSE.md）",
+                        message = "No build is required for reverse engineering. Open the project terminal or Agent chat and use jadx/apktool to unpack and decompile the APK (see REVERSE.md in the project).",
                         logOutput = snapshotLogs(),
                     )
                 )
@@ -888,7 +888,7 @@ class WorkspaceBuildRunner(
                 log("[TaiXu Build] Generic project; no default APK packaging workflow")
                 send(
                     BuildRunProgress(
-                        step = "通用工程",
+                        step = "Generic project",
                         isRunning = false,
                         isSuccess = true,
                         message = "For a generic project, run custom commands or build scripts in the TaiXu terminal",
