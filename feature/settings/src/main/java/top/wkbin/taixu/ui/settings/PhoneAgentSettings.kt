@@ -67,8 +67,8 @@ class PhoneAgentSettingsViewModel(
             val result = runCatching {
                 connectionTester.test(baseUrl.trim(), model.trim(), apiKey.trim())
             }.fold(
-                onSuccess = { "连接成功" },
-                onFailure = { it.message?.take(180) ?: "连接失败，请检查接口地址、密钥与网络" },
+                onSuccess = { "Connection successful" },
+                onFailure = { it.message?.take(180) ?: "Connection failed. Check the endpoint, API key, and network." },
             )
             _testing.value = false
             onResult(result)
@@ -84,9 +84,9 @@ internal fun PhoneAgentSettingsEntry(
     val config by viewModel.config.collectAsStateWithLifecycle(PhoneAgentEndpoint())
     SettingsRow(
         icon = RuntimeIconName.Android,
-        title = "手机操作模型",
-        subtitle = "单独的接口、模型名和密钥，不会出现在聊天模型里",
-        value = config.model.ifBlank { "未配置" },
+        title = "Phone Control Model",
+        subtitle = "Uses a separate endpoint, model name, and API key; it is not part of the chat model configuration",
+        value = config.model.ifBlank { "Not configured" },
         onClick = onOpen,
     )
 }
@@ -105,7 +105,7 @@ fun PhoneAgentSettingsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { RuntimeTopBar("手机操作模型", onBack) },
+        topBar = { RuntimeTopBar("Phone Control Model", onBack) },
     ) { padding ->
         Column(
             Modifier
@@ -116,7 +116,7 @@ fun PhoneAgentSettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                "这里只给虚拟屏用，看画面、点击、滑动和输入。聊天主模型仍在「模型档案管理」里配置，两边互不影响。",
+                "Used only for the virtual screen to inspect the display, tap, swipe, and type. Configure the main chat model under Model Profiles; the two configurations are independent.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -129,9 +129,9 @@ fun PhoneAgentSettingsScreen(
                         value = baseUrl,
                         onValueChange = { baseUrl = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("接口地址") },
+                        label = { Text("Endpoint URL") },
                         placeholder = { Text("https://open.bigmodel.cn/api/paas/v4") },
-                        supportingText = { Text("智谱开放平台用上面这个地址") },
+                        supportingText = { Text("Use the endpoint shown above for the Zhipu Open Platform") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                     )
@@ -139,16 +139,16 @@ fun PhoneAgentSettingsScreen(
                         value = model,
                         onValueChange = { model = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("模型名") },
+                        label = { Text("Model name") },
                         placeholder = { Text("autoglm-phone") },
-                        supportingText = { Text("智谱的手机操作模型名是 autoglm-phone") },
+                        supportingText = { Text("智谱的Phone Control Model名是 autoglm-phone") },
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = apiKey,
                         onValueChange = { apiKey = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("API 密钥") },
+                        label = { Text("API key") },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         singleLine = true,
@@ -163,10 +163,10 @@ fun PhoneAgentSettingsScreen(
                 if (testing) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         RuntimeCircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                        Text("正在测试…")
+                        Text("Testing…")
                     }
                 } else {
-                    Text("测试连接")
+                    Text("Test connection")
                 }
             }
             RuntimeButton(
@@ -176,22 +176,22 @@ fun PhoneAgentSettingsScreen(
                         message = error
                     } else {
                         viewModel.save(PhoneAgentEndpoint(baseUrl.trim(), model.trim(), apiKey.trim()))
-                        message = "已保存。聊天主模型不会用到这里。"
+                        message = "Saved. The main chat model does not use this configuration."
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(vertical = 12.dp),
-            ) { Text("保存") }
+            ) { Text("Save") }
             RuntimeTextButton(
                 onClick = {
                     baseUrl = ""
                     model = ""
                     apiKey = ""
                     viewModel.save(PhoneAgentEndpoint())
-                    message = "已清除"
+                    message = "Cleared"
                 },
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("清除") }
+            ) { Text("Clear") }
             message?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -201,8 +201,8 @@ fun PhoneAgentSettingsScreen(
 
 private fun phoneAgentConfigError(baseUrl: String, model: String, apiKey: String): String? {
     val url = baseUrl.trim()
-    if (url.isBlank() || model.isBlank() || apiKey.isBlank()) return "接口地址、模型名和密钥都要填写"
+    if (url.isBlank() || model.isBlank() || apiKey.isBlank()) return "Endpoint URL、Model name和密钥都要填写"
     val local = url.startsWith("http://127.0.0.1") || url.startsWith("http://localhost")
-    if (!url.startsWith("https://") && !local) return "外部接口必须使用 https://"
+    if (!url.startsWith("https://") && !local) return "External endpoints must use https://"
     return null
 }
