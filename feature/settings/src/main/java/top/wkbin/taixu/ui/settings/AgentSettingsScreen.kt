@@ -174,11 +174,11 @@ fun AgentSettingsScreen(
         topBar = {
             RuntimeTopBar(
                 title = when (category) {
-                    AgentSettingsCategory.EXECUTION -> "Agent 执行与上下文"
-                    AgentSettingsCategory.SUBAGENTS -> "子智能体角色"
-                    AgentSettingsCategory.SKILLS -> "Skills 与插件"
+                    AgentSettingsCategory.EXECUTION -> "Agent Execution & Context"
+                    AgentSettingsCategory.SUBAGENTS -> "Subagent Roles"
+                    AgentSettingsCategory.SKILLS -> "Skills & Plugins"
                 },
-                statusText = "按领域独立管理 Agent 能力",
+                statusText = "Manage Agent capabilities by domain",
                 onBack = onBack,
             )
         },
@@ -194,42 +194,42 @@ fun AgentSettingsScreen(
             // ---- 模块 1：模型思考与交互表现 ----
             item {
                 SectionHeader(
-                    title = "思考流与执行表现",
-                    subtitle = "控制 DeepSeek 等推理模型的思考过程呈现与工具执行上限",
+                    title = "Reasoning Stream & Execution",
+                    subtitle = "Control reasoning display and tool-execution limits for models such as DeepSeek",
                 )
             }
             item {
-                AgentBlockTitle("思考呈现与翻译")
+                AgentBlockTitle("Reasoning Display & Translation")
             }
             item {
                 AgentSettingsGroup {
                     AgentToggleRow(
                         icon = RuntimeIconName.Brain,
-                        title = "默认展开模型思考过程",
-                        subtitle = if (thinkingExpanded) "聊天界面中新生成的思考过程将默认展开呈现" else "思考过程（包括生成中内容）默认折叠，点击可展开查看",
+                        title = "Expand model reasoning by default",
+                        subtitle = if (thinkingExpanded) "New reasoning content is expanded by default in chat" else "Reasoning content, including in-progress content, is collapsed by default; tap to expand",
                         checked = thinkingExpanded,
                         onCheckedChange = viewModel::setThinkingExpanded,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     AgentToggleRow(
                         icon = RuntimeIconName.Globe,
-                        title = "展开时自动翻译英文思考为中文",
-                        subtitle = if (thinkingAutoTranslate) "展开思考块时若检测为英文将自动调用本地离线模型翻译呈现" else "仅在点击思考块上的翻译按钮时进行翻译",
+                        title = "Automatically translate English reasoning into Chinese when expanded",
+                        subtitle = if (thinkingAutoTranslate) "When a reasoning block is expanded, detected English content is translated using the local offline model" else "Translate only when the translation button is tapped",
                         checked = thinkingAutoTranslate,
                         onCheckedChange = viewModel::setThinkingAutoTranslate,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     AgentToggleRow(
                         icon = RuntimeIconName.Compress,
-                        title = "自动收拢历史轮次的思考与工具过程",
-                        subtitle = if (chatRoundCollapse) "已结束的历史轮次中，超过 2 步的思考与工具调用将收拢为「展开更多」摘要，点击即可展开；当前进行中的轮次始终完整呈现" else "关闭时保持自然单行流：全部思考过程与工具调用逐条平铺呈现",
+                        title = "Collapse reasoning and tool activity in previous turns",
+                        subtitle = if (chatRoundCollapse) "In completed turns, reasoning and tool activity longer than two steps is collapsed into an Expand More summary. Tap to expand. The active turn always remains fully visible." else "When disabled, all reasoning and tool calls are shown sequentially in a single flow",
                         checked = chatRoundCollapse,
                         onCheckedChange = viewModel::setChatRoundCollapse,
                     )
                 }
             }
             item {
-                AgentBlockTitle("思考流离线翻译语种模型")
+                AgentBlockTitle("Offline Reasoning Translation Model")
             }
             item {
                 AgentSettingsGroup {
@@ -242,22 +242,22 @@ fun AgentSettingsScreen(
                 }
             }
             item {
-                AgentBlockTitle("执行上下文")
+                AgentBlockTitle("Execution Context")
             }
             item {
                 AgentSettingsGroup {
                     AgentToggleRow(
                         icon = RuntimeIconName.FolderOpen,
-                        title = "自动注入关联工作区路径",
-                        subtitle = "当会话关联了工作区时，执行 base 命令默认以该目录为工作路径 (cwd)",
+                        title = "Automatically inject linked workspace path",
+                        subtitle = "When a session is linked to a workspace, base commands use that directory as the working directory (cwd) by default",
                         checked = autoWorkspaceCwd,
                         onCheckedChange = viewModel::setAutoWorkspaceCwd,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     AgentToggleRow(
                         icon = RuntimeIconName.Compress,
-                        title = "智能压缩 Agent 命令输出",
-                        subtitle = "减少 Agent 读取 git、搜索、测试与构建日志时的上下文消耗；终端与原始文件不受影响",
+                        title = "Smartly compact Agent command output",
+                        subtitle = "Reduce context usage when the Agent reads Git, search, test, and build logs; terminal output and original files are unaffected",
                         checked = commandOutputCompressionEnabled,
                         onCheckedChange = viewModel::setCommandOutputCompressionEnabled,
                     )
@@ -274,7 +274,7 @@ fun AgentSettingsScreen(
                 }
             }
             item {
-                AgentBlockTitle("工具调用限制")
+                AgentBlockTitle("Tool-call Limits")
             }
             item {
                 AgentSettingsGroup {
@@ -306,10 +306,10 @@ fun AgentSettingsScreen(
                 }
             }
 
-            // ---- 模块 2：系统提示词与人设自定义 ----
+            // ---- 模块 2：System prompt与人设自定义 ----
             item {
                 SectionHeader(
-                    title = "系统提示词与人设自定义",
+                    title = "System prompt与人设自定义",
                     subtitle = "定制 Agent 初始人设、环境说明与动态宏变量注入",
                 )
             }
@@ -372,7 +372,7 @@ fun AgentSettingsScreen(
             // ---- 模块 3：内置子智能体 ----
             item {
                 SectionHeader(
-                    title = "软件研发 Agent (${subagents.count { it.isEnabled }}/${subagents.size} 已启用)",
+                    title = "软件研发 Agent (${subagents.count { it.isEnabled }}/${subagents.size} 已Enabled)",
                     subtitle = "Agency Agents · 9 个研发部门 · MIT 许可 · 完整提示词离线内置",
                 )
             }
@@ -420,7 +420,7 @@ fun AgentSettingsScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         RuntimeIcon(RuntimeIconName.Plus, Modifier.size(16.dp), MaterialTheme.colorScheme.onPrimaryContainer)
-                        Text("新增子智能体角色", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+                        Text("新增Subagent Roles", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -474,8 +474,8 @@ fun AgentSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     SectionHeader(
-                        title = "Skill 专精技能库 (${skills.count { it.isEnabled }}/${skills.size} 已启用)",
-                        subtitle = "向 Agent 系统提示词注入领域专业规范与操作指导",
+                        title = "Skill 专精技能库 (${skills.count { it.isEnabled }}/${skills.size} 已Enabled)",
+                        subtitle = "向 Agent System prompt注入领域专业规范与操作指导",
                     )
                 }
             }
@@ -747,7 +747,7 @@ fun AgentSettingsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { deletingSkill = null }) { Text("取消") }
+                TextButton(onClick = { deletingSkill = null }) { Text("Cancel") }
             },
         )
     }
@@ -768,7 +768,7 @@ fun AgentSettingsScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { deletingSubagent = null }) { Text("取消") }
+                TextButton(onClick = { deletingSubagent = null }) { Text("Cancel") }
             },
         )
     }
@@ -999,7 +999,7 @@ private fun AgentDepartmentCard(
                     maxLines = 1,
                 )
                 Text(
-                    "$enabledCount/$agentCount 已启用",
+                    "$enabledCount/$agentCount 已Enabled",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1753,7 +1753,7 @@ private fun AddSkillDialog(
                 OutlinedTextField(
                     value = prompt,
                     onValueChange = { prompt = it },
-                    label = { Text("系统提示词规则 (System Prompt)") },
+                    label = { Text("System prompt规则 (System Prompt)") },
                     minLines = 4,
                     maxLines = 8,
                     modifier = Modifier.fillMaxWidth(),
@@ -1765,12 +1765,12 @@ private fun AddSkillDialog(
                 onClick = { onConfirm(name, desc, prompt, cmd) },
                 enabled = name.isNotBlank() && prompt.isNotBlank(),
             ) {
-                Text("添加并启用")
+                Text("添加并Enabled")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text("Cancel")
             }
         },
     )
@@ -1807,7 +1807,7 @@ private fun SubagentEditorDialog(
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(if (profile == null) "新增子智能体角色" else "编辑子智能体角色", fontWeight = FontWeight.Bold)
+            Text(if (profile == null) "新增Subagent Roles" else "编辑Subagent Roles", fontWeight = FontWeight.Bold)
         },
         text = {
             Column(
@@ -1915,11 +1915,11 @@ private fun SubagentEditorDialog(
                 },
                 enabled = canSave,
             ) {
-                Text(if (profile == null) "添加并启用" else "保存")
+                Text(if (profile == null) "添加并Enabled" else "Save")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text("Cancel") }
         },
     )
 }
@@ -1936,7 +1936,7 @@ private fun SystemPromptCustomCard(
     userName: String,
     onUserNameChange: (String) -> Unit,
 ) {
-    // 仅在首次进入时以持久化值初始化缓冲，避免 remember(prompt) 键在每次 Datastore 回写时重置输入；
+    // 仅在首次进入时以持久化值初始化缓冲，避免 remember(prompt) 键在每次 Datastore 回写时Reset输入；
     // 输入经 400ms 防抖后再写入 Datastore，避免每次按键都落盘
     var textBuffer by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(prompt) }
     androidx.compose.runtime.LaunchedEffect(textBuffer) {
@@ -1970,12 +1970,12 @@ private fun SystemPromptCustomCard(
             if (defaultPromptAsset.isBlank()) {
                 defaultPromptAsset = runCatching {
                     androidContext.assets.open("prompts/system/core.md").bufferedReader().use { it.readText() }
-                }.getOrDefault("（默认系统提示词加载失败）")
+                }.getOrDefault("（默认System prompt加载失败）")
             }
         }
         RuntimeAlertDialog(
             onDismissRequest = { showDefaultPromptDialog = false },
-            title = { Text("默认系统提示词 (core.md)", fontWeight = FontWeight.Bold) },
+            title = { Text("默认System prompt (core.md)", fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                     Text(
@@ -2047,7 +2047,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                 ) {
                     RuntimeIcon(RuntimeIconName.Prompt, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                     Column {
-                        Text("自定义系统提示词 (System Prompt)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text("自定义System prompt (System Prompt)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Text("覆盖全局默认 System Prompt，支持动态宏变量注入", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -2070,7 +2070,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         RuntimeIcon(RuntimeIconName.Visibility, Modifier.size(12.dp))
-                        Text("查看默认系统提示词", style = MaterialTheme.typography.labelSmall)
+                        Text("查看默认System prompt", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -2123,7 +2123,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             RuntimeIcon(RuntimeIconName.Refresh, Modifier.size(12.dp))
-                            Text("重置模板", style = MaterialTheme.typography.labelSmall)
+                            Text("Reset模板", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -2131,7 +2131,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                 OutlinedTextField(
                     value = textBuffer,
                     onValueChange = { textBuffer = it },
-                    placeholder = { Text("在此输入自定义系统提示词，支持 {{cur_datetime}} 等宏变量...") },
+                    placeholder = { Text("在此输入自定义System prompt，支持 {{cur_datetime}} 等宏变量...") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 5,
                     maxLines = 10,
