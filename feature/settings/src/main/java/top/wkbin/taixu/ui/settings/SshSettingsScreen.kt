@@ -77,9 +77,9 @@ fun SshSettingsScreen(
     message?.let { current ->
         RuntimeAlertDialog(
             onDismissRequest = viewModel::consumeMessage,
-            title = { Text(if (messageIsError) "SSH 操作未完成" else "SSH 远程访问") },
+            title = { Text(if (messageIsError) "SSH operation failed" else "SSH Remote Access") },
             text = { Text(current) },
-            confirmButton = { RuntimeTextButton(onClick = viewModel::consumeMessage) { Text("知道了") } },
+            confirmButton = { RuntimeTextButton(onClick = viewModel::consumeMessage) { Text("Got it") } },
         )
     }
 
@@ -99,17 +99,17 @@ fun SshSettingsScreen(
     }
 
     val statusText = when (serviceState) {
-        is SshServiceState.Stopped -> "已停止"
-        is SshServiceState.Installing -> "正在安装 OpenSSH"
-        is SshServiceState.Starting -> "正在启动"
-        is SshServiceState.Running -> "运行中"
-        is SshServiceState.Failed -> "启动失败"
+        is SshServiceState.Stopped -> "Stopped"
+        is SshServiceState.Installing -> "Installing OpenSSH"
+        is SshServiceState.Starting -> "Starting"
+        is SshServiceState.Running -> "Running"
+        is SshServiceState.Failed -> "Failed to start"
     }
     val busy = operating || serviceState is SshServiceState.Installing || serviceState is SshServiceState.Starting
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { RuntimeTopBar("SSH 远程访问", onBack, statusText = statusText) },
+        topBar = { RuntimeTopBar("SSH Remote Access", onBack, statusText = statusText) },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -118,30 +118,30 @@ fun SshSettingsScreen(
         ) {
             item {
                 NoticeBanner(
-                    text = "SSH 按当前 Linux 发行版独立配置。首次启用会按需安装 OpenSSH；支持传统 root + 密码登录，也可使用公钥。",
+                    text = "SSH is configured separately for the active Linux distribution. OpenSSH is installed on first use as needed. Traditional root/password login and public-key authentication are supported.",
                 )
             }
 
             item {
-                SectionLabel("服务状态")
+                SectionLabel("Service status")
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Server,
-                        title = "启用 SSH 服务",
-                        subtitle = "保持启用并随 Linux 运行时自动启动",
+                        title = "Enable SSH service",
+                        subtitle = "Keep enabled and start automatically with the Linux runtime",
                         value = if (busy) {
                             when (serviceState) {
-                                is SshServiceState.Installing -> "正在安装 OpenSSH"
-                                is SshServiceState.Starting -> "正在等待 SSH 服务就绪"
-                                else -> "正在处理"
+                                is SshServiceState.Installing -> "Installing OpenSSH"
+                                is SshServiceState.Starting -> "Waiting for SSH service to become ready"
+                                else -> "Working"
                             }
                         } else {
                             when (serviceState) {
-                                is SshServiceState.Running -> "运行中"
+                                is SshServiceState.Running -> "Running"
                                 is SshServiceState.Installing -> "安装中"
-                                is SshServiceState.Starting -> "启动中"
-                                is SshServiceState.Failed -> "失败"
-                                is SshServiceState.Stopped -> if ((serviceState as SshServiceState.Stopped).installed) "已安装" else "未安装"
+                                is SshServiceState.Starting -> "Starting"
+                                is SshServiceState.Failed -> "Failed"
+                                is SshServiceState.Stopped -> if ((serviceState as SshServiceState.Stopped).installed) "Installed" else "Not installed"
                             }
                         },
                         trailing = {
@@ -179,23 +179,23 @@ fun SshSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Admin,
-                        title = "登录用户名",
+                        title = "登录Username",
                         subtitle = "PRoot Linux 沙箱管理员账户",
                         value = "root",
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Key,
-                        title = "登录密码",
-                        subtitle = if (settings.passwordConfigured) "密码已加密保存，可点击修改或清除" else "尚未设置，使用密码登录前必须配置",
+                        title = "登录Password",
+                        subtitle = if (settings.passwordConfigured) "Password已加密Save，可点击修改或清除" else "尚未设置，使用Password登录前必须配置",
                         value = if (settings.passwordConfigured) "已设置" else "未设置",
                         onClick = { showPasswordDialog = true },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Shield,
-                        title = "允许密码登录",
-                        subtitle = if (settings.passwordAuthEnabled) "连接时输入 root 对应密码" else "密码认证已关闭",
+                        title = "允许Password登录",
+                        subtitle = if (settings.passwordAuthEnabled) "连接时输入 root 对应Password" else "Password认证已关闭",
                         trailing = {
                             RuntimeSwitch(
                                 checked = settings.passwordAuthEnabled,
@@ -227,17 +227,17 @@ fun SshSettingsScreen(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = "首次连接输入 yes 确认服务器指纹，然后输入 root 登录密码",
+                            text = "首次连接输入 yes 确认服务器指纹，然后输入 root 登录Password",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         RuntimeOutlinedButton(
-                            onClick = { copyText(context, settings.connectionCommand, "SSH 命令已复制") },
+                            onClick = { copyText(context, settings.connectionCommand, "SSH 命令已Copy") },
                             modifier = Modifier.align(Alignment.End),
                         ) {
                             RuntimeIcon(RuntimeIconName.Copy, Modifier.size(16.dp))
                             Spacer(Modifier.size(6.dp))
-                            Text("复制命令")
+                            Text("Copy命令")
                         }
                     }
                 }
@@ -266,11 +266,11 @@ fun SshSettingsScreen(
                         OutlinedTextField(
                             value = portText,
                             onValueChange = { portText = it.filter(Char::isDigit).take(5) },
-                            label = { Text("SSH 端口") },
+                            label = { Text("SSH Port") },
                             isError = portText.isNotBlank() && !portValid,
                             supportingText = {
                                 Text(
-                                    if (portText.isNotBlank() && !portValid) "端口需在 1024–65535 范围内"
+                                    if (portText.isNotBlank() && !portValid) "Port需在 1024–65535 范围内"
                                     else "允许范围：1024–65535",
                                 )
                             },
@@ -278,7 +278,7 @@ fun SshSettingsScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f),
                         )
-                        RuntimeOutlinedButton(onClick = { viewModel.savePort(portText) }, enabled = !busy && portValid) { Text("保存") }
+                        RuntimeOutlinedButton(onClick = { viewModel.savePort(portText) }, enabled = !busy && portValid) { Text("Save") }
                     }
                 }
             }
@@ -292,7 +292,7 @@ fun SshSettingsScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            "无需公钥也可以使用密码登录。需要免密连接时，每行添加一个 OpenSSH 公钥。",
+                            "无需公钥也可以使用Password登录。需要免密连接时，每行添加一个 OpenSSH 公钥。",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -314,7 +314,7 @@ fun SshSettingsScreen(
                         ) {
                             RuntimeIcon(RuntimeIconName.Save, Modifier.size(16.dp))
                             Spacer(Modifier.size(6.dp))
-                            Text("保存公钥")
+                            Text("Save公钥")
                         }
                     }
                 }
@@ -368,7 +368,7 @@ private fun PasswordSettingsDialog(
     val matches = password == confirmation
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (passwordConfigured) "修改 SSH 登录密码" else "设置 SSH 登录密码") },
+        title = { Text(if (passwordConfigured) "修改 SSH 登录Password" else "设置 SSH 登录Password") },
         text = {
             Column(
                 modifier = Modifier
@@ -377,14 +377,14 @@ private fun PasswordSettingsDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    "密码将通过 Android Keystore 加密保存，并应用到当前 Linux 发行版的 root 账户。",
+                    "Password将通过 Android Keystore 加密Save，并应用到当前 Linux 发行版的 root 账户。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it.take(128) },
-                    label = { Text("新密码") },
+                    label = { Text("新Password") },
                     supportingText = { Text("至少 8 个字符，不能包含冒号") },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -394,10 +394,10 @@ private fun PasswordSettingsDialog(
                 OutlinedTextField(
                     value = confirmation,
                     onValueChange = { confirmation = it.take(128) },
-                    label = { Text("再次输入密码") },
+                    label = { Text("再次输入Password") },
                     isError = confirmation.isNotEmpty() && !matches,
                     supportingText = {
-                        if (confirmation.isNotEmpty() && !matches) Text("两次输入的密码不一致")
+                        if (confirmation.isNotEmpty() && !matches) Text("两次输入的Password不一致")
                     },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -410,12 +410,12 @@ private fun PasswordSettingsDialog(
             RuntimeButton(
                 onClick = { onSave(password) },
                 enabled = password.length >= 8 && matches && ':' !in password,
-            ) { Text("保存并启用") }
+            ) { Text("Save并启用") }
         },
         dismissButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (passwordConfigured) {
-                    RuntimeTextButton(onClick = onClear) { Text("清除密码") }
+                    RuntimeTextButton(onClick = onClear) { Text("清除Password") }
                 }
                 RuntimeTextButton(onClick = onDismiss) { Text("取消") }
             }
