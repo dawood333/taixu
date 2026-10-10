@@ -107,7 +107,7 @@ class FtpServiceManager(
     }
 
     suspend fun setPort(port: Int) {
-        require(port in 1024..65535) { "FTP 端口必须在 1024..65535 之间" }
+        require(port in 1024..65535) { "FTP port must be between 1024 and 65535" }
         val distroId = linuxRuntime.activeDistroId.value
         preferences.setPort(distroId, port)
         restartIfRunning(distroId)
@@ -197,7 +197,7 @@ class FtpServiceManager(
             acquireWakeLock()
             acquireWifiLock()
             showNotification(host, port, username, anonymous)
-            appendLog("FTP 服务启动成功，监听端口 $port，根目录：${rootDir.absolutePath}")
+            appendLog("FTP server started on port $port; root directory: ${rootDir.absolutePath}")
         } catch (cancellation: CancellationException) {
             hideNotification()
             _state.value = FtpServiceState.Stopped(distroId)
@@ -206,8 +206,8 @@ class FtpServiceManager(
             hideNotification()
             ftpServer = null
             serviceDistroId = null
-            _state.value = FtpServiceState.Failed(distroId, throwable.message ?: "FTP 服务启动失败")
-            appendLog("FTP 服务启动失败: ${throwable.message}")
+            _state.value = FtpServiceState.Failed(distroId, throwable.message ?: "FTP server failed to start")
+            appendLog("FTP server failed to start: ${throwable.message}")
             throw throwable
         }
     }
@@ -293,10 +293,10 @@ class FtpServiceManager(
             manager.createNotificationChannel(
                 NotificationChannel(
                     NOTIFICATION_CHANNEL_ID,
-                    "太墟 Linux FTP 文件服务",
+                    "TaiXu Linux FTP server",
                     NotificationManager.IMPORTANCE_LOW,
                 ).apply {
-                    description = "用于展示 Linux 沙箱 FTP 远程文件访问运行状态的常驻通知"
+                    description = "Persistent notification showing the status of FTP remote file access in the Linux sandbox"
                     setShowBadge(false)
                 },
             )
@@ -304,8 +304,8 @@ class FtpServiceManager(
         val url = if (anonymous) "ftp://$host:$port/" else "ftp://$username@$host:$port/"
         val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.stat_notify_sync)
-            .setContentTitle("Linux FTP 远程文件服务运行中")
-            .setContentText("连接地址: $url")
+            .setContentTitle("Linux FTP server is running")
+            .setContentText("Connection URL: $url")
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
