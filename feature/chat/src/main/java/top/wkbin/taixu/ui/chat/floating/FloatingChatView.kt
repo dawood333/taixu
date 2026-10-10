@@ -419,7 +419,7 @@ private fun FloatingChatPanel(
                     RuntimeIconButton(
                         onClick = onCollapse,
                         modifier = Modifier.size(24.dp),
-                        contentDescription = "收起为胶囊",
+                        contentDescription = "Collapse to bubble",
                     ) {
                         RuntimeIcon(
                             RuntimeIconName.ChevronDown,
