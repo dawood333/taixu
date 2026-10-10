@@ -490,7 +490,7 @@ fun AgentSettingsScreen(
                         subtitle = if (skillEvolutionSuggestions) {
                             "After a successful task that uses tools, suggest creating a new skill or improving an existing custom skill"
                         } else {
-                            "已关闭：对话结束后不再弹出Skill Improvement建议卡片"
+                            "Disabled: skill improvement suggestions will no longer appear after a conversation"
                         },
                         checked = skillEvolutionSuggestions,
                         onCheckedChange = viewModel::setSkillEvolutionSuggestions,
@@ -689,7 +689,7 @@ fun AgentSettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { viewingSkillPrompt = null }) {
-                    Text("关闭")
+                    Text("Close")
                 }
             },
         )
@@ -743,7 +743,7 @@ fun AgentSettingsScreen(
                         deletingSkill = null
                     },
                 ) {
-                    Text("删除", color = MaterialTheme.colorScheme.error)
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -764,7 +764,7 @@ fun AgentSettingsScreen(
                         deletingSubagent = null
                     },
                 ) {
-                    Text("删除", color = MaterialTheme.colorScheme.error)
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -795,7 +795,7 @@ private fun BaseCommandTimeoutSliderRow(
         ) {
             Text("Default timeout for base commands", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
-                "${sliderMinutes.toInt()} 分钟",
+                "${sliderMinutes.toInt()} min",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -1125,7 +1125,7 @@ private fun RoundsSliderRow(
         ) {
             Text("Maximum tool rounds per turn", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
-                "${sliderVal.toInt()} 轮",
+                "${sliderVal.toInt()} rounds",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -1166,7 +1166,7 @@ private fun AutoContinuationSliderRow(
         ) {
             Text("Automatically continue when rounds are exhausted", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
-                if (continuations == 0) "关闭" else "$continuations 次",
+                if (continuations == 0) "Off" else "$continuations times",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -1176,7 +1176,7 @@ private fun AutoContinuationSliderRow(
                 "Stop and wait for confirmation when the round limit is reached; useful when reviewing each stage."
             } else {
                 "When the round limit is reached, ask the model to summarize and save progress, then continue automatically without requiring a tap;" +
-                    "总预算上限 ${roundsPerSegment * (continuations + 1)} 轮"
+                    "Total budget: ${roundsPerSegment * (continuations + 1)} rounds"
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1309,7 +1309,7 @@ private fun ContextFoldingRatioSliderRow(
                     ". The preview excludes reserved space for the system prompt, output, and tool schema."
             } else {
                 "Calculated using the Context Token Budget slider above (the model's context window was not detected)." +
-                    "预览已扣除系统提示/输出/工具 schema 预留。"
+                    "The preview excludes space reserved for the system prompt, output, and tool schema."
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1344,7 +1344,7 @@ private fun ToolsPerRoundSliderRow(
         ) {
             Text("Maximum tool calls per turn", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
-                "${sliderVal.toInt()} 个",
+                "${sliderVal.toInt()} calls",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -1383,7 +1383,7 @@ private fun ConsecutiveFailuresSliderRow(
         ) {
             Text("Consecutive failure circuit-breaker threshold", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
-                "${sliderVal.toInt()} 轮",
+                "${sliderVal.toInt()} rounds",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -1821,7 +1821,7 @@ private fun SubagentEditorDialog(
                     onValueChange = { roleId = it },
                     label = { Text("Role ID") },
                     supportingText = {
-                        Text(if (duplicateId) "该Role ID已存在" else "Only English letters, numbers, underscores, and hyphens are supported")
+                        Text(if (duplicateId) "This role ID already exists" else "Only English letters, numbers, underscores, and hyphens are supported")
                     },
                     isError = duplicateId,
                     singleLine = true,
@@ -2012,18 +2012,18 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
     """.trimIndent()
 
     val availableVariables = listOf(
-        "{{cur_date}}" to "日期",
-        "{{cur_time}}" to "时间",
-        "{{cur_datetime}}" to "日期时间",
-        "{{model_name}}" to "模型名称",
-        "{{model_id}}" to "模型ID",
-        "{{locale}}" to "语言环境",
-        "{{timezone}}" to "时区",
-        "{{device_info}}" to "设备信息",
-        "{{system_version}}" to "系统版本",
-        "{{battery_level}}" to "电池电量",
-        "{{char}}" to "助手名称",
-        "{{user}}" to "User名称",
+        "{{cur_date}}" to "Date",
+        "{{cur_time}}" to "Time",
+        "{{cur_datetime}}" to "Date and time",
+        "{{model_name}}" to "Model name",
+        "{{model_id}}" to "Model ID",
+        "{{locale}}" to "Locale",
+        "{{timezone}}" to "Time zone",
+        "{{device_info}}" to "Device information",
+        "{{system_version}}" to "System version",
+        "{{battery_level}}" to "Battery level",
+        "{{char}}" to "Assistant name",
+        "{{user}}" to "User name",
     )
 
     RuntimeCard(
