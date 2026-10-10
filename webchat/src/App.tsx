@@ -49,7 +49,7 @@ function normalizeConversationMode(mode: string | undefined): ConversationMode {
 }
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error ?? "请求失败");
+  return error instanceof Error ? error.message : String(error ?? "Request failed");
 }
 
 function initialToken(): string {
@@ -208,7 +208,7 @@ export default function App() {
         setActiveTaskId(result.taskId);
         setActiveRenderTaskId(result.taskId);
       }
-      showToast(approved ? "已批准并继续执行" : "已拒绝执行");
+      showToast(approved ? "Approved; continuing" : "Execution denied");
       await loadMessages(conversation);
     } catch (error) {
       showError(error);
@@ -331,11 +331,11 @@ export default function App() {
 
   async function deleteConversation(conversation: Conversation | null = selectedRef.current) {
     if (!conversation || !isPersistedConversation(conversation)) return;
-    if (!window.confirm(`删除“${conversation.title || "当前对话"}”？此操作无法撤销。`)) return;
+    if (!window.confirm(`Delete “${conversation.title || "current conversation"}”? This action cannot be undone.`)) return;
     try {
       await request(`/conversations/${conversation.id}`, { method: "DELETE" });
       await loadConversations(true);
-      showToast("会话已删除");
+      showToast("Conversation deleted");
     } catch (error) {
       showError(error);
     }
@@ -357,7 +357,7 @@ export default function App() {
         conversation = await request<Conversation>("/conversations", {
           method: "POST",
           body: {
-            title: text.trim().split(/\r?\n/, 1)[0].slice(0, 48) || "图片任务",
+            title: text.trim().split(/\r?\n/, 1)[0].slice(0, 48) || "Image task",
             mode: draftMode,
             ...(currentWorkspace ? { workspace: currentWorkspace } : {}),
           },
@@ -372,7 +372,7 @@ export default function App() {
         applyConversationSnapshot(conversation);
         recordConversationNavigation(conversation);
       }
-      if (!conversation) throw new Error("无法创建新对话");
+      if (!conversation) throw new Error("Could not create a new conversation");
       const conversationMode = normalizeConversationMode(conversation.mode);
       const taskId = createTaskId();
       const userMessageCreatedAt = Date.now();
@@ -499,14 +499,14 @@ export default function App() {
   async function uploadWorkspaceFiles(files: FileList) {
     const dir = workspacePath.replace(/\/$/, "");
     if (dir === "/workspace") {
-      showToast("请先进入一个项目目录再上传");
+      showToast("Open a project directory before uploading");
       return;
     }
     try {
       for (const file of Array.from(files)) {
         await uploadWorkspaceFile(`${dir}/${file.name}`, file);
       }
-      showToast("文件已上传");
+      showToast("File uploaded");
       await loadWorkspace();
     } catch (error) {
       showError(error);
@@ -516,17 +516,17 @@ export default function App() {
   async function createWorkspaceItem(kind: "file" | "dir") {
     const dir = workspacePath.replace(/\/$/, "");
     if (dir === "/workspace") {
-      showToast("请先进入一个项目目录再新建");
+      showToast("Open a project directory before creating files");
       return;
     }
-    const name = window.prompt(kind === "dir" ? "输入新文件夹名称" : "输入新文件名称");
+    const name = window.prompt(kind === "dir" ? "Enter a new folder name" : "Enter a new file name");
     if (!name?.trim()) return;
     try {
       await workspaceItemAction({
         path: `${dir}/${name.trim()}`,
         action: kind === "dir" ? "create_dir" : "create_file",
       });
-      showToast(kind === "dir" ? "文件夹已创建" : "文件已创建");
+      showToast(kind === "dir" ? "Folder created" : "File created");
       await loadWorkspace();
     } catch (error) {
       showError(error);
@@ -534,11 +534,11 @@ export default function App() {
   }
 
   async function renameWorkspaceItem(item: WorkspaceItem) {
-    const name = window.prompt("输入新名称", item.name);
+    const name = window.prompt("Enter a new name", item.name);
     if (!name?.trim() || name.trim() === item.name) return;
     try {
       await workspaceItemAction({ path: item.path, action: "rename", newName: name.trim() });
-      showToast("已重命名");
+      showToast("Renamed");
       await loadWorkspace();
     } catch (error) {
       showError(error);
@@ -546,7 +546,7 @@ export default function App() {
   }
 
   async function deleteWorkspaceItem(item: WorkspaceItem) {
-    const label = item.isDirectory ? `文件夹“${item.name}”及其全部内容` : `文件“${item.name}”`;
+    const label = item.isDirectory ? `Folder “${item.name}” and all its contents` : `File “${item.name}”`;
     if (!window.confirm(`删除${label}？此操作无法撤销。`)) return;
     try {
       await workspaceItemAction({ path: item.path, action: "delete" });
@@ -555,7 +555,7 @@ export default function App() {
         setWorkspaceContent("");
         setWorkspaceDirty(false);
       }
-      showToast("已删除");
+      showToast("Deleted");
       await loadWorkspace();
     } catch (error) {
       showError(error);
@@ -579,7 +579,7 @@ export default function App() {
         body: { path: workspaceFilePath, content: workspaceContent, append: false },
       });
       setWorkspaceDirty(false);
-      showToast("文件已保存");
+      showToast("File saved");
     } catch (error) {
       showError(error);
     }
@@ -630,7 +630,7 @@ export default function App() {
 
   function selectMobileSection(section: MobileSection) {
     setMobileSectionState(section);
-    // 移动端切到终端时同步桌面视图，保证 TerminalPane 已渲染；切回时还原。
+    // When switching to the terminal on mobile, sync the desktop view so TerminalPane is rendered; restore it when switching back.
     if (section === "terminal") setDesktopView("terminal");
     else if (desktopView === "terminal") setDesktopView("chat");
   }
@@ -678,12 +678,12 @@ export default function App() {
         data-mobile-section={mobileSection}
       >
         <header className="desktop-navigation-bar">
-          <nav className="desktop-navigation-group" aria-label="对话导航">
+          <nav className="desktop-navigation-group" aria-label="Conversation navigation">
             <button
               className="topbar-icon"
               type="button"
-              aria-label={leftSidebarCollapsed ? "展开左侧边栏" : "收起左侧边栏"}
-              title={leftSidebarCollapsed ? "展开左侧边栏" : "收起左侧边栏"}
+              aria-label={leftSidebarCollapsed ? "Expand left sidebar" : "Collapse left sidebar"}
+              title={leftSidebarCollapsed ? "Expand left sidebar" : "Collapse left sidebar"}
               aria-pressed={!leftSidebarCollapsed}
               onClick={() => setLeftSidebarCollapsed((collapsed) => !collapsed)}
             >
@@ -692,8 +692,8 @@ export default function App() {
             <button
               className="topbar-icon"
               type="button"
-              aria-label="回退到上一会话"
-              title="回退到上一会话"
+              aria-label="Go to previous conversation"
+              title="Go to previous conversation"
               disabled={!previousConversation}
               onClick={() => void navigateConversationHistory(-1)}
             >
@@ -702,8 +702,8 @@ export default function App() {
             <button
               className="topbar-icon"
               type="button"
-              aria-label="前进到下一会话"
-              title="前进到下一会话"
+              aria-label="Go to next conversation"
+              title="Go to next conversation"
               disabled={!nextConversation}
               onClick={() => void navigateConversationHistory(1)}
             >
@@ -712,8 +712,8 @@ export default function App() {
             <button
               className={`topbar-icon${desktopView === "terminal" ? " active" : ""}`}
               type="button"
-              aria-label={desktopView === "terminal" ? "返回对话" : "打开远程终端"}
-              title={desktopView === "terminal" ? "返回对话" : "打开远程终端"}
+              aria-label={desktopView === "terminal" ? "Back to chat" : "Open remote terminal"}
+              title={desktopView === "terminal" ? "Back to chat" : "Open remote terminal"}
               aria-pressed={desktopView === "terminal"}
               onClick={() => setDesktopView(desktopView === "terminal" ? "chat" : "terminal")}
             >
@@ -724,8 +724,8 @@ export default function App() {
             <button
               className="topbar-icon danger"
               type="button"
-              aria-label="删除对话"
-              title="删除对话"
+              aria-label="Delete conversation"
+              title="Delete conversation"
               disabled={!isPersistedConversation(selectedConversation)}
               onClick={() => void deleteConversation()}
             >
@@ -734,8 +734,8 @@ export default function App() {
             <button
               className="topbar-icon"
               type="button"
-              aria-label={rightSidebarCollapsed ? "展开右侧边栏" : "收起右侧边栏"}
-              title={rightSidebarCollapsed ? "展开右侧边栏" : "收起右侧边栏"}
+              aria-label={rightSidebarCollapsed ? "Expand right sidebar" : "Collapse right sidebar"}
+              title={rightSidebarCollapsed ? "Expand right sidebar" : "Collapse right sidebar"}
               aria-pressed={!rightSidebarCollapsed}
               onClick={() => setRightSidebarCollapsed((collapsed) => !collapsed)}
             >
@@ -807,7 +807,7 @@ export default function App() {
               key={section}
             >
               <Icon name={MOBILE_SECTION_ICON[section]} size={18} />
-              <span>{{ chat: "智枢", terminal: "终端", workspace: "工作区" }[section]}</span>
+              <span>{{ chat: "智枢", terminal: "Terminal", workspace: "Workspace" }[section]}</span>
             </button>
           ))}
         </nav>
