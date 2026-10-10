@@ -43,7 +43,7 @@ data class SshRuntimeConfig(
     val passwordAuthEnabled: Boolean = false,
 ) {
     init {
-        require(port in 1024..65535) { "SSH 端口必须在 1024..65535 之间" }
+        require(port in 1024..65535) { "SSH port must be between 1024 and 65535" }
     }
 
     companion object {
@@ -125,7 +125,7 @@ class SshServiceManager(
     }
 
     suspend fun setPort(port: Int) {
-        require(port in 1024..65535) { "SSH 端口必须在 1024..65535 之间" }
+        require(port in 1024..65535) { "SSH port must be between 1024 and 65535" }
         val distroId = linuxRuntime.activeDistroId.value
         preferences.setPort(distroId, port)
         restartIfRunning(distroId)
@@ -156,10 +156,10 @@ class SshServiceManager(
     suspend fun setPasswordAuthEnabled(enabled: Boolean) {
         val distroId = linuxRuntime.activeDistroId.value
         if (enabled) {
-            check(preferences.passwordConfigured(distroId).first()) { "请先设置 SSH 登录密码" }
+            check(preferences.passwordConfigured(distroId).first()) { "Set an SSH password first" }
         } else {
             check(preferences.authorizedKeys(distroId).first().isNotBlank() || !preferences.enabled(distroId).first()) {
-                "请先添加 SSH 公钥，或关闭 SSH 服务后再停用密码登录"
+                "Add an SSH public key first, or stop the SSH service before disabling password authentication"
             }
         }
         preferences.setPasswordAuthEnabled(distroId, enabled)
@@ -191,7 +191,7 @@ class SshServiceManager(
     }
 
     suspend fun start(distroId: String = linuxRuntime.activeDistroId.value) = serviceMutex.withLock {
-        check(linuxRuntime.state.value is RuntimeState.Ready) { "Linux 运行时尚未就绪" }
+        check(linuxRuntime.state.value is RuntimeState.Ready) { "Linux runtime is not ready yet" }
         val current = serviceProcess
         if (serviceDistroId == distroId && current?.session?.isAlive == true) return@withLock
         stopLocked()
@@ -200,12 +200,12 @@ class SshServiceManager(
         val authorizedKeys = SshCommandFactory.normalizeAuthorizedKeys(config.authorizedKeys)
         val password = if (config.passwordAuthEnabled) {
             preferences.readPassword(distroId)?.let(SshCommandFactory::normalizePassword)
-                ?: error("请先设置 SSH 登录密码")
+                ?: error("Set an SSH password first")
         } else {
             null
         }
         check(authorizedKeys.isNotBlank() || password != null) {
-            "请先设置 SSH 登录密码或添加至少一个公钥"
+            "Set an SSH password first或添加至少一个公钥"
         }
 
         try {
@@ -223,7 +223,7 @@ class SshServiceManager(
                     distroId,
                 )
                 check(install.isSuccess) {
-                    (install.stderr.ifBlank { install.stdout }).trim().ifBlank { "OpenSSH 安装失败" }
+                    (install.stderr.ifBlank { install.stdout }).trim().ifBlank { "OpenSSH installation failed" }
                 }
             }
 
@@ -242,7 +242,7 @@ class SshServiceManager(
                 distroId,
             )
             check(configure.isSuccess) {
-                (configure.stderr.ifBlank { configure.stdout }).trim().ifBlank { "SSH 配置校验失败" }
+                (configure.stderr.ifBlank { configure.stdout }).trim().ifBlank { "SSH configuration validation failed" }
             }
 
             // 停止可能残留、仍占用端口的旧 sshd（主机 proot 被杀后，沙盒内的
@@ -274,7 +274,7 @@ class SshServiceManager(
             _state.value = SshServiceState.Running(
                 distroId,
                 config.port,
-                host = localIpv4Address() ?: "设备局域网 IP",
+                host = localIpv4Address() ?: "Device LAN IP",
             )
             acquireWakeLock()
             acquireWifiLock()
@@ -285,7 +285,7 @@ class SshServiceManager(
         } catch (throwable: Throwable) {
             serviceProcess = null
             serviceDistroId = null
-            _state.value = SshServiceState.Failed(distroId, throwable.message ?: "SSH 服务启动失败")
+            _state.value = SshServiceState.Failed(distroId, throwable.message ?: "Failed to start SSH service")
             throw throwable
         }
     }
@@ -338,7 +338,7 @@ class SshServiceManager(
                 val detail = linuxRuntime.getBackgroundLogs(LOG_ID).takeLast(3).joinToString("\n")
                 _state.value = SshServiceState.Failed(
                     distroId,
-                    detail.ifBlank { "SSH 服务进程已退出" },
+                    detail.ifBlank { "SSH service process exited" },
                 )
             }
         }
@@ -361,7 +361,7 @@ class SshServiceManager(
             while (isPortBusy(port)) delay(PORT_POLL_INTERVAL_MS)
             true
         }
-        check(freed == true) { "SSH 端口 $port 仍被旧进程占用，无法启动" }
+        check(freed == true) { "SSH port $port is still occupied by an old process and cannot be started" }
     }
 
     private suspend fun isPortBusy(port: Int): Boolean = withContext(Dispatchers.IO) {
@@ -473,7 +473,7 @@ internal object SshCommandFactory {
         elif command -v xbps-install >/dev/null 2>&1; then
           xbps-install -Sy openssh
         else
-          echo '当前发行版没有受支持的包管理器' >&2
+          echo 'The current distribution has no supported package manager' >&2
           exit 65
         fi
         command -v sshd >/dev/null 2>&1
@@ -489,11 +489,11 @@ internal object SshCommandFactory {
     ): String {
         val keys = normalizeAuthorizedKeys(config.authorizedKeys)
         val normalizedPassword = if (config.passwordAuthEnabled) {
-            normalizePassword(password ?: error("请先设置 SSH 登录密码"))
+            normalizePassword(password ?: error("Set an SSH password first"))
         } else {
             null
         }
-        check(keys.isNotBlank() || normalizedPassword != null) { "请先设置 SSH 登录密码或添加至少一个公钥" }
+        check(keys.isNotBlank() || normalizedPassword != null) { "Set an SSH password first或添加至少一个公钥" }
         val resolvedListenAddress = listenAddress ?: "0.0.0.0"
         val passwordAuth = if (normalizedPassword != null) "yes" else "no"
         val permitRootLogin = if (normalizedPassword != null) "yes" else "prohibit-password"
@@ -548,9 +548,9 @@ internal object SshCommandFactory {
     }
 
     fun normalizeAuthorizedKeys(value: String): String {
-        require(value.length <= MAX_AUTHORIZED_KEYS_BYTES) { "SSH 公钥内容过长" }
+        require(value.length <= MAX_AUTHORIZED_KEYS_BYTES) { "SSH public-key content is too long" }
         val lines = value.lineSequence().map(String::trim).filter(String::isNotEmpty).toList()
-        require(lines.size <= MAX_AUTHORIZED_KEYS) { "最多允许 $MAX_AUTHORIZED_KEYS 个 SSH 公钥" }
+        require(lines.size <= MAX_AUTHORIZED_KEYS) { "A maximum of $MAX_AUTHORIZED_KEYS SSH public keys is allowed" }
         lines.forEach { line ->
             require(AUTHORIZED_KEY.matches(line)) { "SSH 公钥格式无效：${line.take(32)}" }
         }
