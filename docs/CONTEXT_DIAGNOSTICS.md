@@ -1,39 +1,39 @@
-# 请求上下文诊断
+# Request Context Diagnostics
 
-聊天输入区点击上下文圆环，再点击「最近请求上下文」，查看当前会话最近八次构造的请求，可跨运行保留。可搜索字段或内容、展开字段、选择并复制预览文本。
+In the chat composer, tap the context ring, then select **Recent Request Context** to inspect the last eight requests constructed for the current conversation. Records can persist across app runs. Search fields or content, expand fields, select preview text, and copy it.
 
-## 捕获口径
+## Capture scope
 
-- 上下文用量面板仍为实时估算；请求诊断来自协议转换后、调用 HTTP 前的 JSON 请求体。
-- 主会话 Harness 模型回合接入诊断，覆盖 Chat Completions、Responses 和 Anthropic Messages。压缩摘要请求、子智能体请求目前不捕获。
-- 请求预览包含协议实际构造的系统提示、消息/工具调用及结果、工具定义和请求参数。记忆、技能等已注入的内容按实际请求位置呈现，暂不提供注入来源或压缩原因的独立追踪。
-- 每次兼容性重试或模型重试都会重新捕获。显示轮次、该轮请求序号、时间、协议入口和原始请求体字节数。
-- 构造请求不代表已成功发送或服务端已接收；预览字节数不等于 Token 数。
+- The context-usage panel remains a live estimate. Request diagnostics capture the JSON request body after protocol conversion and before the HTTP call.
+- Diagnostics are connected to model turns in the main-conversation Harness. Supported protocols are Chat Completions, Responses, and Anthropic Messages. Compaction-summary requests and subagent requests are not currently captured.
+- The preview includes the system prompt, messages/tool calls and results, tool definitions, and request parameters actually constructed for the protocol. Injected memory and skills appear at their actual positions in the request; separate tracing of injection sources or compaction reasons is not currently provided.
+- Every compatibility retry or model retry is captured again. The UI shows the turn, request sequence within that turn, timestamp, protocol entry point, and raw request-body byte count.
+- Constructing a request does not mean it was successfully sent or received by the server. Preview byte count is not the same as token count.
 
-## 请求差异
+## Request differences
 
-- 选择一条请求时，与前一次捕获比较字段的新增、移除、变化和相同数量。系统提示、工具定义、模型配置和消息均按实际协议字段参与比较。
-- 展开变化字段可同时查看前次与本次预览，均可选择复制；被截短部分仍不展示。
-- 消息按字段位置匹配，插入或移除消息可能使后续位置显示变化；这不是会话树消息身份匹配。
-- 每个字段在脱敏、媒体/不透明数据移除后、显示截短前计算 SHA-256 指纹；尾部变化或显示预算耗尽的字段仍能识别。指纹不用于判断原始请求字节是否相同、缓存是否命中或服务器是否收到请求。
-- 最多捕获 128 个字段；超出时明确显示比较不完整。脱敏掉的凭据变化、媒体及不透明数据变化不参与比较。
+- When a request is selected, compare it with the previous capture and show counts of added, removed, changed, and unchanged fields. System prompts, tool definitions, model configuration, and messages are compared using the actual protocol fields.
+- Expand a changed field to view both the previous and current previews; either can be selected and copied. Truncated portions are not displayed.
+- Messages are matched by field position. Inserting or removing a message can make later positions appear changed; this is not matching by conversation-tree message identity.
+- Each field receives a SHA-256 fingerprint after redaction and removal of media/opaque data, but before display truncation. Fields with tail changes or exhausted display budgets can still be identified. Fingerprints do not prove that raw request bytes are identical, that a cache was hit, or that the server received a request.
+- At most 128 fields are captured. If this limit is exceeded, the UI explicitly marks the comparison as incomplete. Changes to redacted credentials, media, and opaque data are excluded from comparison.
 
-## 保留与脱敏
+## Retention and redaction
 
-- 最多保留最近活跃的 8 个会话，每会话跨运行最近 8 次请求。脱敏后的预览与字段指纹使用 AndroidKeyStore 加密，原子保存到应用私有 `noBackupFilesDir/request-diagnostics/requests.enc`，排除系统备份；重启后异步加载。
-- 请求采集不等待磁盘；保存队列合并为最新有界快照。界面明确显示加载、保存、成功或错误状态。进程在保存完成前被杀时，最新请求可能缺失；读取失败不会把异常或密文展示给用户，后续成功保存可重建存档。
-- 删除会话时等待存档删除该会话后才继续删除会话数据；失败会使删除操作报错，可重试。重启加载期间的新请求与历史合并，删除标记优先，晚到的已删除会话回调不会重新添加快照。
-- 存档格式带版本，读取时校验会话、请求、字段及预览上限；明文序列化上限 32 MiB，密文文件上限 44 MiB。没有明文落盘兜底，也不保存原始请求体；本地存档不能用于原样重放模型请求。
-- 每次预览最多 64,000 字符、128 个字段，每字段最多 8,000 字符。展示截短有明确提示，不改变发送给模型的请求。
-- 使用已有 `SensitiveDataRedactor`，在截短前处理整次预览，以脱敏同一请求不同消息中的凭据回显；额外移除敏感请求头中已知凭据在正文中的出现。
-- 请求头不进入快照，媒体内联数据、不透明推理数据及签名不展示。脱敏不等于匿名化，普通对话和文件内容仍会出现在预览里。
-- 捕获仅处理不超过 24 MB、可重复读取的请求体；诊断异常不阻断网络请求。
+- Keep at most the eight most recently active conversations, with the last eight requests per conversation across app runs. Redacted previews and field fingerprints are encrypted with AndroidKeyStore and atomically stored in the app-private `noBackupFilesDir/request-diagnostics/requests.enc`, excluded from system backup, then loaded asynchronously after restart.
+- Request capture does not wait for disk I/O. The save queue coalesces updates into the latest bounded snapshot. The UI clearly shows loading, saving, success, or error states. If the process is killed before a save completes, the latest request may be missing. Read failures do not expose exceptions or ciphertext to users; a later successful save can rebuild the archive.
+- When deleting a conversation, archive deletion for that conversation must finish before conversation data is deleted. Failure reports an error and can be retried. New requests captured during restart loading are merged with history; deletion markers take precedence, and late callbacks for deleted conversations cannot re-add snapshots.
+- The archive is versioned. Reads validate conversation, request, field, and preview limits. The plaintext serialization limit is 32 MiB and the encrypted file limit is 44 MiB. There is no plaintext-on-disk fallback, and raw request bodies are not saved; the local archive cannot replay a model request byte-for-byte.
+- Each preview is limited to 64,000 characters and 128 fields, with at most 8,000 characters per field. Truncation is explicitly indicated and does not alter the request sent to the model.
+- The existing `SensitiveDataRedactor` is used on the full preview before truncation to redact credentials echoed across messages in the same request. Known credentials from sensitive request headers are also removed from body text.
+- Request headers are not included in snapshots. Inline media, opaque reasoning data, and signatures are not displayed. Redaction is not anonymization; ordinary conversation and file contents can still appear in previews.
+- Capture handles only repeatable request bodies no larger than 24 MB. Diagnostic errors do not block network requests.
 
-## 实现入口
+## Implementation entry points
 
-- `harness/.../diagnostics/RequestDiagnosticsInterceptor.kt`：读取最终请求体，不修改请求。
-- `harness/.../diagnostics/RequestDiagnosticsStore.kt`：脱敏、字段投影、预览预算和会话隔离。
-- `harness/.../diagnostics/RequestContextDiff.kt`：比较字段指纹和捕获完整性。
-- `harness/.../diagnostics/RequestDiagnosticsArchive.kt`：单写入者、重启合并、存档版本与容量验证。
-- `core/database/.../EncryptedRequestDiagnosticsRepository.kt`：有界读取、加密和原子存档写入。
-- `feature/chat/.../RequestContextDialog.kt`：搜索、展开与选择文本。
+- `harness/.../diagnostics/RequestDiagnosticsInterceptor.kt`: reads the final request body without modifying it.
+- `harness/.../diagnostics/RequestDiagnosticsStore.kt`: redaction, field projection, preview budgets, and conversation isolation.
+- `harness/.../diagnostics/RequestContextDiff.kt`: field-fingerprint comparison and capture completeness.
+- `harness/.../diagnostics/RequestDiagnosticsArchive.kt`: single-writer archive, restart merge, versioning, and capacity validation.
+- `core/database/.../EncryptedRequestDiagnosticsRepository.kt`: bounded reads, encryption, and atomic archive writes.
+- `feature/chat/.../RequestContextDialog.kt`: search, expansion, and text selection.
