@@ -1307,7 +1307,7 @@ class ChatViewModel(
                 if (current?.sessionId == sessionId && current.branch.laneName == laneName) {
                     _subagentResult.value = current.copy(
                         loading = false,
-                        error = throwable.message ?: "无法读取子智能体成果",
+                        error = throwable.message ?: "Unable to read subagent output",
                     )
                 }
             }
