@@ -277,12 +277,12 @@ fun ToolCenterScreen(
                                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         Text(
                                             text = when (state) {
-                                                is LocalPluginImportState.Reading -> "正在读取Local plugins信息"
-                                                is LocalPluginImportState.PendingConfirmation -> "等待确认InstallLocal plugins"
-                                                is LocalPluginImportState.Importing -> "正在InstallLocal plugins"
-                                                is LocalPluginImportState.Succeeded -> "Local pluginsInstall完成"
+                                                is LocalPluginImportState.Reading -> "Reading local plugin information"
+                                                is LocalPluginImportState.PendingConfirmation -> "Waiting for confirmation to install the local plugin"
+                                                is LocalPluginImportState.Importing -> "Installing local plugin"
+                                                is LocalPluginImportState.Succeeded -> "Local plugin installation complete"
                                                 is LocalPluginImportState.AlreadyImported -> "Plugin imported"
-                                                is LocalPluginImportState.Failed -> "Local pluginsInstall失败"
+                                                is LocalPluginImportState.Failed -> "Local plugin installation failed"
                                                 LocalPluginImportState.Idle -> ""
                                             },
                                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
@@ -540,7 +540,7 @@ fun ToolCenterScreen(
                         item {
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "Agent ecosystem与服务 (Agents & Services)",
+                                text = "Agent Ecosystem & Services",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(bottom = 2.dp),
@@ -623,7 +623,7 @@ fun ToolCenterScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         RuntimeIcon(RuntimeIconName.Extension, Modifier.size(22.dp), MaterialTheme.colorScheme.primary)
-                        Text("确认InstallLocal plugins", fontWeight = FontWeight.Bold)
+                        Text("Confirm local plugin installation", fontWeight = FontWeight.Bold)
                     }
                 },
                 text = {
@@ -639,7 +639,7 @@ fun ToolCenterScreen(
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = viewModel::cancelLocalPluginImport) { Text("取消") }
+                    TextButton(onClick = viewModel::cancelLocalPluginImport) { Text("Cancel") }
                 },
                 confirmButton = {
                     Button(onClick = viewModel::confirmLocalPluginImport) { Text("Install") }
@@ -750,7 +750,7 @@ fun ToolCenterScreen(
             val context = androidx.compose.ui.platform.LocalContext.current
             RuntimeAlertDialog(
                 onDismissRequest = { showBundleInstallLog = false },
-                title = { Text("开发套件InstallLogs") },
+                title = { Text("Development bundle installation logs") },
                 text = {
                     Surface(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp, max = 420.dp),
@@ -762,7 +762,7 @@ fun ToolCenterScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             if (componentInstallLog.isEmpty()) {
-                                Text("InstallLogs正在接收...", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                                Text("Receiving installation logs...", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             } else {
                                 componentInstallLog.forEach { line ->
                                     val isError = line.contains("error", ignoreCase = true) ||
@@ -1053,11 +1053,11 @@ private fun ToolCard(
                 // Status Badge
                 StatusBadge(
                     text = when {
-                        isInstalling -> "Install中"
+                        isInstalling -> "Installing"
                         isUpdateAvailable -> "Update available"
                         isInstalled -> "Ready"
-                        isFailed -> "Install失败"
-                        else -> "未Install"
+                        isFailed -> "Installation failed"
+                        else -> "Not installed"
                     },
                     color = when {
                         isUpdateAvailable -> MaterialTheme.colorScheme.primary
@@ -1195,7 +1195,7 @@ private fun ToolCard(
                                 modifier = Modifier.size(13.dp),
                             )
                             Spacer(Modifier.width(3.dp))
-                            Text("重试", fontWeight = FontWeight.Medium, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                            Text("Retry", fontWeight = FontWeight.Medium, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         }
                     } else if (!isInstalled && !isInstalling) {
                         Button(
