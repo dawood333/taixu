@@ -64,8 +64,8 @@ import top.wkbin.taixu.ui.components.RuntimeTextButton
 import android.widget.Toast
 
 /**
- * 分支管理（参考 MGit）：
- * 分支列表/切换/新建/删除 + 多色提交记录树（哈希/作者/时间）+ HTTPS Token 推送拉取。
+ * Branches管理（参考 MGit）：
+ * Branches列表/切换/新建/Deleted + 多色Commits树（哈希/作者/时间）+ HTTPS Token PushPull。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,8 +95,8 @@ fun GitScreen(
     var discardTarget by remember { mutableStateOf<GitManager.GitFileChange?>(null) }
     var pushPreview by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
 
-    // 从其他页面/后台返回时自动刷新（agent 可能改了工作区）。
-    // 轻量版：跳过提交树 RevWalk 全量遍历，避免返回时 IO/GC 压力拖累转场动画。
+    // 从其他页面/后台返回时自动刷新（agent 可能改了Workspace）。
+    // 轻量版：跳过Commit树 RevWalk 全量遍历，避免返回时 IO/GC 压力拖累转场动画。
     androidx.lifecycle.compose.LifecycleResumeEffect(Unit) {
         viewModel.refreshLight()
         onPauseOrDispose { }
@@ -173,7 +173,7 @@ fun GitScreen(
                     )
                 }
 
-                // 浅克隆提示：--depth 1 导入的仓库只有最近 1 个提交，需补全历史才能看到完整提交树
+                // 浅克隆提示：--depth 1 导入的Repository只有最近 1 个Commit，需补全历史才能看到完整Commit树
                 if (state.isShallow) {
                     ShallowRepoCard(
                         busy = state.busy,
@@ -200,7 +200,7 @@ fun GitScreen(
                 }
 
                 PrimaryTabRow(selectedTabIndex = selectedTab) {
-                    // 页签文案统一两字 + 数量角标，防止窄屏下换行（"提交记录"曾折成两行）
+                    // 页签文案统一两字 + 数量角标，防止窄屏下换行（"Commits"曾折成两行）
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
@@ -423,7 +423,7 @@ fun GitScreen(
 }
 
 // ----------------------------------------------------------------------
-// 非仓库空态
+// 非Repository空态
 // ----------------------------------------------------------------------
 
 @Composable
@@ -455,7 +455,7 @@ private fun NotARepoContent() {
 }
 
 // ----------------------------------------------------------------------
-// 仓库语义颜色辅助函数（深浅主题自适应，符合 MD3 对比度规范）
+// Repository语义颜色辅助函数（深浅主题自适应，符合 MD3 对比度规范）
 // ----------------------------------------------------------------------
 
 @Composable
@@ -480,7 +480,7 @@ private fun gitWarningColor(): Color {
 private fun gitAiColor(): Color = MaterialTheme.colorScheme.tertiary
 
 // ----------------------------------------------------------------------
-// 仓库概览卡片：分支 + 领先落后 + 远程地址 + 推送/拉取
+// Repository概览卡片：Branches + 领先落后 + 远程地址 + Push/Pull
 // ----------------------------------------------------------------------
 
 @Composable
@@ -630,7 +630,7 @@ private fun ActionChip(
 }
 
 // ----------------------------------------------------------------------
-// 浅克隆提示卡：--depth 1 导入的仓库只有 1 个提交，补全历史后才能看到完整树
+// 浅克隆提示卡：--depth 1 导入的Repository只有 1 个Commit，补全历史后才能看到完整树
 // ----------------------------------------------------------------------
 
 @Composable
@@ -704,7 +704,7 @@ private fun ShallowRepoCard(
 }
 
 // ----------------------------------------------------------------------
-// 分支页签
+// Branches页签
 // ----------------------------------------------------------------------
 
 @Composable
@@ -850,7 +850,7 @@ private fun BranchRow(
 }
 
 // ----------------------------------------------------------------------
-// 提交记录页签
+// Commits页签
 // ----------------------------------------------------------------------
 
 @Composable
@@ -877,7 +877,7 @@ private fun CommitsTab(
         items(state.commits, key = { it.hash }) { row ->
             var expanded by rememberSaveable(row.hash) { mutableStateOf(false) }
             Column {
-                // 点击行加载并展开提交详情（完整信息 + diff）
+                // 点击行加载并展开Commit详情（完整信息 + diff）
                 RuntimeCard(
                     containerColor = Color.Transparent,
                     contentPadding = PaddingValues(0.dp),
@@ -1011,7 +1011,7 @@ private fun EmptyHint(text: String) {
 }
 
 // ----------------------------------------------------------------------
-// 改动页签：选文件暂存 → AI/手写 message → 提交
+// Changes页签：选文件Stage → AI/手写 message → Commit
 // ----------------------------------------------------------------------
 
 @Composable
@@ -1026,7 +1026,7 @@ private fun ChangesTab(
     onGenerateMessage: () -> Unit,
     onMessageChange: (String) -> Unit,
 ) {
-    // message 草稿来自 ViewModel：返回聊天页后 AI 生成的结果不丢
+    // message 草稿来自 ViewModel：返回聊天页后 Generate with AI的结果不丢
     val message = state.commitMessageDraft
     val stagedCount = state.changes.count { it.staged }
     val canCommit = !state.busy && stagedCount > 0 && message.isNotBlank()
@@ -1099,7 +1099,7 @@ private fun ChangesTab(
             }
         }
 
-        // 底部提交栏：message 输入 + AI 生成 + 提交按钮
+        // 底部Commit栏：message 输入 + Generate with AI + Commit按钮
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainerLow,
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
@@ -1170,7 +1170,7 @@ private fun ChangesTab(
                             modifier = Modifier.padding(vertical = 10.dp),
                         )
                     }
-                    // 提交并推送：commit 成功后立即 push（省一次点击）
+                    // Commit并Push：commit 成功后立即 push（省一次点击）
                     Surface(
                         onClick = { onCommitAndPush(message) },
                         enabled = canCommit,
@@ -1205,11 +1205,11 @@ private fun ChangeRow(
     onDiscard: () -> Unit,
 ) {
     val (typeLabel, typeTint) = when (change.changeType) {
-        GitManager.ChangeType.ADDED -> "新增" to gitSuccessColor()
-        GitManager.ChangeType.MODIFIED -> "修改" to gitInfoColor()
-        GitManager.ChangeType.DELETED -> "删除" to MaterialTheme.colorScheme.error
-        GitManager.ChangeType.UNTRACKED -> "未跟踪" to gitWarningColor()
-        GitManager.ChangeType.CONFLICT -> "冲突" to MaterialTheme.colorScheme.error
+        GitManager.ChangeType.ADDED -> "Added" to gitSuccessColor()
+        GitManager.ChangeType.MODIFIED -> "Modified" to gitInfoColor()
+        GitManager.ChangeType.DELETED -> "Deleted" to MaterialTheme.colorScheme.error
+        GitManager.ChangeType.UNTRACKED -> "Untracked" to gitWarningColor()
+        GitManager.ChangeType.CONFLICT -> "Conflict" to MaterialTheme.colorScheme.error
     }
     RuntimeCard(
         containerColor = if (change.staged) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else MaterialTheme.colorScheme.surfaceContainerLow,
@@ -1222,7 +1222,7 @@ private fun ChangeRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // 勾选框：已暂存 ✓，未暂存空框
+            // 勾选框：已Stage ✓，未Stage空框
             Box(
                 modifier = Modifier
                     .size(18.dp)
@@ -1252,7 +1252,7 @@ private fun ChangeRow(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),
             )
-            // 丢弃：未跟踪=删除文件，已跟踪=还原到 HEAD（危险操作，外层有确认对话框）
+            // 丢弃：Untracked=Deleted文件，已跟踪=还原到 HEAD（危险操作，外层有确认对话框）
             if (enabled) {
                 RuntimeIconButton(onClick = onDiscard, modifier = Modifier.size(30.dp)) {
                     RuntimeIcon(RuntimeIconName.Reverse, Modifier.size(15.dp), MaterialTheme.colorScheme.error)
