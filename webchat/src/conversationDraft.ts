@@ -8,7 +8,7 @@ export function createConversationDraft(
 ): Conversation {
   return {
     id: DRAFT_CONVERSATION_ID,
-    title: "新对话",
+    title: "New conversation",
     mode,
     messageCount: 0,
     updatedAt,
