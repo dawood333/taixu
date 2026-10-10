@@ -621,8 +621,8 @@ internal fun statusLabel(status: NodeRunStatus) = when (status) {
 
 private fun runStatusLabel(status: WorkflowRunStatus) = when (status) {
     WorkflowRunStatus.IDLE -> "Ready to run"
-    WorkflowRunStatus.RUNNING -> "工作流Running"
-    WorkflowRunStatus.WAITING_APPROVAL -> "Pending人工确认"
+    WorkflowRunStatus.RUNNING -> "Workflow running"
+    WorkflowRunStatus.WAITING_APPROVAL -> "Awaiting approval"
     WorkflowRunStatus.SUCCESS -> "Workflow completed"
     WorkflowRunStatus.FAILED -> "Workflow failed"
     WorkflowRunStatus.CANCELLED -> "Workflow cancelled"
