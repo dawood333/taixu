@@ -109,9 +109,9 @@ class StorageUsageViewModel(
             val msg = if (result.isSuccess) {
                 val released = result.getOrNull() ?: 0L
                 if (released > 0) {
-                    "Archived logs清理完成，已删除 ${released.formatSize()}"
+                    "Archived log cleanup complete. Deleted ${released.formatSize()}."
                 } else {
-                    "暂无符合条件的过期Archived logs"
+                    "No eligible expired archived logs found."
                 }
             } else {
                 Log.e("StorageUsage", "Quick safe clean failed: ${result.errorOrNull()?.message}")
@@ -175,7 +175,7 @@ class StorageUsageViewModel(
                 "Category cleanup complete"
             } else {
                 Log.e("StorageUsage", "Clear category failed: ${result.errorOrNull()?.message}")
-                result.errorOrNull()?.message ?: "分类Cleanup failed. Refresh and try again."
+                result.errorOrNull()?.message ?: "Category cleanup failed. Refresh and try again."
             }
             val newUsage = runCatching { storageManager.inspect() }.onFailure { if (it is CancellationException) throw it }.getOrNull() ?: _uiState.value.usage
             _uiState.update {
