@@ -1,17 +1,15 @@
-# TaiXu 插件开发准则
+# TaiXu Plugin Development Guidelines
 
-本文档描述当前 TaiXu 插件导入器、Registry、安装器和 PRoot 运行环境的真实行为。除明确标记为“建议”的内容外，示例均以当前实现为准。
+This document describes the current behavior of the TaiXu plugin importer, Registry, installer, and PRoot runtime. Unless explicitly marked as a recommendation, examples describe the current implementation.
 
-## 1. 插件来源
+## 1. Plugin sources
 
-TaiXu 将插件分为两类：
+| Source | `source` | Install method | Asset location |
+|---|---|---|---|
+| Online plugin | `REMOTE` | Usually `SCRIPT` | Built-in or signed Registry |
+| Local plugin | `LOCAL` | `LOCAL_PACKAGE` | User-imported `.txplugin` |
 
-| 来源 | `source` | 安装方式 | 资源位置 |
-| --- | --- | --- | --- |
-| 在线插件 | `REMOTE` | 通常为 `SCRIPT` | 内置或签名 Registry |
-| 本地插件 | `LOCAL` | `LOCAL_PACKAGE` | 用户导入的 `.txplugin` |
-
-本地包导入时，应用会强制改写为：
+When importing a local package, the app forcibly sets:
 
 ```json
 {
@@ -21,46 +19,44 @@ TaiXu 将插件分为两类：
 }
 ```
 
-本地插件与在线 Registry 使用相同 `id` 时，本地插件优先显示。`permissions` 当前用于清单校验和界面展示，**不是安装脚本的权限沙箱**；安装脚本仍在 PRoot 内以当前 Linux 用户权限执行。
+If a local plugin and an online Registry entry share the same `id`, the local plugin takes precedence in the UI. The `permissions` field is used for manifest validation and display; it is **not a permission sandbox**. Install scripts still run inside PRoot with the current Linux user's permissions.
 
-## 2. `.txplugin` 包格式
+## 2. Package format and hard limits
 
-本地插件使用 ZIP 容器，扩展名为 `.txplugin`：
+A local plugin is a ZIP container with the `.txplugin` extension:
 
 ```text
 my-plugin.txplugin
 ├── manifest.json
 └── payload/
-    ├── archives/       # SDK、Gradle、Flutter、NDK 等归档
-    ├── scripts/        # 安装、验证和卸载脚本
-    ├── config/         # 配置模板
-    └── bin/            # 可直接部署的 ARM64 文件
+    ├── archives/       # SDK, Gradle, Flutter, NDK archives
+    ├── scripts/        # Install, verify, and uninstall scripts
+    ├── config/         # Configuration templates
+    └── bin/            # Deployable ARM64 files
 ```
 
-硬性限制：
+- The ZIP root may contain only `manifest.json` and `payload/`.
+- Entries must not use absolute paths, backslash traversal, or `..`.
+- `manifest.json` is limited to 1 MiB.
+- Total uncompressed content is limited to 8 GiB.
+- Importing a large package needs space for the app-private copy, the payload copy inside the distribution, extraction staging, and the final installation directory. Reserve substantially more space than the compressed package size.
 
-- ZIP 根目录只允许 `manifest.json` 和 `payload/`。
-- 条目不得使用绝对路径、反斜杠逃逸或 `..`。
-- `manifest.json` 最大 1 MiB。
-- 所有解包条目的累计数据最大 8 GiB。
-- 大包导入需要同时容纳应用私有插件副本、发行版内的 payload 副本、解压 staging 和最终安装目录；预留空间应明显大于 `.txplugin` 文件本身。
-
-导入后，包会解压到应用私有的版本目录；安装前，`payload/` 会复制到当前发行版：
+After import, the package is stored in an app-private version directory. Before installation, `payload/` is copied into the active distribution at:
 
 ```text
 /opt/taixu/imports/<id>
 ```
 
-## 3. `manifest.json`
+## 3. Manifest
 
-最小本地插件清单：
+Minimal local-plugin example:
 
 ```json
 {
   "schemaVersion": 1,
   "id": "hello-arm64",
   "name": "Hello ARM64",
-  "description": "TaiXu 本地插件示例",
+  "description": "TaiXu local plugin example",
   "version": "1.0.0",
   "publisher": "Your Name",
   "category": "DEVELOPER",
@@ -71,73 +67,59 @@ my-plugin.txplugin
   "source": "LOCAL",
   "offlineOnly": true,
   "installMethod": "LOCAL_PACKAGE",
-  "installSteps": [
-    "/bin/sh \"$TAIXU_PLUGIN_PAYLOAD/scripts/install.sh\""
-  ],
-  "uninstallSteps": [
-    "/bin/sh \"$TAIXU_PLUGIN_PAYLOAD/scripts/uninstall.sh\""
-  ],
+  "installSteps": ["/bin/sh \"$TAIXU_PLUGIN_PAYLOAD/scripts/install.sh\""],
+  "uninstallSteps": ["/bin/sh \"$TAIXU_PLUGIN_PAYLOAD/scripts/uninstall.sh\""],
   "launchCommand": "hello",
   "verifyCommand": "hello",
   "commandLinks": ["hello"]
 }
 ```
 
-字段约束：
+| Field | Current constraint |
+|---|---|
+| `schemaVersion` | Must be `1`. |
+| `id` | Matches `[a-z0-9][a-z0-9-]{1,63}`; length 2–64. |
+| `version` | Required; `x.y.z` is recommended. |
+| `architectures` | Must include `ARM64`, case-insensitive. |
+| `launchType` | `one_shot`, `command`, `pty`, `web`, or `service`. |
+| `permissions` | Only `NETWORK`, `WORKSPACE_READ`, `WORKSPACE_WRITE`, and `LOCAL_WEB`. |
+| `updateStrategy` | `REINSTALL` or `IN_PLACE`. |
+| `homepage` | If provided, must use HTTPS. |
+| `servicePort` | If provided, must be 1–65535 and launch type must be `web` or `service`. |
+| `servicePath` | Must start with `/` and must not contain `..`. |
 
-| 字段 | 当前约束 |
-| --- | --- |
-| `schemaVersion` | 当前必须为 `1`。 |
-| `id` | 正则为 `[a-z0-9][a-z0-9-]{1,63}`，长度 2～64。 |
-| `version` | 必须非空；建议使用规范 `x.y.z`。 |
-| `architectures` | 必须包含 `ARM64`，不区分大小写。 |
-| `launchType` | `one_shot`、`command`、`pty`、`web` 或 `service`。 |
-| `permissions` | 只接受 `NETWORK`、`WORKSPACE_READ`、`WORKSPACE_WRITE`、`LOCAL_WEB`。 |
-| `updateStrategy` | `REINSTALL` 或 `IN_PLACE`。 |
-| `homepage` | 如提供，必须使用 HTTPS。 |
-| `servicePort` | 如提供，必须为 1～65535，且启动类型必须为 `web/service`。 |
-| `servicePath` | 必须以 `/` 开头且不能包含 `..`。 |
+Online plugins should use `source=REMOTE` and `installMethod=SCRIPT`. The current validator does not enforce the REMOTE/SCRIPT combination, so Registry publishers must follow this convention.
 
-在线插件应使用 `source=REMOTE` 和 `installMethod=SCRIPT`。当前 Validator 尚未强制 REMOTE 与 SCRIPT 的组合，Registry 发布者仍必须遵循该约定。
-
-## 4. 安装器提供的环境变量
+## 4. Installer environment variables
 
 ```text
-$TAIXU_TOOL_ID         当前插件 ID
+$TAIXU_TOOL_ID         Plugin ID
 $TAIXU_TOOL_DIR        /opt/taixu/tools/<id>
 $TAIXU_TOOL_DATA       /opt/taixu/data/<id>
-$TAIXU_PLUGIN_PAYLOAD  /opt/taixu/imports/<id>（仅本地插件）
+$TAIXU_PLUGIN_PAYLOAD  /opt/taixu/imports/<id> (local plugins only)
 ```
 
-程序文件放在 `$TAIXU_TOOL_DIR`；用户配置、缓存、模型或项目数据放在 `$TAIXU_TOOL_DATA`。后者在普通卸载时默认保留。
+Put executable program files under `$TAIXU_TOOL_DIR`; put user configuration, caches, models, and project data under `$TAIXU_TOOL_DATA`. Data is retained by default during ordinary uninstall.
 
-`commandLinks` 中的每个名称默认指向：
+Each name in `commandLinks` points by default to `$TAIXU_TOOL_DIR/bin/<command>`. The install script must create that file and restore executable permissions.
 
-```text
-$TAIXU_TOOL_DIR/bin/<command>
-```
+## 5. Minimal RootFS compatibility
 
-因此脚本必须创建对应文件并恢复可执行权限。
-
-## 5. 精简 RootFS 兼容规则
-
-插件只能默认依赖 `/bin/sh` 和实际 RootFS 已提供的基础命令。不要假设下列可选工具存在：
+Plugins should depend only on `/bin/sh` and commands known to exist in the target RootFS. Do not assume these optional tools are installed:
 
 ```text
 unzip  xz  file  readelf  jq  python  node
 ```
 
-具体规则：
+- Scripts should start with `#!/bin/sh`, use POSIX Shell syntax, and use LF line endings.
+- Use absolute `/bin/sh` in manifest commands instead of relying on `PATH`.
+- Prefer `.tar.gz`. If using `.tar.xz`, bundle a compatible extractor; do not assume `xz` exists.
+- ZIP files do not guarantee Unix executable bits; run `chmod` explicitly after extraction.
+- Do not use `find -type f` to locate tools that may be symlinks; use `\( -type f -o -type l \)`.
+- Do not pass a wildcard directly as a single `test -x` argument. Use `find ... -print -quit` to obtain an explicit path.
+- Do not depend on `file` or `readelf` for architecture checks; the ELF header can be read directly.
 
-- 独立脚本以 `#!/bin/sh` 开头，使用 POSIX Shell 语法和 LF 换行。
-- 清单中使用绝对 `/bin/sh`，不要依赖 `PATH` 中的 `sh`。
-- 优先发布 `.tar.gz`；使用 `.tar.xz` 时必须随包提供兼容解压器，不能假设系统有 `xz`。
-- ZIP 不保证保留 Unix 执行位；解压后必须显式 `chmod`。
-- 不要用 `find -type f` 查找可能为符号链接的工具；使用 `\( -type f -o -type l \)`。
-- 不要把通配符直接作为单个 `test -x` 参数；先用 `find ... -print -quit` 得到明确路径。
-- 不要依赖 `file` 或 `readelf` 检查架构，可直接读取 ELF 头。
-
-POSIX ELF64 AArch64 检查示例：
+Example POSIX ELF64 AArch64 check:
 
 ```sh
 elf_bytes() { od -An -t x1 "$@" 2>/dev/null | tr -d ' \n'; }
@@ -145,11 +127,11 @@ is_elf() { test "$(elf_bytes -N 4 "$1")" = "7f454c46"; }
 is_aarch64_elf() { test "$(elf_bytes -j 18 -N 2 "$1")" = "b700"; }
 ```
 
-`e_machine` 位于 ELF 头偏移 18；AArch64 为 183，即小端字节 `b7 00`。
+The ELF `e_machine` field is at offset 18. AArch64 is 183, encoded as little-endian bytes `b7 00`.
 
-## 6. Hello 插件
+## 6. Hello plugin
 
-目录：
+Directory:
 
 ```text
 hello-arm64/
@@ -159,35 +141,18 @@ hello-arm64/
         └── hello
 ```
 
-`payload/bin/hello`：
+`payload/bin/hello`:
 
 ```sh
 #!/bin/sh
 echo "hello from TaiXu"
 ```
 
-清单中的安装步骤：
+The install steps should check the source file, create `$TAIXU_TOOL_DIR/bin`, copy the executable, and run `chmod 755`. The uninstall steps should remove the executable owned by the plugin.
 
-```json
-{
-  "installSteps": [
-    "test -f \"$TAIXU_PLUGIN_PAYLOAD/bin/hello\"",
-    "mkdir -p \"$TAIXU_TOOL_DIR/bin\"",
-    "cp \"$TAIXU_PLUGIN_PAYLOAD/bin/hello\" \"$TAIXU_TOOL_DIR/bin/hello\"",
-    "chmod 755 \"$TAIXU_TOOL_DIR/bin/hello\""
-  ],
-  "uninstallSteps": [
-    "rm -f \"$TAIXU_TOOL_DIR/bin/hello\""
-  ],
-  "launchCommand": "hello",
-  "verifyCommand": "hello",
-  "commandLinks": ["hello"]
-}
-```
+## 7. Large offline dependencies
 
-## 7. 大型离线依赖
-
-大型资源放入 `payload/archives/`，脚本先校验摘要，再解压到 staging，验证后提交：
+Put large assets in `payload/archives/`. The install script should verify the digest, extract into staging, validate the result, and then commit it:
 
 ```sh
 #!/bin/sh
@@ -208,74 +173,36 @@ rm -rf /opt/flutter
 mv /opt/flutter.staging/flutter /opt/flutter
 ```
 
-要求：
+- `offlineOnly=true` skips Runtime dependency fetching for Node/Python/Curl, but it does not prevent a script from connecting to the network. A truly offline plugin must not call the network or a package manager.
+- Host tools must run in Linux ARM64 under PRoot. Android ARM64/Bionic and Linux ARM64/glibc binaries are not interchangeable just because they share an architecture.
+- Pin SHA-256 for every large archive.
+- Keep staging on the same filesystem as the final destination and move it into place only after validation.
+- Install scripts time out after 15 minutes by default; each `verifyCommand` times out after 60 seconds by default.
 
-- `offlineOnly=true` 会跳过 Node/Python/Curl 等 Runtime 依赖获取，但不会阻止脚本主动联网；离线插件自身不得调用网络或包管理器。
-- 主机工具必须能在 Linux ARM64 PRoot 中运行。Android ARM64/Bionic 程序与 Linux ARM64/glibc 程序也不能仅凭架构相同就混用。
-- 所有大型归档必须固定 SHA-256。
-- staging 必须位于同一文件系统，验证完成后再 `mv` 到最终目录。
-- 安装脚本默认超时 15 分钟；单次 `verifyCommand` 默认超时 60 秒。
+## 8. Live progress and logs
 
-## 8. 实时进度与日志
-
-安装器会记录阶段事件、标准输出和标准错误。插件脚本可以输出结构化相对进度：
+The installer records stage events, stdout, and stderr. Scripts may emit structured relative progress:
 
 ```text
-[TAIXU_PROGRESS:47] [EXTRACT] 正在解压 Android NDK r29
+[TAIXU_PROGRESS:47] [EXTRACT] Extracting Android NDK r29
 ```
 
-格式：
+Progress must increase monotonically. Recommended labels are `[COPY]`, `[EXTRACT]`, `[COMMAND]`, and `[VERIFY]`. Do not use `set -x` in install scripts: it can leak tokens, proxy addresses, or other environment variables into logs. Script progress is relative to the recipe; the app maps it to the overall installation progress bar.
 
-```text
-[TAIXU_PROGRESS:<0..100>] <用户可读消息>
-```
+## 9. Packaging, versions, and import
 
-进度必须单调递增。推荐消息标签：
+For small packages, create a ZIP containing `manifest.json` and `payload/`, then use the `.txplugin` extension. For large packages, use a Zip64-capable tool. For already-compressed `.zip`, `.tar.gz`, and `.deb` entries, prefer ZIP Store/NoCompression to avoid useless recompression.
 
-- `[COPY]`：复制资源。
-- `[EXTRACT]`：解压归档。
-- `[COMMAND]`：执行明确、已脱敏的命令或配置步骤。
-- `[VERIFY]`：摘要、架构和最终状态验证。
+When updating only the manifest or scripts, copy the old package and replace a few ZIP entries instead of unpacking and recompressing large archives. Reprocess large files only when replacing archives or changing compression formats.
 
-不要使用 `set -x` 生成安装日志，它可能输出 Token、代理地址或其他环境变量。结构化进度是安装配方内部的相对进度，应用会映射到完整安装进度条。
+- An already-imported `id + version` is not unpacked or installed again.
+- Different versions of the same ID can currently coexist in app-private directories.
+- Version selection currently sorts directory names lexicographically rather than by full SemVer. Until fixed, avoid versions such as `1.0.9` and `1.0.10` together.
+- After a new package is confirmed, the UI performs import and installation in sequence.
 
-## 9. 打包、版本与导入
+## 10. Web and service plugins
 
-### 小型插件
-
-Windows PowerShell：
-
-```powershell
-Compress-Archive `
-  -LiteralPath .\hello-arm64\manifest.json, .\hello-arm64\payload `
-  -DestinationPath .\hello-arm64.zip `
-  -Force
-Move-Item .\hello-arm64.zip .\hello-arm64.txplugin
-```
-
-Linux/macOS：
-
-```sh
-cd hello-arm64
-zip -r ../hello-arm64.txplugin manifest.json payload
-```
-
-大型插件应使用支持 Zip64 的工具。已经是 `.zip`、`.tar.gz`、`.deb` 等压缩归档的条目建议使用 ZIP Store/NoCompression，避免无效的二次压缩。
-
-### 快速更新包内脚本
-
-`.txplugin` 是 ZIP。只修改 `manifest.json` 或脚本时，可以复制原包并更新少量 ZIP 条目；不需要解压、重压缩所有大型归档。只有替换归档或改变其压缩格式时，才需要处理对应大文件。
-
-### 版本行为
-
-- 相同 `id + version` 已导入时会直接提示，不重复解包或安装。
-- 相同 `id` 的不同版本目前会在应用私有目录中共存，不会删除旧版本。
-- 当前版本选择按版本目录名做字符串排序，而不是完整 SemVer 比较。修复前应保持版本段宽度可比较，避免同时使用 `1.0.9` 与 `1.0.10` 这类字符串顺序不同的版本。
-- 选择新版本并确认后，当前 UI 会连续完成导入和安装，不需要再点击第二次“安装”。
-
-## 10. Web/Service 插件
-
-Web 服务应显式声明端口和路径：
+Declare service ports and paths explicitly:
 
 ```json
 {
@@ -287,68 +214,36 @@ Web 服务应显式声明端口和路径：
 }
 ```
 
-当前 Validator 只在 `servicePort` 存在时校验端口，并未强制所有 `web/service` 清单提供端口。插件作者仍应声明端口；除非确有局域网访问需求，服务优先监听 `127.0.0.1`。
+The current validator checks the port when `servicePort` is present, but does not require every `web/service` manifest to provide one. Authors should declare a port and prefer binding to `127.0.0.1` unless LAN access is required.
 
-## 11. 验证、事务与卸载
+## 11. Verification, transactions, and uninstall
 
-`verifyCommand` 应返回 0，并实际执行核心二进制。当前安装器为兼容旧插件，在验证失败但发现任意命令入口可执行时可能保留成功状态；插件不得依赖该兜底行为。
+`verifyCommand` should return 0 and actually run the core executable. For compatibility with older plugins, the current installer may retain a success state if verification fails but any command entry is executable. Do not rely on this fallback.
 
-安装事务只快照和恢复：
+Install transactions snapshot and restore only:
 
 ```text
 /opt/taixu/tools/<id>
 ```
 
-插件写入的 `/opt/android-sdk`、`/opt/flutter`、`/root/.gradle` 或其他全局目录不在框架事务快照中。因此：
+Global paths such as `/opt/android-sdk`, `/opt/flutter`, and `/root/.gradle` are not included in framework snapshots. Therefore:
 
-- 全局资源必须自行使用 staging、校验和提交。
-- 失败时脚本应通过 `trap` 清理 staging。
-- 日志出现 `ROLLED_BACK` 不代表插件创建的所有全局文件都已恢复。
-- `uninstallSteps` 必须删除插件拥有的全局程序文件，但默认保留 `$TAIXU_TOOL_DATA`。
+- Stage, verify, and commit global assets within the plugin itself.
+- Use `trap` to clean staging on failure.
+- A `ROLLED_BACK` log entry does not mean every global file has been restored.
+- `uninstallSteps` must remove global executable files owned by the plugin, while leaving `$TAIXU_TOOL_DATA` by default.
 
-## 12. 发布前检查
+## 12. Release checklist
 
-```text
-[ ] ZIP 根目录只有 manifest.json 与 payload/
-[ ] manifest.json 小于 1 MiB，解包总量小于 8 GiB
-[ ] id、version、ARM64、launchType、来源和权限字段正确
-[ ] 所有大文件均有固定 SHA-256
-[ ] 不依赖未声明的 unzip、xz、file、readelf 等可选命令
-[ ] ELF、符号链接和 ZIP 可执行位处理正确
-[ ] 断网可完成导入、安装、验证和启动
-[ ] 全新安装、同版本重复导入、新版本升级和卸载均测试过
-[ ] verifyCommand、命令链接、PTY/Web 服务均成功
-[ ] 结构化进度单调递增，日志不包含密钥或敏感环境变量
-[ ] 失败时 staging 可清理，且不误称全局目录已完整回滚
-[ ] 已核算插件副本、沙盒副本、staging 与最终目录所需空间
-```
-
-## 13. 常见错误
-
-### 导入后列表没有插件
-
-检查 ZIP 根目录、JSON、`id`、`architectures` 和包大小限制。
-
-### 相同包无法再次导入
-
-相同 `id + version` 会被拒绝。修改内容后必须递增 `version`。
-
-### `cannot create .../bin/...`
-
-确保安装前创建 `$TAIXU_TOOL_DIR/bin`。当前通用安装器也会提前创建该目录。
-
-### `xz: Cannot exec`
-
-RootFS 没有 `xz`。改用 `.tar.gz`，或随插件提供可运行的 ARM64 解压器。
-
-### `unexpected operator`
-
-通常是 `/bin/sh` 的 `test` 收到通配符展开后的多个参数。先用 `find ... -print -quit` 得到单一路径并加双引号。
-
-### ARM64 程序仍无法启动
-
-除 ELF `e_machine` 外，还要检查解释器和 ABI。Android/Bionic ARM64 与 Linux/glibc ARM64 并不自动兼容。
-
-### 日志显示回滚但全局文件仍存在
-
-框架事务仅覆盖 `$TAIXU_TOOL_DIR`。插件拥有的全局路径必须由插件脚本自行清理。
+- [ ] ZIP root contains only `manifest.json` and `payload/`.
+- [ ] Manifest is under 1 MiB and uncompressed content under 8 GiB.
+- [ ] ID, version, ARM64, launch type, source, and permission fields are valid.
+- [ ] Every large file has a pinned SHA-256.
+- [ ] No undeclared optional commands such as unzip, xz, file, or readelf are required.
+- [ ] ELF files, symlinks, and ZIP executable bits are handled correctly.
+- [ ] Import, install, verification, and launch work offline.
+- [ ] Fresh install, duplicate import, upgrade, and uninstall have been tested.
+- [ ] Verification command, command links, PTY, and web/service modes work.
+- [ ] Progress is monotonic and logs contain no credentials or sensitive environment variables.
+- [ ] Staging can be cleaned on failure without falsely claiming global rollback.
+- [ ] Required disk space for package copies, payload, staging, and final directories has been calculated.
