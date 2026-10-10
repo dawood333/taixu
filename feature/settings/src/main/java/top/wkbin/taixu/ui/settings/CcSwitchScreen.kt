@@ -723,8 +723,8 @@ private fun AgentCard(
                     text = when {
                         !isDaemonRunning -> "--"
                         agent.isChecking -> "Checking..."
-                        agent.installed -> agent.currentVersion ?: "已Install"
-                        else -> "未Install"
+                        agent.installed -> agent.currentVersion ?: "Installed"
+                        else -> "Not installed"
                     },
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = if (agent.installed) FontWeight.Bold else FontWeight.Normal,
@@ -886,7 +886,7 @@ private fun SwitchProviderDialog(
 
                 if (providers.isEmpty()) {
                     Text(
-                        text = "暂未配置独立的 Provider，可直接从下方太墟模型库选择一键Import并绑定。",
+                        text = "No separate provider is configured. Select one from the TaiXu model catalog below to import and bind it.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -951,7 +951,7 @@ private fun SwitchProviderDialog(
         },
         confirmButton = {
             RuntimeTextButton(onClick = onDismiss) {
-                Text("关闭")
+                Text("Close")
             }
         },
     )
@@ -975,19 +975,19 @@ private fun UpgradeVersionDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                InfoRow(label = "当前版本", value = agent.currentVersion ?: "未Install")
-                InfoRow(label = "推荐版本", value = agent.latestVersion ?: agent.type.defaultLatestVersion.ifBlank { "latest" })
+                InfoRow(label = "Current version", value = agent.currentVersion ?: "Not installed")
+                InfoRow(label = "Recommended version", value = agent.latestVersion ?: agent.type.defaultLatestVersion.ifBlank { "latest" })
 
                 OutlinedTextField(
                     value = versionInput,
                     onValueChange = { versionInput = it },
-                    label = { Text("目标版本 (如 1.0.0，留空即最新)") },
+                    label = { Text("Target version (e.g. 1.0.0; leave blank for latest)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Text(
-                    text = "确认后将在沙箱内通过包管理器执行相应版本部署与配置。",
+                    text = "After confirmation, the package manager will deploy and configure the selected version in the sandbox.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -997,12 +997,12 @@ private fun UpgradeVersionDialog(
             RuntimeButton(
                 onClick = { onConfirmUpgrade(versionInput.trim()) },
             ) {
-                Text(if (agent.installed) "确认Upgrade" else "确认Install")
+                Text(if (agent.installed) "Confirm upgrade" else "Confirm install")
             }
         },
         dismissButton = {
             RuntimeTextButton(onClick = onDismiss) {
-                Text("取消")
+                Text("Cancel")
             }
         },
     )
@@ -1046,7 +1046,7 @@ private fun InstallLogDialog(
                 ) {
                     RuntimeIcon(RuntimeIconName.Terminal, modifier = Modifier.size(18.dp))
                     Text(
-                        text = "$agentName 日志",
+                        text = "$agentName log",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -1059,14 +1059,14 @@ private fun InstallLogDialog(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             RuntimeCircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("执行中", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            Text("Running", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                     isError -> {
-                        StatusBadge(text = "异常/失败", color = MaterialTheme.colorScheme.error)
+                        StatusBadge(text = "Error/Failed", color = MaterialTheme.colorScheme.error)
                     }
                     logs.isNotEmpty() -> {
-                        StatusBadge(text = "已完成", color = Color(0xFF4CAF50))
+                        StatusBadge(text = "Completed", color = Color(0xFF4CAF50))
                     }
                 }
             }
@@ -1083,7 +1083,7 @@ private fun InstallLogDialog(
                     Box(modifier = Modifier.fillMaxSize()) {
                         if (logs.isEmpty()) {
                             Text(
-                                text = "暂无命令输出日志。点击Install或Upgrade后，将在沙箱内实时捕获并输出详细构建过程...",
+                                text = "No command output yet. Click Install or Upgrade to capture and display detailed build output from the sandbox in real time...",
                                 style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                                 color = Color(0xFF888888),
                                 modifier = Modifier.padding(12.dp),
@@ -1101,7 +1101,7 @@ private fun InstallLogDialog(
                                         line.contains("[-] ") || line.contains("ERR!") || line.contains("error:") || line.contains("FAILED") -> Color(0xFFEF5350)
                                         line.contains("[+] ") -> Color(0xFF81C784)
                                         line.contains("[!] ") || line.contains("WARN") -> Color(0xFFFFB74D)
-                                        line.contains("[*] ") || line.contains("[步骤 ") -> Color(0xFF64B5F6)
+                                        line.contains("[*] ") || line.contains("[Step ") -> Color(0xFF64B5F6)
                                         line.contains("[PATH] ") -> Color(0xFFBA68C8)
                                         else -> Color(0xFFDCDCDC)
                                     }
@@ -1128,7 +1128,7 @@ private fun InstallLogDialog(
                         onClick = onClear,
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                     ) {
-                        Text("清空", style = MaterialTheme.typography.labelSmall)
+                        Text("Clear", style = MaterialTheme.typography.labelSmall)
                     }
                     RuntimeButton(
                         onClick = { onCopy(logs.joinToString("\n")) },
@@ -1136,11 +1136,11 @@ private fun InstallLogDialog(
                     ) {
                         RuntimeIcon(name = RuntimeIconName.Copy, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("复制全部日志", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        Text("Copy all logs", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     }
                 } else {
                     RuntimeButton(onClick = onDismiss) {
-                        Text("确定")
+                        Text("OK")
                     }
                 }
             }
@@ -1148,7 +1148,7 @@ private fun InstallLogDialog(
         dismissButton = {
             if (logs.isNotEmpty()) {
                 RuntimeTextButton(onClick = onDismiss) {
-                    Text("关闭")
+                    Text("Close")
                 }
             }
         },
