@@ -41,7 +41,7 @@ import top.wkbin.taixu.ui.components.liquidGlassContent
 import top.wkbin.taixu.ui.theme.LocalLiquidGlassBackdrop
 
 /**
- * TaiXu · Features配置 (TaiXu Settings & Models)
+ * TaiXu · Features (Settings & Models)
  */
 @Composable
 fun SettingsScreen(
@@ -170,7 +170,7 @@ fun SettingsScreen(
                     icon = RuntimeIconName.Palette,
                     accent = MaterialTheme.colorScheme.secondary,
                     title = "Appearance, Text Size & Terminal",
-                    subtitle = "深Light主题 · 应用字号缩放 · 终端配色与字体",
+                    subtitle = "Light/dark themes · app text scaling · terminal colors and fonts",
                     badge = "$themeLabel · ${terminalFontSize}sp",
                     onClick = onOpenAppearance,
                 )
@@ -194,19 +194,19 @@ fun SettingsScreen(
                     accent = MaterialTheme.colorScheme.tertiary,
                     title = "Featured Features",
                     subtitle = "Build an app from one sentence · AI roundtable · Morning Sentinel · WebChat · A2UI",
-                    badge = "5 项功能",
+                    badge = "5 features",
                     onClick = onOpenFeatureHub,
                 )
             }
 
-            // 5. 关于、更新与官方社区
+            // 5. About, Updates & Community
             item {
                 SettingsCategoryCard(
                     icon = RuntimeIconName.Community,
                     accent = MaterialTheme.colorScheme.secondary,
-                    title = "关于、更新与官方社区",
-                    subtitle = "检查新版本 · GitHub 开源仓库 · 官方 QQ 交流群",
-                    badge = if (appVersionName == "unknown") "版本号未知 · 稳定版" else "v$appVersionName 稳定版",
+                    title = "About, Updates & Community",
+                    subtitle = "Check for updates · GitHub repository · official QQ community",
+                    badge = if (appVersionName == "unknown") "Version unknown · stable release" else "v$appVersionName stable release",
                     onClick = onOpenAboutCommunity,
                 )
             }
