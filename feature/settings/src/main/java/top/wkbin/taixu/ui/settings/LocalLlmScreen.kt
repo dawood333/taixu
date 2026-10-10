@@ -66,15 +66,15 @@ fun LocalLlmScreen(
     val deviceRamBytes = viewModel.deviceRamBytes
     val mobileModelPresets = viewModel.mobileModelPresets
     val topBarStatus = when (val state = serviceState) {
-        LocalLlmServiceState.Stopped -> "服务未启动"
-        is LocalLlmServiceState.Starting -> "正在启动 · ${state.fileName}"
-        is LocalLlmServiceState.Running -> "运行中 · ${state.fileName}"
-        is LocalLlmServiceState.Failed -> "启动失败"
+        LocalLlmServiceState.Stopped -> "Service not started"
+        is LocalLlmServiceState.Starting -> "Starting · ${state.fileName}"
+        is LocalLlmServiceState.Running -> "Running · ${state.fileName}"
+        is LocalLlmServiceState.Failed -> "Failed to start"
     }
 
     var showDownloadDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showPathDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    // 待确认删除的模型文件名（破坏性操作二次确认）
+    // 待确认Delete的模型文件名（破坏性操作二次确认）
     var pendingDeleteModel by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
 
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -84,10 +84,10 @@ fun LocalLlmScreen(
     message?.let { currentMessage ->
         RuntimeAlertDialog(
             onDismissRequest = viewModel::consumeMessage,
-            title = { Text(if (messageIsError) "操作未完成" else "本地 LLM") },
+            title = { Text(if (messageIsError) "Operation incomplete" else "Local LLM") },
             text = { Text(currentMessage) },
             confirmButton = {
-                RuntimeTextButton(onClick = viewModel::consumeMessage) { Text("知道了") }
+                RuntimeTextButton(onClick = viewModel::consumeMessage) { Text("Got it") }
             },
         )
     }
@@ -127,7 +127,7 @@ fun LocalLlmScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "本地 LLM",
+                title = "Local LLM",
                 onBack = onBack,
                 statusText = topBarStatus,
                 actions = {
@@ -138,7 +138,7 @@ fun LocalLlmScreen(
                         ) {
                             RuntimeIcon(RuntimeIconName.Stop, Modifier.size(16.dp))
                             Spacer(Modifier.size(4.dp))
-                            Text("停止")
+                            Text("Stop")
                         }
                     }
                 },
@@ -163,7 +163,7 @@ fun LocalLlmScreen(
                     ) {
                         RuntimeIcon(RuntimeIconName.Download, Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
-                        Text("网络下载", maxLines = 1)
+                        Text("Download from URL", maxLines = 1)
                     }
                     RuntimeOutlinedButton(
                         onClick = { showPathDialog = true },
@@ -173,7 +173,7 @@ fun LocalLlmScreen(
                     ) {
                         RuntimeIcon(RuntimeIconName.Folder, Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
-                        Text("从路径导入", maxLines = 1)
+                        Text("Import from path", maxLines = 1)
                     }
                     RuntimeOutlinedButton(
                         onClick = { filePicker.launch(arrayOf("application/octet-stream", "application/*", "*/*")) },
@@ -183,7 +183,7 @@ fun LocalLlmScreen(
                     ) {
                         RuntimeIcon(RuntimeIconName.File, Modifier.size(18.dp))
                         Spacer(Modifier.size(6.dp))
-                        Text("选择文件", maxLines = 1)
+                        Text("Choose file", maxLines = 1)
                     }
                 }
             }
@@ -214,7 +214,7 @@ fun LocalLlmScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             RuntimeTextButton(onClick = viewModel::cancelTransfer, modifier = Modifier.align(Alignment.End)) {
-                                Text("取消")
+                                Text("Cancel")
                             }
                         }
                     }
@@ -233,10 +233,10 @@ fun LocalLlmScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             RuntimeIcon(RuntimeIconName.Info, Modifier.size(23.dp), MaterialTheme.colorScheme.primary)
-                            Text("本地 LLM 推理", style = MaterialTheme.typography.titleMedium)
+                            Text("Local LLM 推理", style = MaterialTheme.typography.titleMedium)
                         }
                         Text(
-                            "通过 llama.cpp 在 Linux 沙箱内运行 GGUF 模型，推理数据不离开设备。支持 HTTPS / Hugging Face 直链断点下载，也可从手机文件选择器导入。",
+                            "Run GGUF models in the Linux sandbox using llama.cpp; inference data stays on the device. Supports resumable downloads from HTTPS/Hugging Face URLs and importing files through the phone's file picker.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -246,10 +246,10 @@ fun LocalLlmScreen(
                                 color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                             ) {
                                 Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text("需要先安装 llama.cpp 推理引擎", fontWeight = FontWeight.SemiBold)
+                                    Text("Install the llama.cpp inference engine first", fontWeight = FontWeight.SemiBold)
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        RuntimeButton(onClick = viewModel::installEngine) { Text("一键安装") }
-                                        RuntimeOutlinedButton(onClick = onOpenEngine) { Text("查看详情") }
+                                        RuntimeButton(onClick = viewModel::installEngine) { Text("Install now") }
+                                        RuntimeOutlinedButton(onClick = onOpenEngine) { Text("View details") }
                                     }
                                 }
                             }
@@ -260,9 +260,9 @@ fun LocalLlmScreen(
 
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("手机小模型推荐", style = MaterialTheme.typography.titleMedium)
+                    Text("Recommended small models for phones", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "本机内存 ${formatBytes(deviceRamBytes)} · 默认推荐 Q4_K_M，兼顾体积、速度和效果",
+                        "Device RAM: ${formatBytes(deviceRamBytes)} · Q4_K_M is recommended for a balance of size, speed, and quality",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -288,7 +288,7 @@ fun LocalLlmScreen(
             }
 
             item {
-                Text("已导入模型", style = MaterialTheme.typography.titleMedium)
+                Text("Imported models", style = MaterialTheme.typography.titleMedium)
             }
 
             if (models.isEmpty()) {
@@ -445,7 +445,7 @@ private fun ServiceStatusCard(
                         LocalLlmServiceState.Stopped -> "未运行"
                         is LocalLlmServiceState.Starting -> "正在启动 · ${serviceState.fileName}"
                         is LocalLlmServiceState.Running -> "运行中 · ${serviceState.fileName}"
-                        is LocalLlmServiceState.Failed -> "启动失败"
+                        is LocalLlmServiceState.Failed -> "Failed to start"
                     },
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -454,14 +454,14 @@ private fun ServiceStatusCard(
                     RuntimeOutlinedButton(onClick = stop, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 7.dp)) {
                         RuntimeIcon(RuntimeIconName.Stop, Modifier.size(16.dp))
                         Spacer(Modifier.size(4.dp))
-                        Text("停止")
+                        Text("Stop")
                     }
                 }
             }
             Text(
                 running?.endpoint ?: when (serviceState) {
                     is LocalLlmServiceState.Failed -> serviceState.message
-                    else -> "选择下方模型启动服务；启动成功后会自动设为当前对话模型"
+                    else -> "选择下方模型Start service；启动成功后会自动设为当前对话模型"
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -536,7 +536,7 @@ private fun DownloadModelDialog(
         url.substringBefore('?').lowercase().endsWith(".gguf")
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("网络下载 GGUF") },
+        title = { Text("Download from URL GGUF") },
         text = {
             Column(
                 modifier = Modifier
@@ -571,7 +571,7 @@ private fun DownloadModelDialog(
         confirmButton = {
             RuntimeButton(onClick = { onDownload(url, sha256.ifBlank { null }) }, enabled = urlValid) { Text("开始下载") }
         },
-        dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
@@ -584,7 +584,7 @@ private fun ImportPathDialog(
     val pathValid = path.substringBefore('?').lowercase().endsWith(".gguf")
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("从路径导入") },
+        title = { Text("Import from path") },
         text = {
             Column(
                 modifier = Modifier
@@ -592,7 +592,7 @@ private fun ImportPathDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text("输入应用可读取的绝对路径，例如 /storage/emulated/0/Download/model.gguf。受 Android 存储权限限制时请改用“选择文件”。")
+                Text("输入应用可读取的绝对路径，例如 /storage/emulated/0/Download/model.gguf。受 Android 存储权限限制时请改用“Choose file”。")
                 OutlinedTextField(
                     value = path,
                     onValueChange = { path = it },
@@ -611,11 +611,11 @@ private fun ImportPathDialog(
         confirmButton = {
             RuntimeButton(onClick = { onImport(path) }, enabled = pathValid) { Text("导入") }
         },
-        dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
-/** 删除 GGUF 模型二次确认弹窗（与 DistroManagementScreen 删除确认同款倒计时锁样式） */
+/** Delete GGUF 模型二次确认弹窗（与 DistroManagementScreen Delete确认同款倒计时锁样式） */
 @Composable
 private fun DeleteModelConfirmDialog(
     fileName: String,
@@ -635,19 +635,19 @@ private fun DeleteModelConfirmDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "删除模型 $fileName？",
+                text = "Delete模型 $fileName？",
                 style = MaterialTheme.typography.titleMedium,
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "• 将从沙箱中删除该 GGUF 模型文件，释放对应存储空间",
+                    text = "• 将从沙箱中Delete该 GGUF 模型文件，释放对应存储空间",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "• 删除后需要重新下载或导入才能再次使用",
+                    text = "• Delete后需要重新下载或导入才能再次使用",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -663,12 +663,12 @@ private fun DeleteModelConfirmDialog(
                 ),
             ) {
                 Text(
-                    text = if (countdown > 0) "确认删除 (" + countdown + "s)" else "确认删除",
+                    text = if (countdown > 0) "确认Delete (" + countdown + "s)" else "确认Delete",
                     color = if (countdown == 0) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onError.copy(alpha = 0.6f),
                 )
             }
         },
-        dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
 
