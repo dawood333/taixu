@@ -52,7 +52,7 @@ class OciRegistryClient(
                 logger.w("OCI manifest check on ${endpoint.name} failed", failure)
             }
         }
-        throw lastFailure ?: IllegalStateException("没有可用的 OCI Registry 检查线路")
+        throw lastFailure ?: IllegalStateException("No usable OCI Registry route available for checks")
     }
 
     suspend fun pull(
@@ -94,7 +94,7 @@ class OciRegistryClient(
                 logger.w("OCI registry route ${endpoint.name} failed", failure)
             }
         }
-        throw lastFailure ?: IllegalStateException("没有可用的 OCI Registry 下载线路")
+        throw lastFailure ?: IllegalStateException("No usable OCI Registry download route available")
     }
 
     private suspend fun pullFrom(
@@ -121,7 +121,7 @@ class OciRegistryClient(
                 val platform = entry.jsonObject["platform"]?.jsonObject ?: return@firstOrNull false
                 platform["os"]?.jsonPrimitive?.content == "linux" &&
                     platform["architecture"]?.jsonPrimitive?.content == "arm64"
-            }?.jsonObject ?: error("镜像 ${distribution.imageReference} 不提供 linux/arm64")
+            }?.jsonObject ?: error("Image ${distribution.imageReference} does not provide linux/arm64")
             digest = target.getValue("digest").jsonPrimitive.content
             response = getManifest(
                 "${endpoint.registryBase}/v2/$repo/manifests/$digest", token,
@@ -130,7 +130,7 @@ class OciRegistryClient(
             )
             manifest = response.body
         }
-        val layers = manifest["layers"]?.jsonArray ?: error("OCI manifest 没有文件系统层")
+        val layers = manifest["layers"]?.jsonArray ?: error("OCI manifest has no filesystem layers")
         val total = layers.sumOf { it.jsonObject["size"]?.jsonPrimitive?.content?.toLongOrNull() ?: 0L }
 
         // 阶段一：受控并发下载全部层（移动网络单连接常被限速，3 路并发可显著提速；
@@ -161,7 +161,7 @@ class OciRegistryClient(
             onProgress(DownloadProgress(total, total.takeIf { it > 0 }))
             logger.i("Applied OCI layer ${index + 1}/${layers.size}: ${blob.file.name.takeLast(16)}")
         }
-        return ImageInfo("oci-5.9.0-${distribution.id}-${parsed.tag}", digest ?: error("OCI manifest 未返回 digest"))
+        return ImageInfo("oci-5.9.0-${distribution.id}-${parsed.tag}", digest ?: error("OCI manifest did not return a digest"))
     }
 
     private fun resolveFrom(endpoint: Endpoint, distribution: DistributionSpec): ImageInfo {
@@ -179,7 +179,7 @@ class OciRegistryClient(
                 val platform = entry.jsonObject["platform"]?.jsonObject ?: return@firstOrNull false
                 platform["os"]?.jsonPrimitive?.content == "linux" &&
                     platform["architecture"]?.jsonPrimitive?.content == "arm64"
-            }?.jsonObject ?: error("镜像 ${distribution.imageReference} 不提供 linux/arm64")
+            }?.jsonObject ?: error("Image ${distribution.imageReference} does not provide linux/arm64")
             digest = target.getValue("digest").jsonPrimitive.content
             response = getManifest(
                 "${endpoint.registryBase}/v2/$repo/manifests/$digest", token,
@@ -187,8 +187,8 @@ class OciRegistryClient(
                 http,
             )
         }
-        check(response.body["layers"]?.jsonArray != null) { "OCI manifest 没有文件系统层" }
-        return ImageInfo("oci-5.9.0-${distribution.id}-${parsed.tag}", digest ?: error("OCI manifest 未返回 digest"))
+        check(response.body["layers"]?.jsonArray != null) { "OCI manifest has no filesystem layers" }
+        return ImageInfo("oci-5.9.0-${distribution.id}-${parsed.tag}", digest ?: error("OCI manifest did not return a digest"))
     }
 
     /**
@@ -201,7 +201,7 @@ class OciRegistryClient(
         val declared = body?.contentLength() ?: -1L
         val raw = body?.bytes() ?: ByteArray(0)
         check(declared <= 0L || raw.size.toLong() >= declared) {
-            "Registry 元数据响应被截断（$url）：Content-Length 声明 $declared 字节，实际收到 ${raw.size} 字节"
+            "Registry metadata response was truncated ($url): Content-Length declared $declared bytes, received ${raw.size} bytes"
         }
         return raw
     }
@@ -210,7 +210,7 @@ class OciRegistryClient(
         val request = Request.Builder().url(url).header("Accept", accept).header("User-Agent", USER_AGENT)
             .apply { if (token.isNotBlank()) header("Authorization", "Bearer $token") }.build()
         client.newCall(request).execute().use { response ->
-            check(response.isSuccessful) { "Registry 请求失败 HTTP ${response.code}: $url" }
+            check(response.isSuccessful) { "Registry request failed (HTTP ${response.code}): $url" }
             val raw = readMetadataBody(response.body, url)
             return json.parseToJsonElement(raw.toString(Charsets.UTF_8)).jsonObject
         }
@@ -222,7 +222,7 @@ class OciRegistryClient(
         val request = Request.Builder().url(url).header("Accept", accept).header("User-Agent", USER_AGENT)
             .apply { if (token.isNotBlank()) header("Authorization", "Bearer $token") }.build()
         client.newCall(request).execute().use { response ->
-            check(response.isSuccessful) { "Registry 请求失败 HTTP ${response.code}: $url" }
+            check(response.isSuccessful) { "Registry request failed (HTTP ${response.code}): $url" }
             val raw = readMetadataBody(response.body, url)
             val headerDigest = response.header("Docker-Content-Digest")
             val digest = headerDigest ?: "sha256:" + MessageDigest.getInstance("SHA-256")
@@ -285,7 +285,7 @@ class OciRegistryClient(
                         // 本地已完整：直接校验后提交
                         actual = sha256(partial)
                     }
-                    else -> check(false) { "下载 OCI layer 失败 HTTP ${response.code}" }
+                    else -> check(false) { "Failed to download OCI layer (HTTP ${response.code})" }
                 }
                 if (actual == null) {
                     response.body.byteStream().use { input ->
@@ -305,20 +305,20 @@ class OciRegistryClient(
                 }
             }
             if (actual == expected) {
-                check(partial.renameTo(target)) { "无法提交 OCI layer 缓存" }
+                check(partial.renameTo(target)) { "Unable to commit OCI layer cache" }
                 return target
             }
             // 摘要不符：清空后重试（上限内）
             partial.delete()
             if (attempt >= MAX_BLOB_DOWNLOAD_ATTEMPTS) {
-                check(false) { "OCI layer 摘要校验失败：期望 $expected（已重试 $MAX_BLOB_DOWNLOAD_ATTEMPTS 次）" }
+                check(false) { "OCI layer checksum mismatch: expected $expected (retried $MAX_BLOB_DOWNLOAD_ATTEMPTS times)" }
             }
         }
     }
 
     private fun validateDigest(value: String): String {
         val match = Regex("^sha256:([0-9a-fA-F]{64})$").matchEntire(value)
-            ?: throw SecurityException("非法或不支持的 OCI digest：$value")
+            ?: throw SecurityException("Invalid or unsupported OCI digest: $value")
         return match.groupValues[1].lowercase()
     }
 
@@ -362,7 +362,7 @@ class OciRegistryClient(
                 val request = Request.Builder().url("https://auth.docker.io/token?service=registry.docker.io&scope=$scope")
                     .header("User-Agent", USER_AGENT).build()
                 http.newCall(request).execute().use { response ->
-                    check(response.isSuccessful) { "Docker Hub 鉴权失败 HTTP ${response.code}" }
+                    check(response.isSuccessful) { "Docker Hub authentication failed (HTTP ${response.code})" }
                     val body = json.parseToJsonElement(response.body.string()).jsonObject
                     body["token"]?.jsonPrimitive?.content ?: body["access_token"]?.jsonPrimitive?.content.orEmpty()
                 }
