@@ -6,8 +6,8 @@ import top.wkbin.taixu.harness.SkillSuggestion
 import top.wkbin.taixu.harness.HarnessMessage
 
 /**
- * 把技能进化建议转成 [AgentSkill]，口径与设置页新增自定义技能对齐：
- * 更新走既有自定义技能 id（内置技能不可覆盖），创建则生成 `custom_` 前缀 id。
+ * 把技能进化建议转成 [AgentSkill]，口径与设置页新增Custom skill对齐：
+ * 更新走既有Custom skill id（内置技能不可覆盖），创建则生成 `custom_` 前缀 id。
  */
 internal object SkillSuggestionActions {
     fun resolveExisting(
@@ -40,13 +40,13 @@ internal object SkillSuggestionActions {
             AgentSkill(
                 id = newId(),
                 name = trimmedName,
-                description = suggestion.description.trim().ifBlank { "自定义技能" },
+                description = suggestion.description.trim().ifBlank { "Custom skill" },
                 systemPrompt = trimmedPrompt,
                 triggerCommand = trigger,
                 iconName = "Code",
                 isEnabled = true,
                 isBuiltin = false,
-                category = "自定义",
+                category = "Custom",
             )
         }
     }
