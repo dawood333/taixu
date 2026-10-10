@@ -1,41 +1,35 @@
-# 存储分类与清理策略
+# Storage Categories and Cleanup Policy
 
-## 当前实现
+## Current implementation
 
-存储页使用六个互斥分类。每个普通文件按最长路径规则只计入一个条目，未知文件保留在所属分类的“其他文件”中。统计扫描应用私有目录，覆盖独立挂载的发行版 home、工作区根目录文件、数据库、缓存、配置和 WebView 数据；不包含 APK 或外部挂载目录。符号链接不遍历，同一文件标识的硬链接只计一次。
+The storage screen uses six mutually exclusive categories. Each ordinary file is counted once using the longest-path rule; unknown files remain under “Other files” in their category. The scan covers app-private directories, separately mounted distribution home directories, workspace-root files, databases, caches, configuration, and WebView data. It excludes the APK and external mount directories. Symlinks are not traversed, and hard links with the same file identity are counted once.
 
-| 分类 | 内容 | 当前操作与建议 |
-| --- | --- | --- |
-| 项目与个人文件 | 工作区项目、导出文件、发行版个人目录 | 清理已识别 Gradle/Dart 工程的旧专用缓存；源码及通用输出目录由工作区管理 |
-| Linux 与开发环境 | 每个发行版的系统、SDK、共享运行时、版本管理器 | 保留；通过环境或工具功能卸载，先确认项目和插件引用 |
-| 插件与模型数据 | 插件程序、持久化数据及其包含的模型 | 保留；通过工具功能卸载或重置，不能直接删文件破坏注册表 |
-| 会话与附件 | 数据库、任务附件、生成文件 | 保留；按会话生命周期删除，需先检查引用和唯一副本 |
-| 缓存与安装资源 | 依赖下载缓存、离线源包、安装暂存、回滚备份 | 可按需清理部分旧依赖缓存；安装源包、暂存、备份不直接批量删除 |
-| 应用与诊断 | 日志、配置、Skills、加密请求快照、其他私有数据 | 推荐清理过期归档日志；当前日志、配置和请求快照保留 |
+| Category | Includes | Current action/recommendation |
+|---|---|---|
+| Projects and personal files | Workspace projects, exports, distribution home directories | Clean only recognized stale Gradle/Dart project caches; manage source and general output directories through Workspace |
+| Linux and development environments | Distribution systems, SDKs, shared runtimes, version managers | Keep; uninstall through environment/tool controls after checking project and plugin references |
+| Plugins and model data | Plugin executables, persistent data, bundled models | Keep; uninstall/reset through tool controls rather than deleting files and breaking the registry |
+| Sessions and attachments | Database, task attachments, generated files | Delete through the relevant session lifecycle after checking references and unique copies |
+| Caches and installation assets | Dependency downloads, offline packages, staging, rollback backups | Some old dependency caches may be cleaned; do not bulk-delete install packages, staging, or backups |
+| App and diagnostics | Logs, configuration, skills, encrypted request snapshots, other private data | Old archived logs are candidates; keep current logs, configuration, and request snapshots |
 
-总占用与可清理容量分别展示。容量是文件逻辑大小，不能承诺等于 Android 设置的磁盘分配量或设备剩余空间增量。扫描错误会在页面提示，不将无法读取解释成完整扫描。
+Total usage and potentially cleanable usage are shown separately. Values are logical file sizes and may not match Android Settings' allocated storage or the change in free device space. Scan failures are reported rather than treated as a complete scan.
 
-## 清理边界
+## Cleanup boundaries
 
-- 推荐清理仅覆盖超过 7 天的 `.log.gz`、`.log.数字`、`.log.数字.gz` 归档日志。它会失去历史诊断信息，不再宣称“零副作用”。
-- 请求诊断存档位于 `noBackupFilesDir/request-diagnostics/requests.enc`，加密保留最多八个活跃会话、每会话八次脱敏请求预览，随会话删除清理。系统备份不包含它，推荐日志清理不删除它；详见 [`CONTEXT_DIAGNOSTICS.md`](CONTEXT_DIAGNOSTICS.md)。
-- 依赖缓存属于按需清理：可能增加下载与构建时间，影响离线使用。只处理白名单路径中的旧文件；保留锁文件、partial、近期文件、Pub 全局工具、pnpm store、npm npx 环境、Go 解压源码、Gradle Wrapper 分发版和 Yarn 解压缓存。
-- 项目清理要求工程标志文件，当前仅支持根目录 `.gradle` / `.dart_tool` 的旧文件。不根据 `build`、`target`、`dist`、`out` 名称推断可删除内容。多模块与自定义输出目录尚未提供自动清理。
-- 升级回滚备份与暂存由安装事务管理；附件、Skills、插件数据与源包不暴露虚假的清理按钮。
-- 执行使用上次扫描的具体文件计划，分类清理不会扩展到其他分类。新文件、已改变文件、硬链接和链接路径不会进入删除范围；仅删除普通文件，保留目录结构。
-- 执行前复核文件标识、大小、修改时间、链接数和路径祖先。失败或跳过会明确报告；未知 ID、类别不匹配、无清理计划返回失败，协程取消继续传播。
-- 清理与通过 LinuxRuntime 启动的命令互斥，活动终端、后台服务、初始化和环境安装期间拒绝清理；清理时阻止新命令启动。普通命令之间仍允许并发。
+- Recommended cleanup covers only archived logs older than seven days: .log.gz, .log.N, and .log.N.gz. This removes historical diagnostics and is not claimed to be side-effect-free.
+- Request diagnostics are stored in noBackupFilesDir/request-diagnostics/requests.enc. The encrypted archive retains at most eight active conversations and eight redacted request previews per conversation, and is cleaned up when the conversation is deleted. It is excluded from system backup and is not removed by log cleanup; see CONTEXT_DIAGNOSTICS.md.
+- Dependency-cache cleanup is optional: it may increase download/build time and affect offline use. Only old files in allowlisted paths are eligible. Lock files, partial downloads, recent files, Pub global tools, pnpm store, npm npx environment, Go extracted sources, Gradle Wrapper distributions, and Yarn extracted caches are preserved.
+- Project cleanup requires project marker files and currently handles old files in root .gradle and .dart_tool directories. It does not infer deletability from directory names such as build, target, dist, or out. Multi-module and custom output directories do not yet have automatic cleanup.
+- Install rollback backups and staging are owned by install transactions. Attachments, skills, plugin data, and source packages do not expose misleading cleanup actions.
+- Execution uses the concrete file plan from the last scan. Cleanup for one category does not expand into other categories. New or changed files, hard links, and symlink paths are excluded; only ordinary files are deleted and directory structure is retained.
+- Before deletion, recheck file identity, size, modification time, link count, and ancestor paths. Failures and skipped files are reported. Unknown IDs, mismatched categories, or missing cleanup plans fail; coroutine cancellation propagates.
+- Cleanup is mutually exclusive with commands started through LinuxRuntime. It is rejected while terminal sessions, background services, initialization, or environment installation are active; new commands are blocked during cleanup. Ordinary commands may still run concurrently with one another.
+- Scan/delete is not a filesystem transaction and cannot guarantee safety against concurrent writes that bypass the app runtime. The app does not claim to hold a system-wide process lock. Any future cleanup for downloads, plugin installation assets, or user files must integrate with the owning transaction/reference checks rather than widening the path allowlist.
 
-检查和删除并非文件系统事务，无法对绕过应用运行时的并发写入提供绝对保证。当前不宣称拥有全系统进程锁。若后续加入下载包、插件安装资源或用户文件清理，应先接入相应所有者的事务/引用检查，而不是扩大目录白名单。
+## More effective future storage management
 
-## 后续更有效的空间管理
-
-1. **按项目管理大文件**：显示源码、依赖、产物、导出文件，提供大小排序及浏览/导出入口。产物由构建协调器记录实际输出路径后再允许清理；Git 忽略规则不能单独作为可删除依据。
-2. **按版本卸载开发环境**：SDK、NDK、JDK、模型、Runtime 显示引用方和版本，区分“卸载”与“清缓存”。不能仅凭文件年龄判断没有使用。
-3. **按会话释放附件**：通过 Repository 查询引用，提供按时间、按会话删除与孤立附件回收；数据库由业务层删除记录及维护，不直接删 WAL/SHM。
-4. **安装资源回收**：安装事务记录资源路径、完成状态、恢复需求和所有者。只回收已完成且无引用的归档；回滚备份明确提示失去回滚能力。
-5. **缓存恢复成本提示**：显示预计重新下载量、离线影响和最近使用信息，支持用户按需选择。文件修改时间不是最近使用时间，当前 7 天仅作为保守的文件年龄门槛。
-
-## 验证
-
-`StorageManagerTest` 覆盖实际 home 挂载路径、分类总量和目标一致性、备份/临时目录保护、源码目录保护、文件变更、未知 ID、运行中拒绝清理、协程取消和运行时互斥。符号链接测试在不具备创建权限的 Windows 环境会跳过，需在具备权限的主机或 Android/Linux 环境补充运行。尚未进行真机界面与实际磁盘释放量验证。
+1. **Manage large files by project:** Show source, dependencies, build artifacts, and exports with size sorting and browse/export actions. Only allow artifact cleanup after the build coordinator records the actual output path; Git ignore rules alone are not enough.
+2. **Uninstall development environments by version:** Show SDK, NDK, JDK, models, and Runtime with references and versions. Distinguish uninstall from cache cleanup; age alone cannot prove an asset is unused.
+3. **Release attachments by conversation:** Delete through repository-aware lifecycle handling and reference checks.
+4. **Improve estimates:** Clearly distinguish logical file size from filesystem block usage and Android's reported storage.
