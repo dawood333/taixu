@@ -79,7 +79,7 @@ export function ComposerSendIcon({ className }: ComposerIconProps) {
   );
 }
 
-/** 太墟停止按钮图标。 */
+/** TaiXu stop button icon. */
 export function ComposerStopIcon({ className }: ComposerIconProps) {
   return (
     <span aria-hidden="true" className={`composer-action-visual stop${className ? ` ${className}` : ""}`}>
