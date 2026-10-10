@@ -55,7 +55,7 @@ fun EnvironmentVariableSettingsScreen(
     val error by viewModel.environmentError.collectAsStateWithLifecycle()
     val activeDistroId by viewModel.activeDistroId.collectAsStateWithLifecycle()
     val runtimeState by viewModel.runtimeState.collectAsStateWithLifecycle()
-    // 对象状态仅保存可 Bundle 化的字段，旋转后按 key/entry 恢复
+    // 对象状态仅Save可 Bundle 化的字段，旋转后按 key/entry 恢复
     var showEditor by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var editingKey by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var editorInitialKey by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
@@ -110,10 +110,10 @@ fun EnvironmentVariableSettingsScreen(
                 "Environment Variables",
                 onBack,
                 actions = {
-                    IconButton(onClick = { viewModel.refreshEnvironmentVariables() }, contentDescription = "刷新Environment Variables", enabled = !loading && runtimeState is RuntimeState.Ready) {
+                    IconButton(onClick = { viewModel.refreshEnvironmentVariables() }, contentDescription = "Refresh environment variables", enabled = !loading && runtimeState is RuntimeState.Ready) {
                         RuntimeIcon(RuntimeIconName.Refresh)
                     }
-                    IconButton(onClick = { openEnvironmentEditor(null, "", "") }, contentDescription = "添加Environment Variables", enabled = !loading && runtimeState is RuntimeState.Ready) {
+                    IconButton(onClick = { openEnvironmentEditor(null, "", "") }, contentDescription = "Add environment variable", enabled = !loading && runtimeState is RuntimeState.Ready) {
                         RuntimeIcon(RuntimeIconName.Plus)
                     }
                 },
@@ -146,7 +146,7 @@ fun EnvironmentVariableSettingsScreen(
                         RuntimeIcon(RuntimeIconName.Alert, tint = MaterialTheme.colorScheme.tertiary)
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
-                                "警告 · 修改Environment Variables可能导致运行异常",
+                                "Warning · Changing environment variables may cause runtime problems",
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                             )
@@ -192,7 +192,7 @@ fun EnvironmentVariableSettingsScreen(
                     }
                 }
             } else if (entries.isEmpty()) {
-                item { RuntimeCard(modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text("暂无User variables", style = MaterialTheme.typography.titleMedium); Text("点击右上角 + 添加", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } }
+                item { RuntimeCard(modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text("No user variables yet", style = MaterialTheme.typography.titleMedium); Text("Tap + in the top-right corner to add one", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } }
             } else {
                 items(entries, key = { it.id }) { entry ->
                     RuntimeCard(
@@ -248,7 +248,7 @@ fun EnvironmentVariableSettingsScreen(
             } else if (effectiveEntries.isEmpty()) {
                 item {
                     RuntimeCard(modifier = Modifier.fillMaxWidth()) {
-                        Text("暂无可读取的运行时环境", modifier = Modifier.padding(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("No readable runtime environment is available", modifier = Modifier.padding(20.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             } else {
@@ -291,28 +291,28 @@ private fun EnvironmentVariableEditor(
     var note by androidx.compose.runtime.saveable.rememberSaveable(entry?.id, initialKey) { mutableStateOf(entry?.note.orEmpty()) }
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (entry != null) "编辑Environment Variables" else if (initialKey.isNotBlank()) "配置Environment Variables" else "添加Environment Variables") },
+        title = { Text(if (entry != null) "Edit environment variable" else if (initialKey.isNotBlank()) "Configure environment variable" else "Add environment variable") },
         text = {
             Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
                     RuntimeIcon(RuntimeIconName.Alert, Modifier.size(18.dp), MaterialTheme.colorScheme.tertiary)
                     Text(
                         if (entry == null && initialKey.isNotBlank()) {
-                            "这会在用户配置中覆盖 Linux 当前值。错误配置可能导致相关命令无法运行。"
+                            "This overrides the current Linux value in the user configuration. Incorrect values may prevent related commands from running."
                         } else {
-                            "修改后会影响新启动的命令与终端，请确认变量名称和值正确。"
+                            "Changes affect newly launched commands and terminals. Make sure the variable name and value are correct."
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.tertiary,
                     )
                 }
-                OutlinedTextField(value = key, onValueChange = { key = it.uppercase() }, label = { Text("名称") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = value, onValueChange = { value = it }, label = { Text("值") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注（可选）") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = key, onValueChange = { key = it.uppercase() }, label = { Text("Name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = value, onValueChange = { value = it }, label = { Text("Value") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("Note (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
-        confirmButton = { TextButton(onClick = { onSave(key, value, note) }, enabled = key.isNotBlank() && (entry != null || value.isNotEmpty())) { Text("保存") } },
+        confirmButton = { TextButton(onClick = { onSave(key, value, note) }, enabled = key.isNotBlank() && (entry != null || value.isNotEmpty())) { Text("Save") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
