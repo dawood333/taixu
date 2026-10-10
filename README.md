@@ -1,183 +1,149 @@
 <p align="center">
-  <img src="app/src/main/res/drawable/taixu_logo.webp" width="96" alt="太墟 Logo" />
+  <img src="app/src/main/res/drawable/taixu_logo.webp" width="96" alt="TaiXu Logo" />
 </p>
 
-<h1 align="center">太墟 · TaiXu</h1>
+<h1 align="center">TaiXu · 太墟</h1>
 
-<p align="center"><strong>掌中归墟，万象可期。</strong></p>
+<p align="center"><strong>The Myriad Manifestations in the Great Void.</strong></p>
 
 <p align="center">
-  Android 无 Root Linux Runtime · AI Agent Harness · 可视化自动化工作流 · 原生 PTY 终端 · 移动开发工作区
+  Android No-Root Linux Runtime · AI Agent Harness · Visual Workflows · Native PTY Terminal · Mobile Dev Workspace
 </p>
 
 <p align="center">
-  <code>源码 v0.21.0</code> · <code>Android 10+ (API 29+)</code> · <code>arm64-v8a</code> · <code>Kotlin 2.4.20</code> · <code>Jetpack Compose</code>
+  <code>Source v0.21.0</code> · <code>Android 10+ (API 29+)</code> · <code>arm64-v8a</code> · <code>Kotlin 2.4.20</code> · <code>Jetpack Compose</code>
 </p>
 
 <p align="center">
   <a href="https://github.com/wkbin/taixu/releases">Releases</a> ·
   <a href="https://github.com/wkbin/taixu/issues">Issues</a> ·
-  <strong>简体中文</strong> · <a href="README_EN.md">English</a>
+  <a href="README.md">简体中文</a> · <strong>English</strong>
 </p>
 
 ---
 
-## 🌌 何为太墟
+## 🌌 What is TaiXu?
 
-《列子·汤问》云：“渤海之东……其中有大壑焉，实惟无底之谷，其下无底，名曰归墟。八纮九野之水，天汉之流，莫不注之，而无增无减焉。”
+**TaiXu (太墟)** takes its name from GuiXu, the vast ravine described in *Liezi*. It brings a **runnable, observable, recoverable, and extensible** Linux and AI automation environment to Android within the app's permissions.
 
-**太墟**取意于此：在 Android 的应用沙盒与权限边界内，构筑一方**可运行、可观测、可恢复、可演进**的 Linux 与 AI 自动化环境。
-
-太墟让 Agent、MCP 工具、Linux 进程、原生 PTY、浏览器、Git 与项目工作区协同执行任务；可视化工作流则把一次对话扩展为可持久化、可审批、可定时的自动化任务。你可以从一句自然语言意图出发，最终得到真实文件、运行中的进程、经过验证的代码或可安装的 Android / Flutter 构建产物。
-
-> 于太墟中立极，于方寸间创世。
+Agents, MCP tools, Linux processes, native PTY terminals, browsers, Git, and project workspaces work together to turn natural language goals into files, running processes, verified code, and Android / Flutter build artifacts. Visual workflows make repeatable tasks persistent, schedulable, and subject to approval.
 
 ```text
-人的意图 ─→ Agent 规划 ─→ Linux / 工具 / MCP / 浏览器 / 宿主能力 ─→ 验证与交付
-                  ↑                                                   ↓
-                  └──────────── 未完成则继续，必要时审批 ──────────────┘
+Human intent -> Agent planning -> Linux / tools / MCP / browser / host actions -> Verify and deliver
+                       ^                                                       |
+                       +------------- Continue, approve when needed -----------+
 
-持久化工作流 ─→ 条件分支 / 并行节点 / 定时计划 / 后台运行 / 人工审批
+Persistent workflows -> Conditions / parallel nodes / schedules / background runs / approvals
 ```
 
 ---
 
-## ⚡ 核心能力
+## ⚡ Core Capabilities
 
-| 领域 | 能力概览 |
+| Domain | Capabilities |
 | :--- | :--- |
-| **Linux Runtime** | 基于 **PRoot** 在无 Root Android 上运行 ARM64 Linux；从 OCI Registry 安装并校验 RootFS，支持多发行版共存、切换、回滚、持久化目录绑定与 Android 共享存储挂载。 |
-| **Agent Harness** | 支持 OpenAI-compatible Chat Completions、OpenAI Responses API 与 Anthropic Messages API；统一处理流式正文、reasoning、函数工具调用、视觉输入、token usage 与上下文压缩。 |
-| **可靠性与恢复** | 持久化会话、任务计划、语义记忆、自动/手动上下文压缩、大工具输出落盘，以及中断后的恢复；支持 SessionFork 对话回退、文件 checkpoint、外部修改冲突检测与最近一次 rewind 撤销。 |
-| **子智能体协作** | 支持多子智能体调度、结构化结果裁定、token 预算、写路径租约和超限结果分页落盘，降低并行写入冲突与上下文膨胀。 |
-| **规划与执行协同** | 双智能体模式将 Planner 与 Executor 分开运行，支持依赖感知调度与步骤状态展示；AI 圆桌会议提供多视角并行评审与汇总报告。 |
-| **能力按需发现** | 宿主能力与 MCP 工具可通过 `use_capability` 按需查询、调用或用 JavaScript 编排；内层调用仍接受参数校验、权限策略与审批检查，并有超时、取消和有界审计记录。 |
-| **可视化工作流** | 持久化 Kotlin DAG、条件边与并行节点；可组合 Bash、后台进程、Agent、Subagent、构建、宿主动作和人工审批，并支持运行历史、后台执行、通知审批及 WorkManager 一次性/间隔/每日计划。 |
-| **原生 PTY 终端** | JNI 后端通过 `openpty + fork + setsid + TIOCSCTTY + execve` 创建真实控制终端，产物为 `libpty_native.so`；配合 Termux terminal-emulator / TerminalView 支持作业控制、Ctrl+C、窗口尺寸变化和多会话，原生后端不可用时回退至 `script` 通道。 |
-| **移动工作区与构建** | 创建空项目、导入本地 ZIP（含 Zip Slip 防护）或克隆 GitHub 仓库；提供代码树、行级 Diff、沙箱内 Gradle / Flutter 后台构建、APK 签名与安装。 |
-| **端侧 Git 工作台** | 基于 JGit 直接管理宿主工作区，支持改动、暂存、提交、分支、提交图、标签、push/pull、推送预览、AI 提交说明与加密 HTTPS Token。 |
-| **浏览器与 Web 自动化** | 内置多 Tab WebView 池与 Browser MCP；支持页面 Hook、CDP 断点、Worker 级 Fetch 拦截、网络时间线与调试状态展示。 |
-| **MCP 与工具生态** | 内置 Browser、SQLite、Git、APK 审计、CodeGraph、WebSearch 等预设；支持 STDIO、常用 Streamable HTTP 请求-响应与 legacy SSE，远程服务可使用 OAuth Authorization Code + PKCE。 |
-| **无线 ADB 与宿主自动化** | mDNS 发现、通知栏配对码输入、Android / PRoot 日志、设备体检与 Intent 诊断；经用户授权后，可通过无线 ADB、Shizuku、Root 或无障碍通道执行不同级别的宿主与 GUI 自动化，也可使用虚拟屏工具链。 |
-| **端侧协作** | 提供全局悬浮助手、带临时 PIN 的局域网 WebChat、FTP 文件传输，以及 FGS、WakeLock 与 Wi-Fi Lock 长任务保活能力。 |
-| **原生交互界面** | Agent 可通过 `render_surface` 输出 A2UI 声明式界面，在 Compose 中呈现表单等交互内容；提供最近界面查看与示例入口。 |
-| **备份与配置迁移** | 本地 ZIP 备份涵盖会话、记忆、计划、技能资源、附件与可移植偏好；模型档案另支持 JSON 导入预览、复制或更新、导出与系统分享。 |
+| **Linux Runtime** | PRoot runs ARM64 Linux without Android Root. OCI RootFS downloads with integrity checks, multiple distributions, switching, rollback, persistent directory bindings, and shared storage mounts. |
+| **Agent Harness** | OpenAI-compatible Chat Completions, OpenAI Responses, and Anthropic Messages. Streaming text and reasoning output, function calls, vision input, token usage, and context compaction. |
+| **Recovery and History** | Persistent sessions, task plans, semantic memory, context compaction, large tool output spill, and interrupted-operation recovery. SessionFork branches, file checkpoints, external-edit conflict detection, and undo for the most recent rewind. |
+| **Subagents** | Multi-subagent scheduling, structured result adjudication, token budgets, write-path leases, and paginated result spill. |
+| **Planning and Execution** | Separate Planner and Executor lanes with dependency-aware scheduling and step status. AI Roundtable provides parallel reviews from multiple perspectives and a consolidated report. |
+| **On-Demand Capabilities** | Discover and invoke host/MCP capabilities through `use_capability`, including JavaScript orchestration. Nested calls retain argument checks, permission policies, approvals, deadlines, cancellation, and bounded audit metadata. |
+| **Visual Workflows** | Persistent Kotlin DAGs with conditional edges and parallel nodes. Bash, background processes, agents, subagents, builds, host actions, and human approvals; run history, notifications, and WorkManager one-time, interval, or daily schedules. |
+| **Native PTY** | JNI `openpty + fork + setsid + TIOCSCTTY + execve` backend in `libpty_native.so`. Termux terminal-emulator / TerminalView, job control, Ctrl+C, resize, multiple sessions, and a `script` fallback. |
+| **Mobile Workspaces** | Empty projects, ZIP import with Zip Slip checks, GitHub clone, source trees, line diffs, background Gradle / Flutter builds, APK signing, and installation. |
+| **Git Workbench** | JGit-based changes, staging, commits, branches, commit graphs, tags, push/pull, push preview, AI commit messages, and encrypted HTTPS tokens. |
+| **Browser Automation** | Multi-tab WebView pool, Browser MCP, page hooks, CDP breakpoints, Worker-level Fetch interception, network timelines, and debug state. |
+| **MCP and Plugins** | Browser, SQLite, Git, APK audit, CodeGraph, and WebSearch presets. STDIO, common Streamable HTTP request/response flows, legacy SSE, and OAuth Authorization Code + PKCE. |
+| **Host Automation** | Wireless ADB discovery and notification pairing, Android / PRoot logs, device diagnostics, and Intent inspection. Authorized ADB, Shizuku, Root, accessibility, and virtual-screen tooling. |
+| **Device Collaboration** | Floating assistant, temporary-PIN LAN WebChat, FTP transfer, foreground services, WakeLock, and Wi-Fi Lock support for long tasks. |
+| **Native Interactive UI** | Agent-produced A2UI through `render_surface`, rendered in Compose with interactive forms, recent surfaces, and examples. |
+| **Backup and Migration** | Local ZIP backups for sessions, memories, plans, skills, attachments, and portable preferences. Separate model-profile JSON import preview, copy/update, export, and system sharing. |
 
-> 本文按当前源码 `v0.21.0` 更新。已发布版本及其安装包请以 [Releases](https://github.com/wkbin/taixu/releases) 页面为准。
-
----
-
-## 🧠 Agent 可靠性与安全
-
-太墟把 Agent 视为会长期运行并真实修改工作区的执行系统，而不只是一次性的问答接口：
-
-- **分级工具审批**：会话授权与全局策略分离，Plan 只读模式约束工具调用；MCP 注解参与风险判断，按需发现和脚本编排中的调用同样受检查。
-- **可恢复会话**：执行意图、工具结果与操作状态持久化，为中断恢复提供依据；待审批操作保留具体调用，恢复时继续检查权限。
-- **分支一致性**：上下文从当前会话分支投影，回退后不把废弃分支混入模型历史。
-- **上下文治理**：支持自动/手动压缩、溢出重放、token 预算及大型工具输出落盘。
-- **请求上下文诊断**：从聊天上下文用量面板查看最近构造的主会话模型请求，支持脱敏预览、搜索与复制；诊断只在内存中保留。
-- **安全回退**：每轮前创建文件 checkpoint；rewind 时检测会话外修改并报告冲突，满足条件时可撤销最近一次文件恢复。
-- **受控并行**：子智能体通过写路径租约、结构化结果与调度约束降低覆盖彼此改动的风险。
-- **凭据边界**：模型密钥、Git Token 与 OAuth Token 使用应用侧安全存储；敏感信息不应写入工作区或提交到仓库。
-
-脚本执行遇到需要审批的内层调用时会停止，审批针对该次调用；余下步骤由 Agent 后续继续推进。文件 checkpoint 的恢复会报告冲突，具体边界见[安全与凭证暴露面](docs/SECURITY_SURFACE.md)。
+> This README describes source version `v0.21.0`. Published packages and their corresponding features are listed on [Releases](https://github.com/wkbin/taixu/releases).
 
 ---
 
-## 🚀 快速上手
+## 🧠 Agent Reliability and Permissions
 
-### 1. 安装
+- **Approval policies**: Session authorization and global policy remain separate. Plan mode restricts tool use to read-only operations; MCP annotations inform risk assessment. Discovered and scripted calls pass through the same checks.
+- **Durable execution**: Execution intents, results, and operation states support recovery. Pending approvals retain the specific call, and resumed execution checks permissions again.
+- **Branch consistency**: Model context follows the active session branch, excluding abandoned branches.
+- **Context management**: Automatic/manual compaction, overflow replay, token budgets, and file-backed large outputs.
+- **Request diagnostics**: Inspect recently constructed main-session model requests from the context usage panel. Redacted previews support search and copy and remain in memory only.
+- **File recovery**: Checkpoints before turns, external-edit conflict reporting during rewind, and conditional undo of the most recent file restoration.
+- **Controlled parallel work**: Subagent write leases and structured results reduce conflicting edits.
+- **Credential storage**: Model keys, Git tokens, and OAuth tokens use app-side secure storage.
 
-在 **ARM64、Android 10+**（推荐 Android 12+）设备上安装 [最新 Release APK](https://github.com/wkbin/taixu/releases)。Release 页面同时提供构建产物与 SHA-256，建议安装前校验。
-
-### 2. 初始化 Linux
-
-首次启动后跟随「启程向导」安装 RootFS。默认推荐 Ubuntu 24.04 LTS，也可以选择其他受支持发行版。RootFS 不内置于 APK，首次安装需要网络连接与足够的存储空间。
-
-### 3. 配置模型与工具
-
-在设置中添加模型服务与 API Key。可连接 DeepSeek、Claude、OpenAI、SiliconFlow 等云端服务，也可连接沙箱或局域网内的 OpenAI-compatible 本地推理端点，例如 llama.cpp / Ollama 类型服务。
-
-按需启用 MCP、无线 ADB、悬浮窗、通知、安装 APK、Shizuku 或无障碍权限；未使用相关能力时无需授予。
-
-### 4. 创建工作区
-
-在工坊中新建项目，或从 GitHub / 本地 ZIP 导入已有工程。随后可在智枢中描述目标，让 Agent 读写代码、调用工具、运行测试并交付构建产物；也可以把重复任务编排为可视化工作流。
-
-### 5. 常用入口
-
-- **智枢**：Agent 对话、计划、工具调用、子智能体与代码变更。
-- **终端**：进入当前 Linux 发行版的真实 PTY 会话。
-- **工坊**：项目管理、源码浏览、Diff、构建与 APK 交付。
-- **工作流**：搭建 DAG、运行后台任务、设置审批与计划。
-- **Git**：管理改动、分支、提交、标签和远程同步。
-- **浏览器**：网页访问、调试、Hook 与 Browser MCP 自动化。
-- **无线 ADB**：配对设备、查看日志并执行授权范围内的诊断。
-- **乾坤 → 特色功能**：一句话做 App、AI 圆桌会议、晨报哨兵、WebChat 电脑大屏协作与 A2UI 界面。
-- **设置中的备份与模型档案**：导出或恢复本地数据，迁移模型配置。
-
-> 长时间运行 Agent、构建或工作流时，建议允许通知并将太墟加入系统电池优化白名单。Android 的后台限制仍可能影响任务时效。
-
-### 6. 备份与迁移
-
-本地备份恢复前可预览将新增的数据，已有会话不覆盖。备份不包含 RootFS、工作区实际文件、API Key 或自定义请求头；Linux 与项目文件需另行备份。模型档案 JSON 默认也不包含凭据，显式选择包含凭据时会以明文导出，请妥善保管。详见[本地数据备份](docs/LOCAL_BACKUP.md)和[模型档案迁移](docs/MODEL_PROFILE_TRANSFER.md)。
+A script stops at an inner call that requires approval. Approval applies to that call; the agent can continue the remaining steps afterward. See [Security Surface](docs/SECURITY_SURFACE.md) for execution and credential boundaries.
 
 ---
 
-## 🐧 支持的 Linux 发行版
+## 🚀 Quick Start
 
-当前发行版目录提供以下 10 种配置（版本按仓库配置列出）：
+1. **Install** an APK from [Releases](https://github.com/wkbin/taixu/releases) on an ARM64 Android 10+ device. Release builds include SHA-256 files for verification.
+2. **Initialize Linux** through the onboarding wizard. Ubuntu 24.04 LTS is the default. RootFS downloads require network access and additional storage; they are not bundled in the APK.
+3. **Configure a model** in Settings using a supported API and your credentials. Compatible local endpoints such as llama.cpp / Ollama can also be connected.
+4. **Create a workspace** in the Workshop, or import a GitHub repository / local ZIP. Describe a goal in Chat to edit code, run tools, test, and build. Use workflows for repeated tasks.
+5. **Enable optional capabilities** such as MCP, wireless ADB, overlay, notifications, APK installation, Shizuku, or accessibility when needed.
 
-- Ubuntu 24.04 LTS（默认）
-- Debian 12
-- Kali Rolling
-- Arch Rolling
-- Fedora 40
-- Alpine 3.19
-- AlmaLinux 9
-- Rocky Linux 9
-- openSUSE Tumbleweed
-- Manjaro Rolling
+Main entries:
 
-RootFS 优先通过 OCI 镜像获取，部分发行版在自动路由下支持 LXC 镜像回退，不随 APK 分发。镜像能否安装及软件兼容性取决于上游 ARM64 产物、网络与 PRoot 用户态环境。
+- **Chat (智枢)**: Agent conversations, plans, tool calls, subagents, and code changes.
+- **Terminal**: PTY sessions in the active Linux distribution.
+- **Workshop (工坊)**: Projects, source browsing, diffs, builds, and APK delivery.
+- **Workflows / Git / Browser / Wireless ADB**: Automation, repository management, web debugging, and authorized device diagnostics.
+- **乾坤 → 特色功能**: One-sentence app creation, AI Roundtable, Morning Sentinel, LAN WebChat, and A2UI surfaces.
+- **Settings backups and model profiles**: Export/restore local data and migrate model configuration.
 
----
+Notifications and exemption from battery optimization help long-running tasks. Android background restrictions can still delay or interrupt execution.
 
-## 🔌 模型与工具协议
+### Backup scope
 
-### 模型 API
-
-- OpenAI-compatible Chat Completions
-- OpenAI Responses API
-- Anthropic Messages API
-- SSE 流式正文与 reasoning
-- Native function calling 与 JSON 文本工具协议
-- 视觉输入、usage 统计、模型级上下文与压缩预算
-
-### MCP
-
-- STDIO JSON-RPC
-- 常用 Streamable HTTP 请求-响应
-- Legacy SSE
-- OAuth Authorization Code + PKCE、Token 刷新与回调
-- 内置 Browser、SQLite、Git、APK 审计、CodeGraph、WebSearch 预设
-- 能力按需发现与延迟连接
-- 工具注解与审批策略联动；内置与远程能力共用调用检查
+Local backups preview records to add and preserve existing sessions. They exclude RootFS, actual workspace files, API keys, and custom request headers. Back up Linux and project files separately. Model-profile JSON also omits credentials by default; explicitly including them writes them as plaintext. See [Local Backup](docs/LOCAL_BACKUP.md) and [Model Profile Transfer](docs/MODEL_PROFILE_TRANSFER.md).
 
 ---
 
-## 🛠️ 从源码构建
+## 🐧 Distribution Catalog
 
-### 标准 APK 构建要求
+The repository currently lists these 10 configurations:
 
-- **JDK 17**（项目与 CI 基线，推荐 Android Studio JBR）
-- **Android SDK**：compileSdk 37.1 / targetSdk 37 / minSdk 29
-- **Gradle Wrapper**：9.7.0
-- **Android Gradle Plugin**：9.4.1
-- **Kotlin**：2.4.20；Compose BOM：2026.09.00
-- 完整 Git checkout，包括仓库内的本地 Maven AAR 与预编译 ARM64 原生库
+| Distribution | Configured version |
+| :--- | :--- |
+| Ubuntu | 24.04 LTS, default |
+| Debian | 12 (Bookworm) |
+| Kali Linux | Rolling |
+| Arch Linux | Rolling (ARM) |
+| Fedora | 40 |
+| Alpine Linux | 3.19 |
+| AlmaLinux | 9 |
+| Rocky Linux | 9 |
+| openSUSE | Tumbleweed |
+| Manjaro | Rolling |
 
-普通 APK 构建直接使用仓库内的预编译 native 制品；只有重新编译 PTY 等原生组件时，才额外需要 **Android NDK 30.0.15729638、CMake 3.22.1 与 Ninja**。
+RootFS installation prefers OCI images; some distributions support LXC image fallback under automatic routing. Installation availability and compatibility depend on upstream ARM64 artifacts, network access, and PRoot.
+
+---
+
+## 🔌 Model and Tool Protocols
+
+**Models**: OpenAI-compatible Chat Completions, OpenAI Responses, Anthropic Messages, SSE text/reasoning streams, native function calling, JSON text tool calls, vision input, usage accounting, and model-specific context/compaction budgets.
+
+**MCP**: STDIO JSON-RPC, common Streamable HTTP request/response flows, legacy SSE, OAuth Authorization Code + PKCE with refresh and callbacks, built-in presets, on-demand discovery, and delayed connection. Tool annotations participate in approval policy.
+
+---
+
+## 🛠️ Build from Source
+
+### Requirements
+
+- **JDK 17**: Project and CI baseline; Android Studio JBR is also used for local builds.
+- **Android SDK**: compileSdk 37.1 / targetSdk 37 / minSdk 29.
+- **Gradle Wrapper**: 9.7.0.
+- **Android Gradle Plugin**: 9.4.1.
+- **Kotlin**: 2.4.20; **Compose BOM**: 2026.09.00.
+- Complete Git checkout, including the local Maven AAR repository and prebuilt ARM64 native libraries.
+
+Normal APK builds use the checked-in native artifacts. Rebuilding native PTY components additionally requires Android NDK `30.0.15729638`, CMake `3.22.1`, and Ninja.
 
 ### Windows
 
@@ -199,120 +165,112 @@ export JAVA_HOME="/path/to/jdk-17"
 ./gradlew assembleDebug --console=plain
 ```
 
-Debug APK 默认输出到：
+Debug output:
 
 ```text
 app/build/outputs/apk/debug/taixu-v0.21.0-debug.apk
 ```
 
-### 可选步骤
-
-正常完整检出后无需手动准备 PRoot。仅当 `app/src/main/jniLibs/arm64-v8a/libproot*.so` 缺失、校验失败，或需要刷新官方 PRoot 制品时运行：
+Only run the following if the bundled `app/src/main/jniLibs/arm64-v8a/libproot*.so` files are missing, fail validation, or need refreshing:
 
 ```powershell
 .\tools\prepare-proot-runtime.ps1
 ```
 
-设置 `TAIXU_DEV_BUILD=1` 可构建包名为 `top.wkbin.taixu.dev` 的 **TaiXuDev** 预览版，与正式包 `top.wkbin.taixu` 独立共存：
+For **TaiXuDev**, which uses `top.wkbin.taixu.dev` and can coexist with the release package `top.wkbin.taixu`:
 
 ```powershell
 $env:TAIXU_DEV_BUILD="1"
 .\gradlew.bat assembleDebug --console=plain
 ```
 
-未设置该变量时，普通 Debug 包名为 `top.wkbin.taixu.debug`。局域网 WebChat 前端位于 `webchat/`，使用 React、TypeScript 与 Vite；在该目录使用 pnpm 10.28.0 执行 `pnpm install --frozen-lockfile`，随后可运行 `pnpm dev`、`pnpm test` 或 `pnpm build`。
+Without this variable, the normal Debug package is `top.wkbin.taixu.debug`.
 
-更多构建、测试、签名与诊断命令见 [docs/COMMANDS.md](docs/COMMANDS.md)。
+The LAN WebChat frontend lives in `webchat/` and uses React, TypeScript, and Vite. In that directory, use pnpm 10.28.0 to run `pnpm install --frozen-lockfile`, followed by `pnpm dev`, `pnpm test`, or `pnpm build`.
+
+See [Build, Test, and Debug Commands](docs/COMMANDS.md) for more options.
 
 ---
 
-## 📐 模块拓扑
+## 📐 Module Topology
 
 ```text
 TaiXu/
-├── app/                  # 宿主壳、Koin 装配、Manifest、JNI 与前台服务
-├── baselineprofile/      # Baseline Profile 与启动性能基准
+├── app/                  # Host shell, Koin wiring, Manifest, JNI, foreground services
+├── baselineprofile/      # Baseline profiles and startup benchmarks
 ├── core/
-│   ├── model/            # 纯 Kotlin 领域模型
-│   ├── common/           # 调度器、日志与公共基础设施
-│   ├── database/         # Room：会话、消息、记忆、工作流、OAuth、执行历史
-│   ├── datastore/        # DataStore：用户偏好、外观、挂载与引导状态
-│   ├── network/          # OkHttp、SSE 与网络策略
-│   ├── security/         # 密钥、Token 与安全存储
-│   └── browser/          # 浏览器共享模型与协议
-├── runtime/              # PRoot、RootFS、PTY、进程、存储与工作区运行时
-│   └── browser/          # WebView 池、Hook、CDP、网络时间线与 Browser MCP
-├── project-template/     # 项目模板、动态表单与物化引擎
-├── harness/              # Agent 循环、Provider、工具、审批、子智能体与 MCP
-│   └── core/             # 纯 Kotlin 回合解释器与执行协议
-├── tools/                # Registry、Recipe、安装事务、依赖与 Provider 仓储
-├── showerclient/         # 虚拟屏客户端与画面显示
-├── webchat/              # 局域网协作前端（React / TypeScript / Vite）
-└── feature/              # Jetpack Compose 业务特性
-    ├── theme/            # 主题与视觉系统
-    ├── components/       # 通用组件、图标与 Spotlight 引导
-    ├── navigation/       # Navigation3 路由与入口
-    ├── home/             # 首页状态与诊断
-    ├── chat/             # 智枢对话、计划、Diff 与悬浮助手
-    ├── terminal/         # 终端 UI 与多会话
-    ├── workspace/        # 工坊、源码浏览、构建与交付
-    ├── browser/          # 内置浏览器 UI
-    ├── workflow/         # DAG 编辑器、运行、审批与计划
-    ├── git/              # JGit 工作台
-    ├── a2uipoc/          # A2UI 原生界面渲染与交互
-    ├── preview/          # 澄明组件目录与效果预览
-    ├── settings/         # 模型、MCP、ADB、插件与系统设置
-    ├── developer/        # 开发者沙箱与底层诊断
-    ├── custom_iteration/ # 自定义迭代能力
-    └── onboarding/       # 首次启动与 RootFS 初始化
+│   ├── model/            # Pure Kotlin domain models
+│   ├── common/           # Dispatchers, logging, shared infrastructure
+│   ├── database/         # Room sessions, messages, memory, workflows, OAuth, history
+│   ├── datastore/        # Preferences, appearance, mounts, onboarding state
+│   ├── network/          # OkHttp, SSE, network policies
+│   ├── security/         # Keys, tokens, secure storage
+│   └── browser/          # Shared browser models and protocols
+├── runtime/              # PRoot, RootFS, PTY, processes, storage, workspaces
+│   └── browser/          # WebView pool, hooks, CDP, network timelines, Browser MCP
+├── project-template/     # Templates, dynamic forms, materialization
+├── harness/              # Agent loop, providers, tools, approvals, subagents, MCP
+│   └── core/             # Pure Kotlin turn interpreter and execution contracts
+├── tools/                # Registry, recipes, installation, providers, backups
+├── showerclient/         # Virtual-screen client and display
+├── webchat/              # LAN collaboration frontend: React / TypeScript / Vite
+└── feature/              # Jetpack Compose features
+    ├── theme/            # Themes and visual system
+    ├── components/       # Shared components, icons, guided onboarding
+    ├── navigation/       # Navigation3 routes
+    ├── home/             # Runtime dashboard and diagnostics
+    ├── chat/             # Chat, plans, diffs, floating assistant
+    ├── terminal/         # Terminal UI and multiple sessions
+    ├── workspace/        # Projects, source, builds, delivery
+    ├── browser/          # In-app browser UI
+    ├── workflow/         # DAG editor, runs, approvals, schedules
+    ├── git/              # JGit workbench
+    ├── a2uipoc/          # Native A2UI rendering and interaction
+    ├── preview/          # Liquid Glass component catalog and previews
+    ├── settings/         # Models, MCP, ADB, plugins, settings
+    ├── developer/        # Developer sandbox and diagnostics
+    ├── custom_iteration/ # Custom iteration capabilities
+    └── onboarding/       # Initial setup and RootFS installation
 ```
 
-Android 应用业务层以 Kotlin 与 Jetpack Compose 为主；底层还包含 C/JNI、Python、JavaScript、Shell 与 TypeScript 组件。
+The Android app mainly uses Kotlin and Compose, with C/JNI, Python, JavaScript, Shell, and TypeScript components.
 
 ---
 
-## 📚 文档导航
+## 📚 Documentation
 
-- 🧭 [AI 语义导航总览](docs/AI_NAVIGATION.md)
-- 🏗️ [系统架构与模块拓扑](docs/ARCHITECTURE.md)
-- ⏱️ [主要运行时调用链](docs/EXECUTION_TRACES.md)
-- 📜 [架构与 UI 设计铁律](docs/ARCHITECTURE_RULES.md)
-- 🔀 [可视化工作流](docs/WORKFLOW.md)
-- 🌐 [内置浏览器与 Hook 引擎](docs/BROWSER_DESIGN.md)
-- 🔌 [插件生态开发指南](docs/PLUGIN_DEVELOPMENT_GUIDELINES.md)
-- 📦 [Android 离线插件说明](docs/ANDROID_OFFLINE_PLUGIN.md)
-- 💾 [存储管理](docs/STORAGE_MANAGEMENT.md)
-- 🗃️ [本地数据备份与恢复](docs/LOCAL_BACKUP.md)
-- 🔑 [模型档案备份与恢复](docs/MODEL_PROFILE_TRANSFER.md)
-- 🔍 [请求上下文诊断](docs/CONTEXT_DIAGNOSTICS.md)
-- 🛡️ [安全边界与凭证暴露面](docs/SECURITY_SURFACE.md)
-- 🧱 [沙箱后端 ADR](docs/ADR_SANDBOX_BACKEND.md)
-- 🩺 [已知问题](docs/KNOWN_ISSUES.md)
-- 🧪 [构建、测试与调试命令](docs/COMMANDS.md)
+Most engineering documents are in Chinese:
+
+- [AI Navigation](docs/AI_NAVIGATION.md), [Architecture](docs/ARCHITECTURE.md), [Execution Traces](docs/EXECUTION_TRACES.md), and [Architecture Rules](docs/ARCHITECTURE_RULES.md).
+- [Workflows](docs/WORKFLOW.md) and [Browser Design](docs/BROWSER_DESIGN.md).
+- [Plugin Development](docs/PLUGIN_DEVELOPMENT_GUIDELINES.md) and [Android Offline Plugins](docs/ANDROID_OFFLINE_PLUGIN.md).
+- [Storage Management](docs/STORAGE_MANAGEMENT.md), [Local Backup](docs/LOCAL_BACKUP.md), and [Model Profile Transfer](docs/MODEL_PROFILE_TRANSFER.md).
+- [Request Context Diagnostics](docs/CONTEXT_DIAGNOSTICS.md) and [Security Surface](docs/SECURITY_SURFACE.md).
+- [Sandbox Backend ADR](docs/ADR_SANDBOX_BACKEND.md), [Known Issues](docs/KNOWN_ISSUES.md), and [Commands](docs/COMMANDS.md).
 
 ---
 
-## ⚠️ 权限、边界与已知限制
+## ⚠️ Permissions and Limitations
 
-- **仅支持 ARM64**：当前只适配 `arm64-v8a`，其他 ABI 不在支持范围内。
-- **PRoot 权限边界**：它通过用户态系统调用拦截与路径重写提供 Linux 兼容环境；guest 进程实际使用 App uid，并共享宿主网络，不具备 KVM、Root 特权或内核模块加载能力。PRoot 不提供对恶意代码的安全隔离，持有 HostBridge 密钥的 guest 代码可触发当前已授权的宿主能力。
-- **首次安装依赖网络**：RootFS 不随 APK 打包，安装时需要下载 OCI 镜像并占用额外存储空间。
-- **宿主能力取决于授权**：无线 ADB、Shizuku、Root 与无障碍提供的权限等级不同；高级宿主动作不会在未授权时自动获得能力。
-- **后台任务受 Android 限制**：前台服务与 WorkManager 可提高可靠性，但 Doze、厂商省电策略及新版 Android 的前台服务时限仍可能造成延迟或中断。
-- **局域网服务需谨慎开启**：WebChat 与 FTP 只应在可信网络中主动启用，并在使用后关闭。
-- **兼容性因设备而异**：复杂 TUI、特定软键盘组合键和重型 C/C++ 交叉编译会受到设备性能、内存与 PRoot 兼容性的影响。
-- **保护凭据**：请妥善保存模型 API Key、Git Token 与远程服务凭据，切勿提交到公开仓库。
-
----
-
-## 🤝 参与贡献
-
-欢迎提交 [Issue](https://github.com/wkbin/taixu/issues)、Pull Request，或分享你的真机使用记录。开始修改前建议先阅读 [AI_NAVIGATION.md](docs/AI_NAVIGATION.md) 与对应模块文档，并运行架构检查和相关测试。
+- **ARM64 only**: The supported ABI is `arm64-v8a`.
+- **PRoot boundary**: Guest processes use the app uid and share the host network. PRoot provides Linux compatibility without KVM, real Root privileges, or kernel modules. It does not securely isolate malicious code; guest code holding the HostBridge key can invoke currently authorized host capabilities.
+- **Network and storage**: Initial RootFS setup downloads images and requires additional disk space.
+- **Host permissions**: Wireless ADB, Shizuku, Root, and accessibility provide different permission levels and require authorization.
+- **Android background limits**: Foreground services and WorkManager help, but Doze, vendor battery policies, and service time limits can still delay or interrupt tasks.
+- **LAN services**: Enable WebChat and FTP on trusted networks and disable them after use.
+- **Device compatibility**: Complex TUIs, keyboard shortcuts, and heavy compilation depend on device resources and PRoot compatibility.
+- **Credentials**: Keep API keys and remote credentials private and out of public repositories.
 
 ---
 
-## 📜 注脚
+## 🤝 Contributing
 
-> 须弥纳于芥子，太墟纳于掌中。
+Issues, pull requests, and real-device reports are welcome. Read [AI Navigation](docs/AI_NAVIGATION.md) and the relevant module documentation before changing code, then run architecture checks and applicable tests.
 
-限制从未真正消失；但自由可以来自身处限制之中，仍有能力去构筑、去验证属于自己的世界。
+---
+
+## 📜 Footnote
+
+> Mount Sumeru is contained within a mustard seed; the Great Void is contained within the palm.
+
+Constraints remain, but understanding them gives us room to build and verify our own world.
