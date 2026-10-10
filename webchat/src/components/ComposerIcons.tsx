@@ -4,7 +4,7 @@ interface ComposerIconProps {
   className?: string;
 }
 
-/** 太墟附件按钮图标。 */
+/** TaiXu attachment button icon. */
 export function ComposerAttachmentIcon({ className }: ComposerIconProps) {
   return (
     <svg
