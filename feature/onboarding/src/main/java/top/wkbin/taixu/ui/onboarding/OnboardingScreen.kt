@@ -799,7 +799,7 @@ private fun OnboardingModelImportDialog(
                         }
                         if (jsonText.isNotBlank()) {
                             Text(
-                                text = "已载入 ${jsonText.length} 字符",
+                                text = "Loaded ${jsonText.length} characters",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -813,7 +813,7 @@ private fun OnboardingModelImportDialog(
                 onClick = { onImportJson(jsonText) },
                 enabled = jsonText.isNotBlank(),
             ) {
-                Text("载入配置")
+                Text("Load configuration")
             }
         },
         dismissButton = {
