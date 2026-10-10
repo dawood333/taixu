@@ -151,7 +151,7 @@ class LocalLlmManager(
                         if (read < 0) break
                         if (read == 0) continue
                         copied += read
-                        require(copied <= MAX_MODEL_BYTES) { "GGUF 文件超过 32 GB 限制" }
+                        require(copied <= MAX_MODEL_BYTES) { "GGUF file exceeds the 32 GB limit" }
                         output.write(buffer, 0, read)
                         emit(LocalModelTransfer.Progress(copied, totalBytes))
                     }
@@ -173,24 +173,24 @@ class LocalLlmManager(
 
     fun importPath(path: String): Flow<LocalModelTransfer> {
         val source = File(path.trim()).canonicalFile
-        require(source.isFile && source.canRead()) { "文件不存在或不可读取：${source.absolutePath}" }
-        require(source.extension.equals(GGUF_EXTENSION, ignoreCase = true)) { "请选择 .gguf 模型文件" }
+        require(source.isFile && source.canRead()) { "File does not exist or cannot be read: ${source.absolutePath}" }
+        require(source.extension.equals(GGUF_EXTENSION, ignoreCase = true)) { "Select a .gguf model file" }
         return import(source.name, FileInputStream(source), source.length())
     }
 
     suspend fun start(fileName: String) = serviceMutex.withLock {
         check(Build.SUPPORTED_ABIS.any { it.equals("arm64-v8a", ignoreCase = true) }) {
-            "当前设备不是 ARM64，无法运行本地 llama.cpp 推理引擎"
+            "This device is not ARM64 and cannot run the local llama.cpp inference engine"
         }
         val model = resolveModelFile(fileName)
-        require(model.isFile) { "模型文件不存在：$fileName" }
+        require(model.isFile) { "Model file does not exist: $fileName" }
         validateGguf(model)
 
         val currentState = _serviceState.value
         val currentProcess = serviceProcess
         if (currentState is LocalLlmServiceState.Running && currentProcess?.session?.isAlive == true) {
             check(currentState.fileName == model.name) {
-                "已有本地模型正在运行，请先停止后再启动其他模型"
+                "A local model is already running. Stop it before starting another model."
             }
             return@withLock
         }
@@ -206,7 +206,7 @@ class LocalLlmManager(
                     timeoutMs = ENGINE_PROBE_TIMEOUT_MS,
                 ),
             )
-            check(probe.isSuccess) { "尚未安装 llama.cpp 推理引擎，请先在工具中心安装" }
+            check(probe.isSuccess) { "llama.cpp inference engine is not installed. Install it from the Tool Center first." }
             val guestModel = "$GUEST_MODEL_DIRECTORY/${model.name}"
             val contextSize = if (deviceRamBytes() < SIX_GIB) LOW_MEMORY_CONTEXT_SIZE else DEFAULT_CONTEXT_SIZE
             val threads = Runtime.getRuntime().availableProcessors().coerceIn(MIN_INFERENCE_THREADS, MAX_INFERENCE_THREADS)
@@ -241,7 +241,7 @@ class LocalLlmManager(
         } catch (throwable: Throwable) {
             serviceProcess = null
             _serviceState.value = LocalLlmServiceState.Failed(
-                throwable.message ?: "本地模型服务启动失败",
+                throwable.message ?: "Failed to start local model service",
             )
             throw throwable
         }
@@ -257,9 +257,9 @@ class LocalLlmManager(
 
     suspend fun delete(fileName: String) = withContext(Dispatchers.IO) {
         val runningName = (_serviceState.value as? LocalLlmServiceState.Running)?.fileName
-        require(runningName != fileName) { "请先停止正在运行的模型" }
+        require(runningName != fileName) { "Stop the currently running model first" }
         val target = resolveModelFile(fileName)
-        check(!target.exists() || target.delete()) { "无法删除模型：$fileName" }
+        check(!target.exists() || target.delete()) { "Unable to delete model: $fileName" }
         File("${target.absolutePath}.part").delete()
         refresh()
     }
@@ -271,31 +271,31 @@ class LocalLlmManager(
 
     private fun resolveModelFile(rawName: String): File {
         val safeName = rawName.substringAfterLast('/').substringAfterLast('\\').trim()
-        require(SAFE_FILE_NAME.matches(safeName)) { "模型文件名无效" }
-        require(safeName.endsWith(".$GGUF_EXTENSION", ignoreCase = true)) { "模型必须是 .gguf 文件" }
+        require(SAFE_FILE_NAME.matches(safeName)) { "Invalid model filename" }
+        require(safeName.endsWith(".$GGUF_EXTENSION", ignoreCase = true)) { "Model must be a .gguf file" }
         val directory = modelDirectory().apply { mkdirs() }.canonicalFile
         val target = File(directory, safeName).canonicalFile
-        require(target.parentFile == directory) { "模型路径越界" }
+        require(target.parentFile == directory) { "Model path is outside the allowed directory" }
         return target
     }
 
     private fun fileNameFromUrl(url: String): String {
         val value = url.trim()
-        require(value.startsWith("https://", ignoreCase = true)) { "下载地址必须使用 HTTPS" }
+        require(value.startsWith("https://", ignoreCase = true)) { "Download URL must use HTTPS" }
         val path = runCatching { URI(value).path }.getOrNull().orEmpty()
         return path.substringAfterLast('/').takeIf { it.isNotBlank() }
-            ?: throw IllegalArgumentException("下载地址中缺少 GGUF 文件名")
+            ?: throw IllegalArgumentException("Download URL does not include a GGUF filename")
     }
 
     private fun requireModel(fileName: String): LocalGgufModel =
         _models.value.first { it.fileName == fileName }
 
     private fun validateGguf(file: File) {
-        require(file.length() >= GGUF_HEADER_BYTES) { "文件过小，不是有效的 GGUF 模型" }
+        require(file.length() >= GGUF_HEADER_BYTES) { "File is too small to be a valid GGUF model" }
         val magic = ByteArray(GGUF_MAGIC.size)
         file.inputStream().use { input ->
             check(input.read(magic) == magic.size && magic.contentEquals(GGUF_MAGIC)) {
-                "文件头不是 GGUF，下载内容可能是登录页或错误响应"
+                "File header is not GGUF; the download may be a login page or an error response"
             }
         }
     }
