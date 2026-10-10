@@ -1,23 +1,23 @@
-# Responses 原生历史回放
+# Native Responses History Replay
 
-Responses API 的手动上下文需要保留模型的完整输出项。普通正文和推理摘要无法替代原始 reasoning 项，原始消息中的 `phase` 也影响模型对中间进度和最终答复的理解。协议依据：[OpenAI conversation state](https://developers.openai.com/api/docs/guides/conversation-state)。
+Manual context for the Responses API must preserve the model's complete output items. Ordinary message text and reasoning summaries cannot replace the original reasoning items, and the `phase` in original messages also affects how the model understands intermediate progress and final answers. Protocol reference: [OpenAI conversation state](https://developers.openai.com/api/docs/guides/conversation-state).
 
-太墟在 `AssistantText.responsesTurn` 中保存 Responses 的完整 `output`，包括 item ID、函数调用 ID、消息 phase 和不透明的 `encrypted_content`。它随现有 Room `payloadJson` 保存，无数据库表结构迁移；旧消息没有该字段时按普通历史读取。只有工具调用的回合也保存空正文 assistant 条目，作为原生输出的锚点。
+TaiXu stores the complete Responses `output` in `AssistantText.responsesTurn`, including item IDs, function-call IDs, message phase, and opaque `encrypted_content`. It is stored in the existing Room `payloadJson` without a database-schema migration. Older messages without this field are read as ordinary history. Turns containing only tool calls also save an empty-body assistant entry as an anchor for the native output.
 
-`ResponsesApi` 从非流式最终响应或 SSE `response.completed` 获取输出。网关省略完成事件里的 output 时，可以使用带连续 output_index 的 `output_item.done`；`output_item.added` 中的部分加密内容不会保存。没有完成事件的流式中断只保留已有正文。仅在完成事件提供正文或工具调用的网关也能正常工作，已有正文增量不会重复发送到 UI。
+`ResponsesApi` obtains output from a non-streaming final response or SSE `response.completed`. If a gateway omits `output` from the completion event, the client can use `output_item.done` events with continuous output indexes. Partial encrypted content from `output_item.added` is not stored. A streaming interruption without a completion event preserves only text already received. Gateways that provide text or tool calls only in the completion event are also supported, and existing text deltas are not sent to the UI twice.
 
-主会话和子智能体通过 `ApiMessageProjector` 使用同一回放校验，再由 `ResponsesRequestBuilder` 构建 input。满足以下条件时，才原样回放整个输出组：
+The main conversation and subagents use the same replay validation through `ApiMessageProjector`, then build input through `ResponsesRequestBuilder`. The full native output group is replayed only when all of the following conditions hold:
 
-- Responses 模式开启，供应商、端点、模型和凭据范围相同。凭据范围只保存 API key 与自定义请求头的 SHA-256 摘要，不保存明文凭据。
-- 保存的原生正文与当前投影正文一致，函数名称和 JSON 参数一致；函数调用 ID 有效且不重复。
-- 所有工具调用都有实际完成的工具结果；缺失、等待审批、被上下文裁剪的调用不带入整组原生输出。
-- 输出类型属于 reasoning、message、function_call，且没有未完成的输出项。本轮不支持的托管工具输出使用普通历史回退。
-- 同一请求中原生 item ID 和调用 ID 不与此前原生回合重复。
+- Responses mode is enabled and the provider, endpoint, model, and credential scope are the same. Credential scope stores only SHA-256 digests of the API key and custom request headers, never plaintext credentials.
+- The saved native text matches the current projected text, function names and JSON arguments match, and function-call IDs are valid and unique.
+- Every tool call has a completed tool result. Missing, approval-pending, or context-trimmed calls prevent replay of the entire native output group.
+- Output types are reasoning, message, or function_call, with no incomplete output items. Unsupported managed-tool output falls back to ordinary history.
+- Native item IDs and call IDs do not repeat IDs from earlier native turns in the same request.
 
-本地工具调用 ID 经规范化后可能与 provider 的 call_id 不同，构建请求时会按名称和参数匹配，并把对应工具结果映射回原始 call_id。映射只作用于当前 assistant 回合。工具结果的到达顺序可以不同。
+Local tool-call IDs may differ from the provider's `call_id` after normalization. When building a request, the client matches by name and arguments and maps the corresponding tool result back to the original `call_id`. This mapping applies only to the current assistant turn. Tool results may arrive in a different order.
 
-校验失败时保留普通正文、函数调用和结果，不伪造 reasoning 项。编辑回复、切换模型或凭据、部分工具批次、中断和上下文裁剪都可以触发这一回退。Chat Completions 和其他协议不会发送该原生附加数据；JSON 文本工具模式也不使用它。
+If validation fails, ordinary text, function calls, and results are preserved without fabricating reasoning items. Editing a reply, switching models or credentials, partial tool batches, interruption, and context trimming can trigger this fallback. Chat Completions and other protocols do not send this native supplemental data, and JSON-text tool mode does not use it.
 
-每轮原生输出上限为 256,000 UTF-8 字节，超过时不保存。上下文估算将原生载荷加入 token 与请求体预算，文本和参数可能被重复估算，以保守控制体积。请求体仍超限时可先省略原生附加数据而保留普通历史，数据库中的原始记录不受影响。加密内容不会显示在聊天或请求诊断页；诊断预览继续省略 encrypted_content、signature 等不透明字段。
+Each native output is limited to 256,000 UTF-8 bytes; larger outputs are not stored. Context estimation includes the native payload in token and request-body budgets. Text and arguments may be estimated more than once to keep the budget conservative. If the request body is still too large, native supplemental data can be omitted while ordinary history is retained; the original database record is unchanged. Encrypted content is never shown in chat or request diagnostics; diagnostic previews continue to omit opaque fields such as `encrypted_content` and `signature`.
 
-回归覆盖：原生字段与输出顺序、规范化 ID 与乱序工具结果、旧消息兼容、Room 重新打开、主会话/子智能体一致性、编辑与切换回退、缺失/待审批结果、完成事件补全文本、部分加密内容丢弃、EOF/索引缺口、载荷体积预算。测试使用本地 MockWebServer 和 Robolectric，未调用真实模型服务。
+Regression coverage includes native fields and output order, normalized IDs and out-of-order tool results, legacy-message compatibility, reopening Room, main/subagent consistency, edit/switch fallback, missing or approval-pending results, completion-event text, discarded partial encrypted content, EOF/index gaps, and payload-size budgets. Tests use a local MockWebServer and Robolectric and do not call a real model service.
