@@ -97,7 +97,7 @@ private fun StorageScanNotice(warnings: List<String>) {
     if (showDetails) {
         RuntimeAlertDialog(
             onDismissRequest = { showDetails = false },
-            title = { Text("扫描Details") },
+            title = { Text("Scan details") },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -150,7 +150,7 @@ fun StorageUsageScreen(
                             Text("• Historical logs in .log.gz and .log.N formats")
                             Text("• Current logs, installation assets, and rollback backups will be kept")
                             Spacer(Modifier.height(4.dp))
-                            Text("历史诊断信息将被删除。请先Close终端并停止运行中的任务。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            Text("Historical diagnostic information will be deleted. Close terminal sessions and stop running tasks first.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         }
                     },
                     confirmButton = {
@@ -209,15 +209,15 @@ fun StorageUsageScreen(
                             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            Text("预计删除 ${category.reclaimableBytes.readableSize()}（文件大小）")
-                            Text(category.cleanupHint ?: "Confirm cleanup该分类下的Potentially cleanable数据吗？")
+                            Text("Estimated deletion: ${category.reclaimableBytes.readableSize()} (logical file size)")
+                            Text(category.cleanupHint ?: "Clean the eligible data in this category?")
                             category.entries.filter { it.cleanable }.forEach { item ->
                                 Text("• ${item.name}：${item.reclaimableBytes.readableSize()}")
                             }
                             if (category.riskLevel == StorageRiskLevel.CAUTION) {
                                 Text("提示：缓存需要重新下载或生成，会增加下次构建时间并可能影响离线使用。", style = MaterialTheme.typography.bodySmall, color = Color(0xFFD97706))
                             } else if (category.riskLevel == StorageRiskLevel.DANGEROUS) {
-                                Text("警告：此操作不可撤销，请确认数据已备份。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                Text("Warning: This action cannot be undone. Make sure your data is backed up.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                             }
                         }
                     },
@@ -240,19 +240,19 @@ fun StorageUsageScreen(
                 val entry = target.entry
                 RuntimeAlertDialog(
                     onDismissRequest = viewModel::dismissDialog,
-                    title = { Text("清理【${entry.name}】？") },
+                    title = { Text("Clean “${entry.name}”?") },
                     text = {
                         Column(
                             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            Text("预计删除 ${entry.reclaimableBytes.readableSize()}（文件大小）")
-                            Text(entry.cleanupHint ?: "Confirm cleanup此细项吗？")
+                            Text("Estimated deletion: ${entry.reclaimableBytes.readableSize()} (logical file size)")
+                            Text(entry.cleanupHint ?: "Clean this item?")
                             entry.path?.let {
-                                Text("目标路径：$it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Target path: $it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (entry.riskLevel == StorageRiskLevel.DANGEROUS) {
-                                Text("警告：此项清理将永久删除对应数据，操作不可撤销！", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                                Text("Warning: This will permanently delete the selected data and cannot be undone!", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                             }
                         }
                     },
@@ -277,9 +277,9 @@ fun StorageUsageScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "存储管理",
+                title = "Storage Management",
                 onBack = onBack,
-                statusText = usage?.totalManagedBytes?.readableSize() ?: "统计中",
+                statusText = usage?.totalManagedBytes?.readableSize() ?: "Calculating…",
             )
         },
     ) { padding ->
@@ -304,7 +304,7 @@ fun StorageUsageScreen(
                     ) {
                         RuntimeCircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         Text(
-                            "正在深度分析 Linux 沙箱、依赖缓存与工作区存储…",
+                            "Analyzing Linux sandbox, dependency caches, and workspace storage…",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -320,14 +320,14 @@ fun StorageUsageScreen(
             usage?.excludedMountPointCount?.takeIf { it > 0 }?.let { count ->
                 item(key = "excluded_mount_points") {
                     Text(
-                        "已跳过 $count 个受限挂载入口，工作区与附件按实际目录统计。",
+                        "Skipped $count restricted mount points; workspace files and attachments are counted from their actual directories.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
-            // 2. 智能清理建议卡片（安全释放 + 谨慎释放）
+            // 2. 智能Clean建议卡片（安全释放 + 谨慎释放）
             usage?.let { u ->
                 if (u.safeCleanableBytes > 0 || u.projectCleanableBytes > 0) {
                     item(key = "smart_cleanup_suggestions") {
@@ -357,7 +357,7 @@ fun StorageUsageScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        "分类细化明细",
+                        "Category details",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -387,7 +387,7 @@ fun StorageUsageScreen(
                 item(key = "empty_filter") {
                     RuntimeCard(Modifier.fillMaxWidth()) {
                         Text(
-                            "当前筛选分类下无数据",
+                            "No data in the selected category",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -429,7 +429,7 @@ private fun StorageDashboardCard(
     ) {
         Column {
             Text(
-                "太墟已管理空间",
+                "Storage managed by TaiXu",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -449,17 +449,17 @@ private fun StorageDashboardCard(
             if (refreshing) {
                 RuntimeCircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
                 Spacer(Modifier.width(6.dp))
-                Text("扫描中", style = MaterialTheme.typography.labelSmall)
+                Text("Scanning", style = MaterialTheme.typography.labelSmall)
             } else {
                 RuntimeIcon(RuntimeIconName.Refresh, Modifier.size(14.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("重新扫描", style = MaterialTheme.typography.labelSmall)
+                Text("Rescan", style = MaterialTheme.typography.labelSmall)
             }
         }
     }
 
     Spacer(Modifier.height(8.dp))
-    Text("按文件大小统计，不包含 APK；与系统磁盘占用可能不同。Potentially cleanable量只计超过 7 天的已识别文件。",
+    Text("Calculated from file sizes and excludes the APK; it may differ from system storage usage. Potentially cleanable data includes only recognized files older than 7 days.",
         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(14.dp))
 
@@ -476,7 +476,7 @@ private fun StorageDashboardCard(
             .semantics {
                 contentDescription = visibleCategories.joinToString("；") { cat ->
                     val pct = (cat.bytes * 100 / totalBytes)
-                    "${cat.name} 占比 $pct%"
+                    "${cat.name}: $pct%"
                 }
             },
     ) {
@@ -589,12 +589,12 @@ private fun StorageDashboardCard(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            "设备可用空间：${usage.availableBytes.readableSize()}",
+            "Available device storage: ${usage.availableBytes.readableSize()}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            "共 ${usage.categories.size} 个管理分类",
+            "${usage.categories.size} managed categories",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline,
         )
@@ -602,7 +602,7 @@ private fun StorageDashboardCard(
 }
 
 /**
- * 智能清理建议卡片：安全清理与谨慎清理快捷入口（宽敞防挤压设计）
+ * 智能Clean建议卡片：安全Clean与谨慎Clean快捷入口（宽敞防挤压设计）
  */
 @Composable
 private fun SmartCleanupCards(
@@ -613,7 +613,7 @@ private fun SmartCleanupCards(
     onCleanProjectBuilds: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // 1. Potentially cleanable的归档日志卡片
+        // 1. Eligible archived logs卡片
         if (safeCleanableBytes > 0) {
             RuntimeCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -636,14 +636,14 @@ private fun SmartCleanupCards(
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                             Text(
-                                "Potentially cleanable的归档日志",
+                                "Eligible archived logs",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Spacer(Modifier.height(2.dp))
                             Text(
-                                "超过 7 天的历史归档；当前日志保留",
+                                "Archived logs older than 7 days; current logs are retained",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -679,7 +679,7 @@ private fun SmartCleanupCards(
                                     tint = Color(0xFF0E9F6E),
                                 )
                                 Text(
-                                    "零风险 · 不影响代码与配置",
+                                    "Low risk · does not affect source code or configuration",
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                     fontWeight = FontWeight.Medium,
                                     color = Color(0xFF0E9F6E),
@@ -695,9 +695,9 @@ private fun SmartCleanupCards(
                             if (cleaningAction == "quick_safe") {
                                 RuntimeCircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
                                 Spacer(Modifier.width(6.dp))
-                                Text("清理中…", style = MaterialTheme.typography.labelMedium)
+                                Text("Cleaning…", style = MaterialTheme.typography.labelMedium)
                             } else {
-                                Text("清理过期日志", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                Text("Clean expired logs", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -705,7 +705,7 @@ private fun SmartCleanupCards(
             }
         }
 
-        // 2. 工作区构建生成物卡片
+        // 2. Workspace build artifacts卡片
         if (cautionCleanableBytes > 0) {
             RuntimeCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -728,14 +728,14 @@ private fun SmartCleanupCards(
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                             Text(
-                                "工作区构建生成物",
+                                "Workspace build artifacts",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Spacer(Modifier.height(2.dp))
                             Text(
-                                "已识别工程的 .gradle / .dart_tool 旧缓存",
+                                "Old .gradle / .dart_tool caches in recognized projects",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -771,7 +771,7 @@ private fun SmartCleanupCards(
                                     tint = Color(0xFFB76E00),
                                 )
                                 Text(
-                                    "谨慎清理 · 编译时重新生成",
+                                    "Use caution · regenerated during builds",
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                     fontWeight = FontWeight.Medium,
                                     color = Color(0xFFB76E00),
@@ -787,9 +787,9 @@ private fun SmartCleanupCards(
                             if (cleaningAction == "all_project_builds") {
                                 RuntimeCircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
                                 Spacer(Modifier.width(6.dp))
-                                Text("清理中…", style = MaterialTheme.typography.labelMedium)
+                                Text("Cleaning…", style = MaterialTheme.typography.labelMedium)
                             } else {
-                                Text("清理项目缓存", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                                Text("Clean project caches", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -866,7 +866,7 @@ private fun StorageCategoryDetailCard(
             }
         }
 
-        // 底部状态与操作行：风险等级标签（完整不换行） + 清理按钮
+        // 底部状态与操作行：风险等级标签（完整不换行） + Clean按钮
         Spacer(Modifier.height(10.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -885,7 +885,7 @@ private fun StorageCategoryDetailCard(
                         RuntimeCircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 2.dp)
                     } else {
                         Text(
-                            text = if (category.id == "package_cache") "一键清理" else "清理此分类",
+                            text = if (category.id == "package_cache") "Clean now" else "Clean category",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                         )
@@ -976,7 +976,7 @@ private fun StorageEntryRow(
                             RuntimeCircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 2.dp)
                         } else {
                             Text(
-                                "清理",
+                                "Clean",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = when (entry.riskLevel) {
@@ -1053,22 +1053,22 @@ private fun StorageEntryRow(
 private fun RiskBadge(riskLevel: StorageRiskLevel, modifier: Modifier = Modifier) {
     val (label, bg, fg) = when (riskLevel) {
         StorageRiskLevel.SAFE -> Triple(
-            "归档日志 · Potentially cleanable",
+            "Archived logs · eligible for cleanup",
             Color(0xFFE6F8F0),
             Color(0xFF0E9F6E),
         )
         StorageRiskLevel.CAUTION -> Triple(
-            "按需清理 · 需恢复缓存",
+            "按需Clean · 需恢复缓存",
             Color(0xFFFFF4E5),
             Color(0xFFB76E00),
         )
         StorageRiskLevel.DANGEROUS -> Triple(
-            "高风险 · 持久化数据",
+            "High risk · persistent data",
             Color(0xFFFFECEC),
             Color(0xFFDC2626),
         )
         StorageRiskLevel.READONLY -> Triple(
-            "保留 · 由所属功能管理",
+            "Keep · managed by the owning feature",
             MaterialTheme.colorScheme.surfaceContainerHighest,
             MaterialTheme.colorScheme.onSurfaceVariant,
         )
