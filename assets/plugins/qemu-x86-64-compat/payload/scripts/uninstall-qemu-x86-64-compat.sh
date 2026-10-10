@@ -9,4 +9,4 @@ rm -f /opt/taixu/bin/qemu-x86_64
 rm -rf "$TOOL_DIR"
 rm -rf "$COMPAT_ROOT"
 
-echo "QEMU x86_64 user-mode 插件已卸载"
+echo "QEMU x86_64 user-mode plugin has been uninstalled"
