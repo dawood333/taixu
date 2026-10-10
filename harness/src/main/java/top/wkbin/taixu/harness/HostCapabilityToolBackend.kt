@@ -134,7 +134,7 @@ class HostCapabilityToolBackend(
                     append("Effective mode: ").append(info.mode.title)
                     append("\nPermission status: ").append(if (info.modeActive) "Authorized" else "Not authorized")
                     append("\nShizuku: ").append(if (info.shizukuAvailable) "Available (shell UID 2000)" else "Unavailable")
-                    append("\nRoot: ").append(if (info.rootAvailable) "Available (UID 0)" else "Unavailable或未选择")
+                    append("\nRoot: ").append(if (info.rootAvailable) "Available (UID 0)" else "Unavailable or not selected")
                 }
             }
             "app_list" -> executeCachedApps(args)
