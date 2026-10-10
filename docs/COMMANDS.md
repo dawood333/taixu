@@ -39,12 +39,12 @@ $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat arch
 #          files are registered in .architecture-baseline.json and may only shrink).
 
 # 6.1 Sync the file-size ratchet baseline (reduce limits / reject increases / remove stale entries; run after shrinking code)
-$env:JAVA_HOME="C:\Program Files\Android\Studio\jbr"; .\gradlew.bat architectureBaselineSync --console=plain
+$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat architectureBaselineSync --console=plain
 # Note: when adding a module or changing module dependencies, update the requires entries in architecture-policy.json
 # or the architecture gate will fail.
 
 # 7. Validate Harness built-in tool contracts and execution policy only
-$env:JAVA_HOME="C:\Program Files\Android\Studio\jbr"; .\gradlew.bat :harness:testDebugUnitTest --tests "top.wkbin.taixu.harness.*" --console=plain
+$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :harness:testDebugUnitTest --tests "top.wkbin.taixu.harness.*" --console=plain
 ```
 
 ---
