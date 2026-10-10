@@ -75,11 +75,11 @@ class SponsorListRepository(
                 .build()
             httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    throw IllegalStateException("名单加载失败 HTTP ${response.code}")
+                    throw IllegalStateException("Failed to load acknowledgements (HTTP ${response.code})")
                 }
                 val body = response.body?.string().orEmpty()
                 if (body.isBlank()) {
-                    throw IllegalStateException("名单内容为空")
+                    throw IllegalStateException("Acknowledgements list is empty")
                 }
                 json.decodeFromString(SponsorListDto.serializer(), body).entries
             }
