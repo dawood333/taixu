@@ -77,7 +77,7 @@ class WorkshopSigningManager(
 
         val distroId = linuxRuntime.activeDistroId.value
         if (distroId.isBlank()) {
-            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "环境不完整"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "Environment incomplete"))
         }
 
         val fileName = "${sanitizeFileName(safeName)}-${UUID.randomUUID().toString().substring(0, 8)}.p12"
@@ -105,7 +105,7 @@ class WorkshopSigningManager(
             sandboxFile.delete()
             val rawReason = (result.stderr + "\n" + result.stdout).trim()
             val reason = if (result.exitCode == 127 || rawReason.contains("No such file", ignoreCase = true) || rawReason.contains("not found", ignoreCase = true)) {
-                "环境不完整"
+                "Environment incomplete"
             } else {
                 rawReason.take(400).ifBlank { "exit ${result.exitCode}" }
             }
@@ -249,13 +249,13 @@ class WorkshopSigningManager(
                     return@withContext AppResult.Failure(AppError(ErrorCode.IO, "Failed to sync signing key to the sandbox: ${it.message}"))
                 }
             if (!sandboxFile.isFile || sandboxFile.length() != hostFile.length()) {
-                return@withContext AppResult.Failure(AppError(ErrorCode.IO, "签名同步进沙箱不完整"))
+                return@withContext AppResult.Failure(AppError(ErrorCode.IO, "Signing data could not be fully synchronized into the sandbox"))
             }
             // 安装签名 init 脚本：兼容 ARM64 主路径与 QEMU x86_64 兼容路径。
             val scriptSource = File(pathManager.taixuScriptsDir(distroId), SIGNING_INIT_SCRIPT_NAME)
             if (!scriptSource.isFile) {
                 return@withContext AppResult.Failure(
-                    AppError(ErrorCode.IO, "沙箱内缺少签名策略脚本 $SIGNING_INIT_SCRIPT_NAME，请先同步工坊资产"),
+                    AppError(ErrorCode.IO, "Signing policy script $SIGNING_INIT_SCRIPT_NAME is missing from the sandbox. Sync the Workshop assets first."),
                 )
             }
             val scriptContent = scriptSource.readText(Charsets.UTF_8)
