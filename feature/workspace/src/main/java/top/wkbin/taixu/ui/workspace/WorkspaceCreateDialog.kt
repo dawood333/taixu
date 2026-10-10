@@ -61,11 +61,11 @@ import top.wkbin.taixu.ui.components.RuntimeIconName
 import top.wkbin.taixu.ui.components.RuntimeOutlinedButton as OutlinedButton
 import top.wkbin.taixu.ui.components.RuntimeTextButton as TextButton
 
-/** 创建项目向导步骤：平台选择 → 空项目详情 / 模板选择 → 模板详情。 */
+/** Create项目向导步骤：平台选择 → Empty project详情 / 模板选择 → 模板详情。 */
 internal enum class CreateProjectStep { PROJECT_TYPE, EMPTY_DETAILS, TEMPLATE, DETAILS }
 
 /**
- * 创建项目向导状态（屏幕级持有，rememberSaveable 保证旋转后进度不丢）。
+ * Create项目向导状态（屏幕级持有，rememberSaveable 保证旋转后进度不丢）。
  * 复杂对象（selectedTemplate / apkSource）按原语义只保留 remember，旋转后需重新选择。
  */
 @Stable
@@ -96,7 +96,7 @@ internal class CreateProjectWizardState(
     var exportApkToDownload by exportApkToDownload
     var createInProgress by createInProgress
 
-    /** 关闭或创建完成后复位向导（selectedTemplate 恒为 EMPTY，无需复位）。 */
+    /** 关闭或Create完成后复位向导（selectedTemplate 恒为 EMPTY，无需复位）。 */
     fun reset() {
         step = CreateProjectStep.PROJECT_TYPE
         projectName = ""
@@ -140,8 +140,8 @@ internal fun rememberCreateProjectWizardState(): CreateProjectWizardState {
 }
 
 /**
- * 创建项目向导弹窗：四步流程（平台 → 模板 → 详情），
- * 创建进行中保持弹窗展示进度，完成后统一关闭并复位（模板实例化可能耗时 60 秒）。
+ * Create项目向导弹窗：四步流程（平台 → 模板 → 详情），
+ * Create进行中保持弹窗展示进度，完成后统一关闭并复位（模板实例化可能耗时 60 秒）。
  */
 @Composable
 internal fun CreateProjectDialog(
@@ -155,7 +155,7 @@ internal fun CreateProjectDialog(
     onDismiss: () -> Unit,
     onOpenToolCenter: () -> Unit,
 ) {
-    // 创建进行中：保持弹窗展示进度，完成后统一关闭并复位
+    // Create进行中：保持弹窗展示进度，完成后统一关闭并复位
     LaunchedEffect(state.createInProgress, busy) {
         if (state.createInProgress && !busy) {
             state.reset()
@@ -179,11 +179,11 @@ internal fun CreateProjectDialog(
             ) {
                 when (state.step) {
                     CreateProjectStep.PROJECT_TYPE -> {
-                        Text("选择项目类型", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text("先选择要创建的项目平台", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Choose project type", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text("Select the target platform for the new project", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         val projectTypes = projectTemplates.map { it.manifest.projectType }.distinct()
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            // 空项目：跳过平台与模板选择，直接输入名称创建空文件夹
+                            // Empty project：跳过平台与模板选择，直接输入名称Create空文件夹
                             RuntimeCard(
                                 onClick = {
                                     state.selectedProjectType = null
@@ -204,9 +204,9 @@ internal fun CreateProjectDialog(
                                 ) {
                                     RuntimeIcon(RuntimeIconName.Folder, Modifier.size(36.dp), MaterialTheme.colorScheme.primary)
                                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        Text("空项目", fontWeight = FontWeight.SemiBold)
+                                        Text("Empty project", fontWeight = FontWeight.SemiBold)
                                         Text(
-                                            "只创建一个空文件夹，随时手动添加内容",
+                                            "Creates an empty folder; add content whenever you like",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
@@ -255,8 +255,8 @@ internal fun CreateProjectDialog(
                     }
 
                     CreateProjectStep.EMPTY_DETAILS -> {
-                        Text("新建空项目", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text("输入名称即创建一个空文件夹", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("新建Empty project", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text("Enter a name to create an empty folder", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         OutlinedTextField(
                             value = state.projectName,
                             onValueChange = { state.projectName = it },
@@ -275,8 +275,8 @@ internal fun CreateProjectDialog(
                     }
 
                     CreateProjectStep.TEMPLATE -> {
-                        Text("选择模板", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text("选择一个具体模板后继续", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Choose a template", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text("Choose a specific template to continue", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         val filteredTemplates = projectTemplates.filter { it.manifest.projectType == state.selectedProjectType }
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             filteredTemplates.groupBy { it.manifest.category }.forEach { (category, templates) ->
@@ -294,7 +294,7 @@ internal fun CreateProjectDialog(
                                                 onClick = {
                                                     state.selectedTemplateId = template.manifest.id
                                                     state.trustTemplateScripts = false
-                                                    // 标准模板一律通过 manifest id 创建，避免 UI 依赖内置模板枚举。
+                                                    // 标准模板一律通过 manifest id Create，避免 UI 依赖内置模板枚举。
                                                     state.selectedTemplate = ProjectTemplate.EMPTY
                                                     state.templateVariableValues = template.manifest.variables
                                                         .filter { it.prompt }
