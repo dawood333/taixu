@@ -1,70 +1,71 @@
-# 🛠️ 太墟 (TaiXu) — 常用开发与自动化命令速查 (Runbook & Commands)
+# TaiXu — Development and Automation Command Reference
 
 ---
 
-## 1. 构建环境要求 (Prerequisites)
+## 1. Build prerequisites
 
-- **Android SDK**：主工程需要 Android SDK Platform 37.1（A2UI alpha 依赖要求）；targetSdk 仍为 37。已接受 SDK 许可证时，Gradle 可自动安装缺失的平台。
+- **Android SDK:** The main project requires Android SDK Platform 37.1 (required by the A2UI alpha dependency); targetSdk remains 37. If SDK licenses have been accepted, Gradle can automatically install missing platforms.
 
-- **JDK 环境变量设置（Windows PowerShell）**：
-  必须通过设置 `JAVA_HOME` 指向 Android Studio 自带的 JBR（支持 Java 25 / 17+）执行 Gradle 任务：
+- **JDK environment variable (Windows PowerShell):** Set `JAVA_HOME` to the JBR bundled with Android Studio (Java 25 / 17+) before running Gradle tasks:
   ```powershell
   $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
-  # 或自定义安装路径（例如 D:\Program Files\Android\Android Studio\jbr）
+  # Or a custom install path, e.g. D:\Program Files\Android\Android Studio\jbr
   ```
 
 ---
 
-## 2. 核心构建与测试命令 (Build & Test)
+## 2. Core build and test commands
 
 ```powershell
-# 1. 运行所有单元测试（全库回归）
+# 1. Run all unit tests (full-repository regression)
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat test --console=plain
 
-# 2. 运行单模块单元测试
+# 2. Run unit tests for one module
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :feature:settings:testDebugUnitTest --console=plain
 
-# 3. 仅编译 Kotlin 代码（快速语法与类型检查）
+# 3. Compile Kotlin only (fast syntax and type check)
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat compileDebugKotlin --console=plain
 
-# 4. 单模块快速编译验证
+# 4. Fast compile validation for one module
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :harness:compileDebugKotlin --console=plain -q
 
-# 5. 编译并打包 Debug APK
+# 5. Build and package the Debug APK
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat assembleDebug --console=plain
 
-# 6. 验证架构依赖边界（规则唯一事实源：根目录 architecture-policy.json）
+# 6. Verify architecture dependency boundaries (single source of truth: root architecture-policy.json)
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat architectureCheck --console=plain
-# 检查内容：模块依赖白名单（含反向依赖）、依赖图无环、import 黑名单（模型层纯 Kotlin / DAO 直连）、
-#          文件尺寸棘轮（maxFileLines=400，存量超限文件登记在 .architecture-baseline.json，只许缩减）
+# Checks: module dependency allowlist (including reverse dependencies), acyclic dependency graph, import denylist
+#          (pure Kotlin model layer / direct DAO access), file-size ratchet (maxFileLines=400; existing oversized
+#          files are registered in .architecture-baseline.json and may only shrink).
 
-# 6.1 同步尺寸棘轮基线（收缩下调 / 拒绝上涨 / 清理失效条目；代码缩减后运行以下调基线）
-$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat architectureBaselineSync --console=plain
-# 注意：新增模块或调整模块依赖时必须同步登记 architecture-policy.json 的 requires，否则门禁失败
+# 6.1 Sync the file-size ratchet baseline (reduce limits / reject increases / remove stale entries; run after shrinking code)
+$env:JAVA_HOME="C:\Program Files\Android\Studio\jbr"; .\gradlew.bat architectureBaselineSync --console=plain
+# Note: when adding a module or changing module dependencies, update the requires entries in architecture-policy.json
+# or the architecture gate will fail.
 
-# 7. 仅验证 Harness 内置工具契约与执行策略
-$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew.bat :harness:testDebugUnitTest --tests "top.wkbin.taixu.harness.*" --console=plain
+# 7. Validate Harness built-in tool contracts and execution policy only
+$env:JAVA_HOME="C:\Program Files\Android\Studio\jbr"; .\gradlew.bat :harness:testDebugUnitTest --tests "top.wkbin.taixu.harness.*" --console=plain
 ```
 
 ---
 
-## 3. 设备部署与实时日志调试 (Deploy & Debug)
+## 3. Device deployment and live-log debugging
 
 ```powershell
-# 1. 安装 Debug APK 到已连接的真机或模拟器
+# 1. Install the Debug APK on a connected physical device or emulator
 adb install -r app/build/outputs/apk/debug/taixu-v0.5.0-debug.apk
 
-# 2. 启动太墟主入口 Activity
+# 2. Launch TaiXu's main Activity
 adb shell am start -n top.wkbin.taixu/.MainActivity
 
-# 3. 实时过滤太墟运行时与智能体核心日志
+# 3. Filter live logs for the TaiXu runtime and Agent core
 adb logcat -s TaiXu:V HarnessLoop:V ProotProcess:V
 ```
 
-## 4. Koin 依赖图回归
+## 4. Koin dependency-graph regression
 
 ```powershell
 .\gradlew.bat :app:testDebugUnitTest --tests "top.wkbin.taixu.di.*" --console=plain
 ```
 
-修改依赖注册后同时运行完整单元测试和 `:app:assembleDebug`。依赖注入已迁移为 Koin DSL。
+After changing dependency registration, run the full unit-test suite and `:app:assembleDebug`. Dependency injection has migrated to the Koin DSL.
