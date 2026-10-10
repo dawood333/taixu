@@ -128,14 +128,14 @@ fun AgentEcoSettingsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(icon = RuntimeIconName.Bot, title = "Agent Execution & Context", subtitle = "Reasoning stream, context compaction, tool-call limits, and system prompts", onClick = onOpenAgentSettings)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    SettingsRow(icon = RuntimeIconName.Bot, title = "Subagent Roles", subtitle = "自动委派策略与可用的Subagent Roles", onClick = onOpenSubagentSettings)
+                    SettingsRow(icon = RuntimeIconName.Bot, title = "Subagent Roles", subtitle = "Automatic delegation policies and available subagent roles", onClick = onOpenSubagentSettings)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    SettingsRow(icon = RuntimeIconName.Sparkles, title = "Skills 与插件", subtitle = "管理 Skill 提示词、脚本包与运行时插件", value = "${skills.count { it.isEnabled }} 个技能", onClick = onOpenSkillSettings)
+                    SettingsRow(icon = RuntimeIconName.Sparkles, title = "Skills & Plugins", subtitle = "Manage skill prompts, script packages, and runtime plugins", value = "${skills.count { it.isEnabled }} skills", onClick = onOpenSkillSettings)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Network,
-                        title = "MCP 协议生态与服务",
-                        subtitle = "管理 SQLite、Git、Fetch 等 Model Context Protocol 协议服务",
+                        title = "MCP Protocols & Services",
+                        subtitle = "Manage Model Context Protocol services such as SQLite, Git, and Fetch",
                         onClick = onOpenMcpSettings,
                     )
                 }
