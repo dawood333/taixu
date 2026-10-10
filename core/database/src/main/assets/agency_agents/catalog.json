@@ -524,7 +524,7 @@
     {
       "id": "agency_engineering_wechat_mini_program_developer",
       "name": "WeChat Mini Program Developer",
-      "description": "Expert WeChat Mini Program developer specializing in 小程序 development with WXML/WXSS/WXS, WeChat API integration, payment systems, subscription messaging, and the full WeChat ecosystem.",
+      "description": "Expert WeChat Mini Program developer specializing in Mini Program development with WXML/WXSS/WXS, WeChat API integration, payment systems, subscription messaging, and the full WeChat ecosystem.",
       "departmentId": "engineering",
       "promptPath": "agency_agents/agents/engineering/engineering-wechat-mini-program-developer.md",
       "sortOrder": 56
