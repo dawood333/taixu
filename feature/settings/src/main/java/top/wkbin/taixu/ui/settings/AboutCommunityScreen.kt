@@ -89,15 +89,15 @@ fun AboutCommunityScreen(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             RuntimeIcon(RuntimeIconName.Check, Modifier.size(22.dp), tint = successStatusColor())
-                            Text("已是最新版本", fontWeight = FontWeight.Bold)
+                            Text("You're up to date", fontWeight = FontWeight.Bold)
                         }
                     },
                     text = {
-                        Text("当前太墟版本 v${state.info.currentVersion} 已是最新稳定版，无需更新。")
+                        Text("TaiXu v${state.info.currentVersion} is the latest stable release. No update is needed.")
                     },
                     confirmButton = {
                         TextButton(onClick = { viewModel.clearUpdateState() }) {
-                            Text("确定")
+                            Text("OK")
                         }
                     },
                     dismissButton = {
@@ -106,7 +106,7 @@ fun AboutCommunityScreen(
                             viewModel.loadCurrentReleaseNotes(currentVersion)
                             showReleaseNotesDialog = true
                         }) {
-                            Text("本版日志")
+                            Text("Release notes")
                         }
                     },
                 )
@@ -118,13 +118,13 @@ fun AboutCommunityScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         RuntimeIcon(RuntimeIconName.Alert, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.error)
-                        Text("检查更新失败")
+                        Text("Update check failed")
                     }
                 },
                 text = { Text(state.message) },
                 confirmButton = {
                     TextButton(onClick = { viewModel.clearUpdateState() }) {
-                        Text("知道了")
+                        Text("Got it")
                     }
                 },
             )
@@ -155,7 +155,7 @@ fun AboutCommunityScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { RuntimeTopBar("关于与社区", onBack) },
+        topBar = { RuntimeTopBar("About & Community", onBack) },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -164,7 +164,7 @@ fun AboutCommunityScreen(
         ) {
             item {
                 Text(
-                    text = "应用版本与更新",
+                    text = "App version and updates",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -172,9 +172,9 @@ fun AboutCommunityScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Update,
-                        title = "检查新版本",
-                        subtitle = "基于 GitHub Releases 自动检测与在线升级",
-                        value = if (updateCheckState is UpdateCheckState.Checking) "检查中…" else "v$currentVersion",
+                        title = "Check for updates",
+                        subtitle = "Automatically check for and install updates from GitHub Releases",
+                        value = if (updateCheckState is UpdateCheckState.Checking) "Checking…" else "v$currentVersion",
                         onClick = {
                             // 检查进行中禁止重复触发
                             if (updateCheckState !is UpdateCheckState.Checking) {
@@ -185,8 +185,8 @@ fun AboutCommunityScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Document,
-                        title = "版本更新日志",
-                        subtitle = "查看当前版本 (v$currentVersion) 的更新说明与功能亮点",
+                        title = "Release notes",
+                        subtitle = "View changes and highlights for the current version (v$currentVersion)",
                         onClick = {
                             viewModel.loadCurrentReleaseNotes(currentVersion)
                             showReleaseNotesDialog = true
@@ -195,21 +195,21 @@ fun AboutCommunityScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     ToggleRow(
                         icon = RuntimeIconName.Update,
-                        title = "启动时自动检查更新",
-                        subtitle = "应用启动时在后台静默检测新版本",
+                        title = "Check for updates on startup",
+                        subtitle = "Silently check for updates in the background at startup",
                         checked = autoCheckUpdates,
                         change = viewModel::setAutoCheckUpdates,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Sparkles,
-                        title = "重看功能引导",
-                        subtitle = "重新展示插件中心、工作坊、多会话终端等首次使用引导",
+                        title = "Replay feature tour",
+                        subtitle = "Show the first-use tour for the plugin center, workspace, multi-session terminal, and other features again",
                         onClick = {
                             viewModel.replayFirstUseGuides()
                             Toast.makeText(
                                 context,
-                                "已重置功能引导，下次进入相应页面会重新展示",
+                                "The feature tour has been reset and will appear again when you next open the relevant screens",
                                 Toast.LENGTH_SHORT,
                             ).show()
                         },
@@ -219,7 +219,7 @@ fun AboutCommunityScreen(
 
             item {
                 Text(
-                    text = "官方社区与开源",
+                    text = "Community & Open Source",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -227,7 +227,7 @@ fun AboutCommunityScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Github,
-                        title = "GitHub 开源项目",
+                        title = "Open-source project on GitHub",
                         subtitle = "https://github.com/wkbin/taixu · 欢迎 Star 支持",
                         onClick = { openBrowser(context, "https://github.com/wkbin/taixu") },
                     )
@@ -235,7 +235,7 @@ fun AboutCommunityScreen(
                     SettingsRow(
                         icon = RuntimeIconName.Qq,
                         title = "官方 QQ 交流群",
-                        subtitle = "群号: 964382207 · 点击一键加群 / 复制群号",
+                        subtitle = "群号: 964382207 · 点击一键加群 / Copy群号",
                         value = "964382207",
                         onClick = { joinQqGroup(context, "964382207") },
                     )
@@ -302,7 +302,7 @@ private fun AboutAppDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("确定") }
+            TextButton(onClick = onDismiss) { Text("OK") }
         },
     )
 }
@@ -409,7 +409,7 @@ private fun joinQqGroup(context: Context, groupId: String = "964382207") {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         val clip = ClipData.newPlainText("太墟官方交流群", groupId)
         clipboard?.setPrimaryClip(clip)
-        Toast.makeText(context, "已复制 QQ 群号：$groupId，可打开 QQ 搜索加入", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "已Copy QQ 群号：$groupId，可Open QQ 搜索加入", Toast.LENGTH_LONG).show()
     }
 }
 
@@ -423,7 +423,7 @@ private fun openBrowser(context: Context, url: String) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         val clip = ClipData.newPlainText("URL", url)
         clipboard?.setPrimaryClip(clip)
-        Toast.makeText(context, "已复制链接：$url", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "已Copy链接：$url", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -476,7 +476,7 @@ private fun VersionReleaseNotesDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("确定") }
+            TextButton(onClick = onDismiss) { Text("OK") }
         },
         dismissButton = {
             TextButton(onClick = onOpenHistory) { Text("查看全部历史") }
