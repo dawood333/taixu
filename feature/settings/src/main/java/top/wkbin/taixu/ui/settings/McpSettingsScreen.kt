@@ -105,7 +105,7 @@ fun McpSettingsScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showLocalDiscoveryDialog by remember { mutableStateOf(false) }
     var viewingDetailServer by remember { mutableStateOf<McpServerConfig?>(null) }
-    // 待确认删除的服务 id（破坏性操作二次确认）；McpServerConfig 非 Parcelable，仅保存 id
+    // 待Confirm delete的服务 id（破坏性操作二次确认）；McpServerConfig 非 Parcelable，仅Save id
     var pendingDeleteServerId by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     val pendingDeleteServer = pendingDeleteServerId?.let { id -> servers.firstOrNull { it.id == id } }
 
@@ -116,8 +116,8 @@ fun McpSettingsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "MCP 插件与协议生态",
-                statusText = "已就绪",
+                title = "MCP Plugins & Protocols",
+                statusText = "Ready",
                 onBack = onBack,
             )
         },
@@ -155,7 +155,7 @@ fun McpSettingsScreen(
                             )
                         }
                         Text(
-                            "MCP 是开放的标准模型上下文协议。开启后，太墟将在 PRoot 沙箱内启动对应的 Stdio 服务或连接本地 SSE 端点，并动态向智枢 Agent 注入专业工具能力。",
+                            "MCP is an open standard for model context. When enabled, TaiXu starts the corresponding stdio service inside the PRoot sandbox or connects to a local SSE endpoint, then exposes its tools to the Agent dynamically.",
                             style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -170,7 +170,7 @@ fun McpSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "可用 MCP 插件服务 (${servers.size})",
+                        "Available MCP services (${servers.size})",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -189,13 +189,13 @@ fun McpSettingsScreen(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 RuntimeIcon(RuntimeIconName.Search, Modifier.size(14.dp), MaterialTheme.colorScheme.primary)
-                                Text("探测本机", style = MaterialTheme.typography.labelMedium)
+                                Text("Scan local host", style = MaterialTheme.typography.labelMedium)
                             }
                         }
                         TextButton(onClick = { showAddDialog = true }) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 RuntimeIcon(RuntimeIconName.Plus, Modifier.size(14.dp), MaterialTheme.colorScheme.primary)
-                                Text("添加服务", style = MaterialTheme.typography.labelMedium)
+                                Text("Add service", style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -208,8 +208,8 @@ fun McpSettingsScreen(
             if (builtinServers.isNotEmpty()) {
                 item(key = "mcp_section_builtin") {
                     McpSectionHeader(
-                        title = "系统核心 MCP",
-                        subtitle = "太墟内置系统级能力，默认关闭；开启后常驻本会话，harness 随时可调用（不参与 @ 唤醒）",
+                        title = "Core system MCP",
+                        subtitle = "Built-in system-level capabilities, disabled by default. When enabled, they remain available in this session for Harness calls (not triggered by @ mentions).",
                         count = builtinServers.size,
                     )
                 }
@@ -227,8 +227,8 @@ fun McpSettingsScreen(
             if (customServers.isNotEmpty()) {
                 item(key = "mcp_section_custom") {
                     McpSectionHeader(
-                        title = "自定义与三方 MCP",
-                        subtitle = "通过「添加服务」导入的外部 MCP 服务，可 @ 唤醒",
+                        title = "Custom & third-party MCP",
+                        subtitle = "通过「Add service」导入的外部 MCP 服务，可 @ 唤醒",
                         count = customServers.size,
                     )
                 }
@@ -286,9 +286,9 @@ fun McpSettingsScreen(
     pendingDeleteServer?.let { server ->
         RuntimeAlertDialog(
             onDismissRequest = { pendingDeleteServerId = null },
-            title = { Text("删除 MCP 服务", fontWeight = FontWeight.Bold) },
+            title = { Text("Delete MCP service", fontWeight = FontWeight.Bold) },
             text = {
-                Text("确定要删除「${server.name}」吗？删除后将停止向智枢 Agent 注入该服务的工具能力；系统核心 MCP 重新开启即可恢复。")
+                Text("确定要Delete「${server.name}」吗？Delete后将停止向智枢 Agent 注入该服务的工具能力；Core system MCP 重新开启即可恢复。")
             },
             confirmButton = {
                 Button(
@@ -300,11 +300,11 @@ fun McpSettingsScreen(
                         containerColor = MaterialTheme.colorScheme.error,
                     ),
                 ) {
-                    Text("确认删除")
+                    Text("Confirm delete")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { pendingDeleteServerId = null }) { Text("取消") }
+                TextButton(onClick = { pendingDeleteServerId = null }) { Text("Cancel") }
             },
         )
     }
@@ -328,9 +328,9 @@ fun McpSettingsScreen(
                     runCatching { viewModel.beginMcpAuthorization(server) }
                         .onSuccess {
                             runCatching { screenContext.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(it))) }
-                                .onFailure { error -> Toast.makeText(screenContext, "授权启动失败：${error.message}", Toast.LENGTH_SHORT).show() }
+                                .onFailure { error -> Toast.makeText(screenContext, "Failed to start with authorization: ${error.message}", Toast.LENGTH_SHORT).show() }
                         }
-                        .onFailure { Toast.makeText(screenContext, "授权启动失败：${it.message}", Toast.LENGTH_SHORT).show() }
+                        .onFailure { Toast.makeText(screenContext, "Failed to start with authorization: ${it.message}", Toast.LENGTH_SHORT).show() }
                 }
             },
             onLogout = { viewModel.logoutMcpAuthorization(server.id) },
@@ -349,14 +349,14 @@ private fun LocalMcpDiscoveryDialog(
     var addedIds by remember { mutableStateOf(emptySet<String>()) }
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("探测本机 MCP", fontWeight = FontWeight.Bold) },
+        title = { Text("Scan local host MCP", fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
-                    "正在检查 127.0.0.1 的监听端口，并用 MCP 协议验证。仅显示真正可用的服务，不会自动添加。",
+                    "Checking listening ports on 127.0.0.1 and validating them with the MCP protocol. Only working services are shown; none are added automatically.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -369,7 +369,7 @@ private fun LocalMcpDiscoveryDialog(
                         ) {
                             CircularProgressIndicator(Modifier.size(20.dp))
                             Spacer(Modifier.width(10.dp))
-                            Text("正在探测本机服务…", style = MaterialTheme.typography.bodyMedium)
+                            Text("正在Scan local host服务…", style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                     is LocalMcpDiscoveryState.Error -> {
@@ -378,7 +378,7 @@ private fun LocalMcpDiscoveryDialog(
                     is LocalMcpDiscoveryState.Results -> {
                         if (state.servers.isEmpty()) {
                             Text(
-                                "没有发现可用的本机 MCP 服务。请确认服务已启动，并监听在 127.0.0.1。",
+                                "No usable local MCP services found. Make sure the service is running and listening on 127.0.0.1.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -463,8 +463,8 @@ private fun BrowserGatesCard(gates: BrowserGateState, viewModel: SettingsViewMod
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             BrowserGateRow(
-                title = "远程连接",
-                description = "允许局域网设备连接浏览器 MCP 服务（绑定 0.0.0.0）；关闭时仅限本机回环，仍强制 Bearer 认证",
+                title = "远程Connect",
+                description = "允许局域网设备Connect浏览器 MCP 服务（绑定 0.0.0.0）；关闭时仅限本机回环，仍强制 Bearer 认证",
                 checked = gates.allowRemoteConnect,
                 onCheckedChange = viewModel::setBrowserAllowRemoteConnect,
             )
@@ -582,8 +582,8 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
             AnimatedVisibility(visible = state.enabled) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     BrowserGateRow(
-                        title = "允许局域网连接",
-                        description = "绑定 0.0.0.0，同网段设备可连接；关闭时仅限本机回环，两种模式均强制 Bearer 认证",
+                        title = "允许局域网Connect",
+                        description = "绑定 0.0.0.0，同网段设备可Connect；关闭时仅限本机回环，两种模式均强制 Bearer 认证",
                         checked = state.allowRemote,
                         onCheckedChange = viewModel::setAgentServerAllowRemote,
                     )
@@ -610,7 +610,7 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                         modifier = Modifier.fillMaxWidth(),
                     )
 
-                    // 运行状态与连接地址
+                    // 运行状态与Connect地址
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -680,7 +680,7 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Text(
-                                "令牌持久保存，外部客户端可长期复用；重置后需同步更新客户端配置",
+                                "令牌持久Save，外部客户端可长期复用；重置后需同步更新客户端配置",
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f),
@@ -698,7 +698,7 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                     )
 
                     Text(
-                        "启用后会显示一条常驻通知用于后台保活，避免 App 退到后台时连接被系统掐断。",
+                        "启用后会显示一条常驻通知用于后台保活，避免 App 退到后台时Connect被系统掐断。",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -708,7 +708,7 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
     }
 }
 
-/** 一行「标签 + 等宽值 + 复制按钮」，用于展示连接地址。 */
+/** 一行「标签 + 等宽值 + 复制按钮」，用于展示Connect地址。 */
 @Composable
 private fun CopyableLine(label: String, value: String, context: Context) {
     Row(
@@ -742,7 +742,7 @@ private fun CopyableLine(label: String, value: String, context: Context) {
     }
 }
 
-/** 探测本机局域网 IPv4（用于展示可被外部设备访问的连接地址）；失败返回 null。 */
+/** Scan local host局域网 IPv4（用于展示可被外部设备访问的Connect地址）；失败返回 null。 */
 private fun detectLanIp(): String? = try {
     NetworkInterface.getNetworkInterfaces()
         ?.asSequence()
@@ -756,7 +756,7 @@ private fun detectLanIp(): String? = try {
 }
 
 /**
- * MCP 分栏标题：分组展示「系统核心 MCP（内置）」与「自定义与三方 MCP」。
+ * MCP 分栏标题：分组展示「Core system MCP（内置）」与「Custom & third-party MCP」。
  */
 @Composable
 private fun McpSectionHeader(title: String, subtitle: String, count: Int) {
@@ -1079,8 +1079,8 @@ private fun McpServerDetailDialog(
                                             discoveredTools = tools
                                             Toast.makeText(context, "成功探测到 ${tools.size} 个工具", Toast.LENGTH_SHORT).show()
                                         }.onFailure { err ->
-                                            testError = err.message ?: "连接失败"
-                                            Toast.makeText(context, "连接失败：${err.message}", Toast.LENGTH_LONG).show()
+                                            testError = err.message ?: "Connect失败"
+                                            Toast.makeText(context, "Connect失败：${err.message}", Toast.LENGTH_LONG).show()
                                         }
                                     }
                                 }
@@ -1148,7 +1148,7 @@ private fun McpServerDetailDialog(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (!server.isBuiltin) {
                     TextButton(onClick = onDelete) {
-                        Text("删除服务", color = MaterialTheme.colorScheme.error)
+                        Text("Delete服务", color = MaterialTheme.colorScheme.error)
                     }
                 }
                 Button(onClick = onDismiss) {
@@ -1349,7 +1349,7 @@ private fun AddMcpServerDialog(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text("OAuth 2.0 + PKCE", style = MaterialTheme.typography.labelMedium)
-                                Text("授权码模式；token 加密保存且不会导出", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("授权码模式；token 加密Save且不会导出", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Switch(checked = oauthEnabled, onCheckedChange = { oauthEnabled = it })
                         }
@@ -1452,7 +1452,7 @@ private fun AddMcpServerDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text("Cancel") }
         },
     )
 }
