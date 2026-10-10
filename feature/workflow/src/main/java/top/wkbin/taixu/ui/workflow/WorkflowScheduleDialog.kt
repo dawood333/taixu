@@ -44,17 +44,17 @@ import top.wkbin.taixu.ui.components.RuntimeOutlinedButton
 
 /** 重复方式的展示文案（列表与对话框共用）。 */
 fun scheduleRepeatLabel(entity: WorkflowScheduleEntity): String = when (WorkflowScheduleRepeat.valueOf(entity.repeatType)) {
-    WorkflowScheduleRepeat.DAILY -> "每天 ${"%02d".format(entity.hour ?: 0)}:${"%02d".format(entity.minute ?: 0)}"
-    WorkflowScheduleRepeat.INTERVAL -> "每 ${entity.intervalMinutes ?: WorkflowScheduleRepository.MIN_INTERVAL_MINUTES} 分钟"
-    WorkflowScheduleRepeat.ONCE -> "一次性 · ${
+    WorkflowScheduleRepeat.DAILY -> "Daily at ${"%02d".format(entity.hour ?: 0)}:${"%02d".format(entity.minute ?: 0)}"
+    WorkflowScheduleRepeat.INTERVAL -> "Every ${entity.intervalMinutes ?: WorkflowScheduleRepository.MIN_INTERVAL_MINUTES} minutes"
+    WorkflowScheduleRepeat.ONCE -> "One time · ${
         SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(entity.onceAtEpochMillis ?: 0L))
     }"
 }
 
 /**
- * 定时计划新建/编辑对话框：选工作流 + 重复方式（每天 HH:mm / 每 N 分钟 / 一次性时刻）+
- * 变量（KEY=VALUE 行式）+ 工作区 + 可选模型。变量与时刻在保存前做格式校验；
- * 编辑时保留原 id 与启用状态，避免 upsert 产生孤儿行。
+ * 定时计划新建/编辑对话框：选工作流 + 重复方式（Daily HH:mm / 每 N 分钟 / One time时刻）+
+ * 变量（KEY=VALUE 行式）+ 工作区 + 可选模型。变量与时刻在Save前做格式校验；
+ * 编辑时保留原 id 与Enabled状态，避免 upsert 产生孤儿行。
  */
 @Composable
 fun WorkflowScheduleEditDialog(
@@ -90,7 +90,7 @@ fun WorkflowScheduleEditDialog(
 
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (existing == null) "新建定时计划" else "编辑定时计划") },
+        title = { Text(if (existing == null) "Create schedule" else "Edit schedule") },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -99,65 +99,65 @@ fun WorkflowScheduleEditDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("计划名称") },
+                    label = { Text("Schedule name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SimplePickerField(
-                    label = "目标工作流",
-                    value = definitions.firstOrNull { it.id == workflowId }?.name ?: "请选择",
+                    label = "Workflow",
+                    value = definitions.firstOrNull { it.id == workflowId }?.name ?: "Select…",
                     options = definitions.map { it.id to it.name },
                     onSelect = { workflowId = it },
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = repeat == WorkflowScheduleRepeat.DAILY, onClick = { repeat = WorkflowScheduleRepeat.DAILY }, label = { Text("每天") })
-                    FilterChip(selected = repeat == WorkflowScheduleRepeat.INTERVAL, onClick = { repeat = WorkflowScheduleRepeat.INTERVAL }, label = { Text("周期") })
-                    FilterChip(selected = repeat == WorkflowScheduleRepeat.ONCE, onClick = { repeat = WorkflowScheduleRepeat.ONCE }, label = { Text("一次性") })
+                    FilterChip(selected = repeat == WorkflowScheduleRepeat.DAILY, onClick = { repeat = WorkflowScheduleRepeat.DAILY }, label = { Text("Daily") })
+                    FilterChip(selected = repeat == WorkflowScheduleRepeat.INTERVAL, onClick = { repeat = WorkflowScheduleRepeat.INTERVAL }, label = { Text("Interval") })
+                    FilterChip(selected = repeat == WorkflowScheduleRepeat.ONCE, onClick = { repeat = WorkflowScheduleRepeat.ONCE }, label = { Text("One time") })
                 }
                 when (repeat) {
                     WorkflowScheduleRepeat.DAILY -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = hour, onValueChange = { hour = it.filter(Char::isDigit).take(2) },
-                            label = { Text("时(0-23)") }, singleLine = true, modifier = Modifier.weight(1f),
+                            label = { Text("Hour (0–23)") }, singleLine = true, modifier = Modifier.weight(1f),
                         )
                         OutlinedTextField(
                             value = minute, onValueChange = { minute = it.filter(Char::isDigit).take(2) },
-                            label = { Text("分(0-59)") }, singleLine = true, modifier = Modifier.weight(1f),
+                            label = { Text("Minute (0–59)") }, singleLine = true, modifier = Modifier.weight(1f),
                         )
                     }
                     WorkflowScheduleRepeat.INTERVAL -> OutlinedTextField(
                         value = intervalMinutes, onValueChange = { intervalMinutes = it.filter(Char::isDigit).take(4) },
-                        label = { Text("间隔分钟（≥15）") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Interval in minutes (≥15)") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
                     )
                     WorkflowScheduleRepeat.ONCE -> OutlinedTextField(
                         value = onceAt, onValueChange = { onceAt = it },
-                        label = { Text("触发时间（yyyy-MM-dd HH:mm）") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Trigger time (yyyy-MM-dd HH:mm)") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
                     )
                 }
                 OutlinedTextField(
                     value = variablesText,
                     onValueChange = { variablesText = it },
-                    label = { Text("变量（每行 KEY=VALUE，可空）") },
+                    label = { Text("Variables (one KEY=VALUE per line; optional)") },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
                     textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = MaterialTheme.typography.bodySmall.fontSize),
                 )
                 OutlinedTextField(
                     value = workspacePath,
                     onValueChange = { workspacePath = it },
-                    label = { Text("工作区路径") },
+                    label = { Text("Workspace path") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SimplePickerField(
-                    label = "模型（可选，默认走全局）",
-                    value = models.firstOrNull { it.id == modelId }?.name ?: "全局默认",
-                    options = listOf("" to "全局默认") + models.map { it.id to it.name },
+                    label = "Model (optional; uses global default)",
+                    value = models.firstOrNull { it.id == modelId }?.name ?: "Global default",
+                    options = listOf("" to "Global default") + models.map { it.id to it.name },
                     onSelect = { modelId = it },
                 )
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
         },
-        dismissButton = { RuntimeOutlinedButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = { RuntimeOutlinedButton(onClick = onDismiss) { Text("Cancel") } },
         confirmButton = {
             RuntimeButton(
                 onClick = {
@@ -173,7 +173,7 @@ fun WorkflowScheduleEditDialog(
                         onFailure = { error = it.message },
                     )
                 },
-            ) { Text("保存") }
+            ) { Text("Save") }
         },
     )
 }
@@ -192,8 +192,8 @@ private fun validateAndBuild(
     workspacePath: String,
     modelId: String,
 ): Result<WorkflowScheduleEntity> {
-    if (name.isBlank()) return Result.failure(IllegalArgumentException("请填写计划名称"))
-    if (definitions.none { it.id == workflowId }) return Result.failure(IllegalArgumentException("请选择目标工作流"))
+    if (name.isBlank()) return Result.failure(IllegalArgumentException("请填写Schedule name"))
+    if (definitions.none { it.id == workflowId }) return Result.failure(IllegalArgumentException("Select…Workflow"))
     val variables = parseVariables(variablesText).fold(
         onSuccess = { it },
         onFailure = { return Result.failure(it) },
