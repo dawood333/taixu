@@ -264,7 +264,7 @@ internal class AnthropicApi(
         } catch (io: IOException) {
             if (firstEventState.get() == ProviderClient.FIRST_EVENT_TIMED_OUT) {
                 throw SocketTimeoutException(
-                    "等待模型首个响应超过 ${firstEventTimeoutMs / 1000}s",
+                    "Timed out waiting for the model's first response after ${firstEventTimeoutMs / 1000}s",
                 ).apply { initCause(io) }
             }
             throw io
@@ -434,7 +434,7 @@ internal class AnthropicApi(
             put("stream", stream)
             if (model.capabilities.textTools && dynamicTools.isNotEmpty()) {
                 // JSON 文本模式：工具定义写进 system，模型用文本输出工具调用
-                systemPrompt.append("\n\n## 可用工具 JSON 定义（必须严格按此 name 与参数输出）\n")
+                systemPrompt.append("\n\n## Available tool JSON definitions (tool names and parameters must match exactly)\n")
                     .append(ProviderClient.buildToolsTextDescription(dynamicTools))
             }
             if (!model.pureChatMode && systemPrompt.isNotEmpty()) {
