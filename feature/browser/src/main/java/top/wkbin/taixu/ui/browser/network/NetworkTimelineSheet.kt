@@ -38,7 +38,7 @@ import top.wkbin.taixu.runtime.browser.CapturedRequest
 import top.wkbin.taixu.runtime.browser.hook.HookHitRecord
 
 /**
- * 网络时间线抽屉：请求列表（方法/状态/耗时/URL）+ Hook 命中记录 两个页签；
+ * Network Timeline抽屉：请求列表（方法/状态/耗时/URL）+ Hook 命中记录 两个页签；
  * 点击单条请求展开引擎侧完整详情（请求/响应头与 body）。
  */
 @Composable
@@ -62,16 +62,16 @@ fun NetworkTimelineSheet(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     RuntimeTextButton(onClick = { detailId = null }) {
-                        Text("← 返回", color = MaterialTheme.colorScheme.primary)
+                        Text("← Back", color = MaterialTheme.colorScheme.primary)
                     }
                     Text(
-                        "请求详情",
+                        "Request Details",
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
             } else {
                 Text(
-                    "网络时间线",
+                    "Network Timeline",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -94,12 +94,12 @@ fun NetworkTimelineSheet(
                         Tab(
                             selected = selectedTab == 0,
                             onClick = { selectedTab = 0 },
-                            text = { Text("请求 (${requests.size})", style = MaterialTheme.typography.labelMedium) },
+                            text = { Text("Requests (${requests.size})", style = MaterialTheme.typography.labelMedium) },
                         )
                         Tab(
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 },
-                            text = { Text("Hook 命中 (${hookHits.size})", style = MaterialTheme.typography.labelMedium) },
+                            text = { Text("Hook Hits (${hookHits.size})", style = MaterialTheme.typography.labelMedium) },
                         )
                     }
                     if (selectedTab == 0) {
@@ -115,7 +115,7 @@ fun NetworkTimelineSheet(
         },
         confirmButton = {
             RuntimeTextButton(onClick = onDismiss) {
-                Text("关闭", color = MaterialTheme.colorScheme.primary)
+                Text("Close", color = MaterialTheme.colorScheme.primary)
             }
         },
     )
@@ -126,7 +126,7 @@ fun NetworkTimelineSheet(
 private fun RequestList(requests: List<CapturedRequest>, onClick: (String) -> Unit) {
     if (requests.isEmpty()) {
         Text(
-            "暂无捕获记录。\n导航页面后这里会显示资源请求；安装 hook 规则（browser.hook_create）可捕获 fetch/XHR 的状态码与 body。",
+            "No requests captured yet.\nNavigate to a page to see resource requests here. Install a hook rule (browser.hook_create) to capture fetch/XHR status codes and response bodies.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -200,7 +200,7 @@ private fun RequestRow(req: CapturedRequest, onClick: () -> Unit) {
     }
 }
 
-/** 单条请求详情：引擎 networkDetail 输出的等宽文本（含请求/响应头与 body）。 */
+/** 单条Request Details：引擎 networkDetail 输出的等宽文本（含请求/响应头与 body）。 */
 @Composable
 private fun NetworkDetailBody(detail: String?) {
     Surface(
@@ -229,7 +229,7 @@ private fun NetworkDetailBody(detail: String?) {
 private fun HookHitList(hits: List<HookHitRecord>) {
     if (hits.isEmpty()) {
         Text(
-            "暂无 hook 命中。\n安装 hook 规则（browser.hook_create）后，函数调用、属性访问、WebSocket 与网络规则命中会实时出现在这里。",
+            "No hook hits yet.\nAfter installing a hook rule (browser.hook_create), function calls, property access, WebSocket events, and network-rule matches will appear here in real time.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
