@@ -23,8 +23,8 @@ internal fun phoneTaskHudControls(
         layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
         row.addView(this)
     }
-    val pause = button("暂停")
-    val stop = button("停止")
+    val pause = button("Pause")
+    val stop = button("Stop")
     pause.setOnClickListener {
         registry.get(session)?.let { task ->
             if (task.state.value == PhoneTaskState.PAUSED) task.resume() else task.pause()
@@ -35,7 +35,7 @@ internal fun phoneTaskHudControls(
         while (true) {
             val state = registry.get(session)?.state?.value
             val running = state == PhoneTaskState.RUNNING || state == PhoneTaskState.PAUSED
-            pause.text = if (state == PhoneTaskState.PAUSED) "继续" else "暂停"
+            pause.text = if (state == PhoneTaskState.PAUSED) "Resume" else "Pause"
             pause.contentDescription = pause.text
             pause.isEnabled = running
             stop.isEnabled = running
