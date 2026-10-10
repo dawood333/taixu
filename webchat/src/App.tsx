@@ -547,7 +547,7 @@ export default function App() {
 
   async function deleteWorkspaceItem(item: WorkspaceItem) {
     const label = item.isDirectory ? `Folder “${item.name}” and all its contents` : `File “${item.name}”`;
-    if (!window.confirm(`删除${label}？此操作无法撤销。`)) return;
+    if (!window.confirm(`Delete ${label}? This action cannot be undone.`)) return;
     try {
       await workspaceItemAction({ path: item.path, action: "delete" });
       if (workspaceFilePath === item.path) {
@@ -798,7 +798,7 @@ export default function App() {
           onWorkspaceDelete={(item) => void deleteWorkspaceItem(item)}
         />
 
-        <nav className="mobile-nav" aria-label="Web Chat 区域">
+        <nav className="mobile-nav" aria-label="Web Chat sections">
           {(["chat", "terminal", "workspace"] as MobileSection[]).map((section) => (
             <button
               className={mobileSection === section ? "active" : ""}
@@ -807,14 +807,14 @@ export default function App() {
               key={section}
             >
               <Icon name={MOBILE_SECTION_ICON[section]} size={18} />
-              <span>{{ chat: "智枢", terminal: "Terminal", workspace: "Workspace" }[section]}</span>
+              <span>{{ chat: "Agent Hub", terminal: "Terminal", workspace: "Workspace" }[section]}</span>
             </button>
           ))}
         </nav>
         <button
           className="conversation-scrim"
           type="button"
-          aria-label="关闭对话列表"
+          aria-label="Close conversation list"
           onClick={() => setConversationsOpen(false)}
         />
       </div>
