@@ -120,17 +120,17 @@ fun ToolCenterScreen(
         uri?.let(viewModel::importLocalPlugin)
     }
 
-    // 首次进入引导：高亮顶栏「导入离线插件包」文件夹按钮
+    // 首次进入引导：高亮顶栏「Import offline plugin package」文件夹按钮
     val importGuideShown by viewModel.importGuideShown.collectAsStateWithLifecycle()
     val importAnchor = rememberSpotlightAnchor()
 
     val categories = listOf(
-        "ALL" to "全部生态",
-        "BUNDLES" to "全栈开发套件",
-        "SOURCE_LOCAL" to "本地插件",
-        "SOURCE_REMOTE" to "在线插件",
-        "CODING_AGENT" to "编程助手",
-        "AI_AGENT" to "智能体生态",
+        "ALL" to "All tools",
+        "BUNDLES" to "Full-stack development bundles",
+        "SOURCE_LOCAL" to "Local plugins",
+        "SOURCE_REMOTE" to "Online plugins",
+        "CODING_AGENT" to "Coding assistants",
+        "AI_AGENT" to "Agent ecosystem",
     )
 
     val showBundles = selectedCategory == "ALL" || selectedCategory == "BUNDLES"
@@ -151,14 +151,14 @@ fun ToolCenterScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "插件与工具中心",
-                statusText = "已集成 ${tools.count { it.state == ToolState.INSTALLED.name }} 个已就绪工具",
+                title = "Plugins & Tool Center",
+                statusText = "${tools.count { it.state == ToolState.INSTALLED.name }} tools ready",
                 onBack = onBack,
                 actions = {
                     IconButton(
                         onClick = { importLauncher.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
                         modifier = Modifier.spotlightAnchor(importAnchor),
-                        contentDescription = "导入离线插件包",
+                        contentDescription = "Import offline plugin package",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.FolderOpen,
@@ -172,7 +172,7 @@ fun ToolCenterScreen(
                             viewModel.refreshInstalledStatus()
                         },
                         enabled = !isSyncing,
-                        contentDescription = if (isSyncing) "正在刷新插件目录" else "刷新插件目录",
+                        contentDescription = if (isSyncing) "Refreshing plugin catalog" else "Refresh plugin catalog",
                     ) {
                         if (isSyncing) {
                             RuntimeCircularProgressIndicator(
@@ -277,12 +277,12 @@ fun ToolCenterScreen(
                                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         Text(
                                             text = when (state) {
-                                                is LocalPluginImportState.Reading -> "正在读取本地插件信息"
-                                                is LocalPluginImportState.PendingConfirmation -> "等待确认安装本地插件"
-                                                is LocalPluginImportState.Importing -> "正在安装本地插件"
-                                                is LocalPluginImportState.Succeeded -> "本地插件安装完成"
-                                                is LocalPluginImportState.AlreadyImported -> "插件已导入"
-                                                is LocalPluginImportState.Failed -> "本地插件安装失败"
+                                                is LocalPluginImportState.Reading -> "正在读取Local plugins信息"
+                                                is LocalPluginImportState.PendingConfirmation -> "等待确认InstallLocal plugins"
+                                                is LocalPluginImportState.Importing -> "正在InstallLocal plugins"
+                                                is LocalPluginImportState.Succeeded -> "Local pluginsInstall完成"
+                                                is LocalPluginImportState.AlreadyImported -> "Plugin imported"
+                                                is LocalPluginImportState.Failed -> "Local pluginsInstall失败"
                                                 LocalPluginImportState.Idle -> ""
                                             },
                                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
@@ -290,14 +290,14 @@ fun ToolCenterScreen(
                                         )
                                         Text(
                                             text = when (state) {
-                                                is LocalPluginImportState.Reading -> "${state.fileName}：正在读取 manifest.json，尚未复制或解压插件资源"
-                                                is LocalPluginImportState.PendingConfirmation -> "${state.fileName} 已读取清单，请在弹窗中确认安装"
+                                                is LocalPluginImportState.Reading -> "${state.fileName}: reading manifest.json; plugin assets have not been copied or extracted yet"
+                                                is LocalPluginImportState.PendingConfirmation -> "${state.fileName}: manifest read. Confirm installation in the dialog."
                                                 is LocalPluginImportState.Importing -> {
                                                     val percent = state.progress?.let { " ${(it * 100).toInt()}%" }.orEmpty()
-                                                    "${state.fileName}$percent · ${state.currentEntry ?: "正在解包插件资源"}，大型 ARM64 插件可能需要几分钟，请保持应用打开"
+                                                    "${state.fileName}$percent · ${state.currentEntry ?: "Extracting plugin assets"}，Large ARM64 plugins may take several minutes. Keep the app open."
                                                 }
-                                                is LocalPluginImportState.Succeeded -> "${state.pluginName} v${state.version} 已解压、安装并完成验证"
-                                                is LocalPluginImportState.AlreadyImported -> "${state.pluginName} v${state.version} 已存在，无需重复导入；可在下方插件列表中安装或重试"
+                                                is LocalPluginImportState.Succeeded -> "${state.pluginName} v${state.version} extracted, installed, and verified"
+                                                is LocalPluginImportState.AlreadyImported -> "${state.pluginName} v${state.version} already exists; no need to import it again. Install or retry it from the plugin list below."
                                                 is LocalPluginImportState.Failed -> state.message
                                                 LocalPluginImportState.Idle -> ""
                                             },
@@ -309,7 +309,7 @@ fun ToolCenterScreen(
                                     }
                                     if (!isImporting && !isPending) {
                                         TextButton(onClick = viewModel::clearLocalPluginImportState) {
-                                            Text("关闭", color = contentColor)
+                                            Text("Close", color = contentColor)
                                         }
                                     }
                                 }
@@ -352,12 +352,12 @@ fun ToolCenterScreen(
                                     )
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = if (isInstallingComponents) "后台正在装配开发套件..." else "最近一次开发套件装配",
+                                            text = if (isInstallingComponents) "Installing development bundle in the background..." else "Most recent development bundle installation",
                                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                             color = MaterialTheme.colorScheme.primary,
                                         )
                                         Text(
-                                            text = componentInstallProgress ?: if (isInstallingComponents) "正在执行后台批量装配流水线，你可自由切换到其他页面" else "装配任务已结束，可查看完整日志",
+                                            text = componentInstallProgress ?: if (isInstallingComponents) "Batch installation is running in the background. You can switch to other screens." else "Installation finished. View the full log for details.",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 2,
@@ -374,7 +374,7 @@ fun ToolCenterScreen(
                                     onClick = { showBundleInstallLog = true },
                                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                                 ) {
-                                    Text("查看安装日志", style = MaterialTheme.typography.labelMedium)
+                                    Text("View installation log", style = MaterialTheme.typography.labelMedium)
                                 }
                             }
                         }
@@ -385,7 +385,7 @@ fun ToolCenterScreen(
                 if (showBundles) {
                     item {
                         Text(
-                            text = "开发者全栈套件 (Dev Bundles)",
+                            text = "Full-stack developer bundles",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(bottom = 2.dp),
@@ -460,7 +460,7 @@ fun ToolCenterScreen(
                                                 modifier = Modifier.wrapContentWidth(),
                                             ) {
                                                 Text(
-                                                    text = if (isCoreReady) "已就绪 ($installedCount/${bundle.components.size})" else "未装配 ($installedCount/${bundle.components.size})",
+                                                    text = if (isCoreReady) "Ready ($installedCount/${bundle.components.size})" else "Not installed ($installedCount/${bundle.components.size})",
                                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                                     color = if (isCoreReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -501,7 +501,7 @@ fun ToolCenterScreen(
                                                     RuntimeIcon(RuntimeIconName.Shield, Modifier.size(10.dp), tint = MaterialTheme.colorScheme.primary)
                                                 }
                                                 Text(
-                                                    text = if (comp.isRequired) "${comp.name} (必选)" else comp.name,
+                                                    text = if (comp.isRequired) "${comp.name} (required)" else comp.name,
                                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                                     color = if (isInstalled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                                                 )
@@ -523,7 +523,7 @@ fun ToolCenterScreen(
                                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                             RuntimeIcon(RuntimeIconName.Tune, Modifier.size(14.dp))
                                             Text(
-                                                text = if (isCoreReady) "组件管理与配置" else "装配套件",
+                                                text = if (isCoreReady) "Manage components" else "Install bundle",
                                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                             )
                                         }
@@ -540,7 +540,7 @@ fun ToolCenterScreen(
                         item {
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "智能体生态与服务 (Agents & Services)",
+                                text = "Agent ecosystem与服务 (Agents & Services)",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(bottom = 2.dp),
@@ -565,7 +565,7 @@ fun ToolCenterScreen(
                             onViewLogs = { viewModel.viewLogs(tool.id) },
                             onOpenDetail = { onOpenToolDetail(tool.id) },
                             onStartAiHealing = {
-                                // 与日志弹窗「AI 自愈」入口一致：始终传入该工具的全量日志
+                                // 与Logs弹窗「AI repair」入口一致：始终传入该工具的全量Logs
                                 viewModel.fullToolLogs(tool.id) { logs ->
                                     onStartAiHealing(tool.id, tool.name, logs)
                                 }
@@ -623,26 +623,26 @@ fun ToolCenterScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         RuntimeIcon(RuntimeIconName.Extension, Modifier.size(22.dp), MaterialTheme.colorScheme.primary)
-                        Text("确认安装本地插件", fontWeight = FontWeight.Bold)
+                        Text("确认InstallLocal plugins", fontWeight = FontWeight.Bold)
                     }
                 },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(manifest.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(manifest.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        InfoRow("版本", manifest.version, isCode = false)
-                        InfoRow("来源", "本地插件", isCode = false)
-                        InfoRow("架构", manifest.architectures.joinToString(", "), isCode = false)
-                        InfoRow("包大小", pending.archiveSizeBytes?.let { formatBytes(it) } ?: "未知", isCode = false)
-                        InfoRow("离线模式", if (manifest.offlineOnly) "是（不拉取在线依赖）" else "否", isCode = false)
-                        Text("点击安装后才会解压资源并执行安装脚本；取消不会修改插件目录。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        InfoRow("Version", manifest.version, isCode = false)
+                        InfoRow("Source", "Local plugins", isCode = false)
+                        InfoRow("Architecture", manifest.architectures.joinToString(", "), isCode = false)
+                        InfoRow("Package size", pending.archiveSizeBytes?.let { formatBytes(it) } ?: "Unknown", isCode = false)
+                        InfoRow("Offline mode", if (manifest.offlineOnly) "Yes (do not fetch online dependencies)" else "No", isCode = false)
+                        Text("Assets are extracted and installation scripts run only after you tap Install. Canceling leaves the plugin directory unchanged.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = viewModel::cancelLocalPluginImport) { Text("取消") }
                 },
                 confirmButton = {
-                    Button(onClick = viewModel::confirmLocalPluginImport) { Text("安装") }
+                    Button(onClick = viewModel::confirmLocalPluginImport) { Text("Install") }
                 },
             )
         }
@@ -656,7 +656,7 @@ fun ToolCenterScreen(
 
             RuntimeAlertDialog(
                 onDismissRequest = { viewModel.viewLogs(null) },
-                title = { Text("工具执行日志 ($toolName)") },
+                title = { Text("Tool execution log ($toolName)") },
                 text = {
                     Surface(
                         modifier = Modifier
@@ -674,7 +674,7 @@ fun ToolCenterScreen(
                         ) {
                             if (toolLogs.isEmpty()) {
                                 Text(
-                                    text = "暂无相关事件日志",
+                                    text = "No related event logs",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.outline,
                                 )
@@ -717,7 +717,7 @@ fun ToolCenterScreen(
                                     modifier = Modifier.size(14.dp),
                                 )
                                 Spacer(Modifier.width(4.dp))
-                                Text("🧠 AI 自愈", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                Text("🧠 AI repair", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                             }
                         }
                         TextButton(
@@ -726,20 +726,20 @@ fun ToolCenterScreen(
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                                 val clip = ClipData.newPlainText("tool_logs", fullLogs)
                                 clipboard?.setPrimaryClip(clip)
-                                Toast.makeText(context, "日志已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Log copied to clipboard", Toast.LENGTH_SHORT).show()
                             },
                             enabled = toolLogs.isNotEmpty(),
                         ) {
-                            Text("复制")
+                            Text("Copy")
                         }
                         TextButton(
                             onClick = { viewModel.clearLogs(toolId) },
                             enabled = toolLogs.isNotEmpty(),
                         ) {
-                            Text("清空", color = MaterialTheme.colorScheme.error)
+                            Text("Clear", color = MaterialTheme.colorScheme.error)
                         }
                         TextButton(onClick = { viewModel.viewLogs(null) }) {
-                            Text("关闭")
+                            Text("Close")
                         }
                     }
                 },
@@ -750,7 +750,7 @@ fun ToolCenterScreen(
             val context = androidx.compose.ui.platform.LocalContext.current
             RuntimeAlertDialog(
                 onDismissRequest = { showBundleInstallLog = false },
-                title = { Text("开发套件安装日志") },
+                title = { Text("开发套件InstallLogs") },
                 text = {
                     Surface(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 220.dp, max = 420.dp),
@@ -762,7 +762,7 @@ fun ToolCenterScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             if (componentInstallLog.isEmpty()) {
-                                Text("安装日志正在接收...", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                                Text("InstallLogs正在接收...", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                             } else {
                                 componentInstallLog.forEach { line ->
                                     val isError = line.contains("error", ignoreCase = true) ||
@@ -786,18 +786,18 @@ fun ToolCenterScreen(
                             onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                                 clipboard?.setPrimaryClip(ClipData.newPlainText("TaiXu Bundle Install Log", componentInstallLog.joinToString("\n")))
-                                // 与工具日志复制行为保持一致，复制后给出反馈
-                                Toast.makeText(context, "日志已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                                // 与工具LogsCopy行为保持一致，Copy后给出反馈
+                                Toast.makeText(context, "Log copied to clipboard", Toast.LENGTH_SHORT).show()
                             },
                             enabled = componentInstallLog.isNotEmpty(),
-                        ) { Text("复制") }
-                        TextButton(onClick = { showBundleInstallLog = false }) { Text("关闭") }
+                        ) { Text("Copy") }
+                        TextButton(onClick = { showBundleInstallLog = false }) { Text("Close") }
                     }
                 },
             )
         }
 
-        // 卡片级卸载二次确认（与工具详情页同一弹窗组件）
+        // 卡片级Uninstall二次确认（与工具详情页同一弹窗组件）
         pendingUninstallId?.let { uninstallId ->
             UninstallToolConfirmDialog(
                 toolName = pendingUninstallName.orEmpty(),
@@ -830,13 +830,13 @@ fun ToolCenterScreen(
         }
     }
 
-    // 首次进入引导遮罩：高亮顶栏「导入离线插件包」入口（组件内部等待按钮完成布局测量后才绘制）
+    // 首次进入引导遮罩：高亮顶栏「Import offline plugin package」入口（组件内部等待按钮完成布局测量后才绘制）
     if (!importGuideShown) {
         SpotlightGuideOverlay(
             anchor = importAnchor,
-            title = "导入离线插件包",
-            message = "已从 QQ 群下载好全量离线插件包？点击右上角的文件夹图标，选择 zip 文件即可导入，" +
-                "一次装齐 Android、Flutter、反编译环境，全程无需联网。",
+            title = "Import offline plugin package",
+            message = "Have you downloaded the complete offline plugin package? Tap the folder icon in the top-right and select the ZIP file to import it. " +
+                "Install Android, Flutter, and decompilation tools in one go, without a network connection.",
             icon = RuntimeIconName.FolderOpen,
             onDismiss = viewModel::markImportGuideShown,
         )
@@ -1019,7 +1019,7 @@ private fun ToolCard(
                                 shape = RoundedCornerShape(6.dp),
                             ) {
                                 Text(
-                                    text = if (source == "LOCAL") "本地插件" else "在线插件",
+                                    text = if (source == "LOCAL") "Local plugins" else "Online plugins",
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                     color = if (source == "LOCAL") {
                                         MaterialTheme.colorScheme.onTertiaryContainer
@@ -1035,9 +1035,9 @@ private fun ToolCard(
 
                         Text(
                             text = "${tool.publisher} · ${when (tool.category) {
-                                "CODING_AGENT" -> "编程智能体"
-                                "AI_AGENT" -> "AI 智能体"
-                                "DEVELOPER_TOOL" -> "开发加速包"
+                                "CODING_AGENT" -> "Coding agent"
+                                "AI_AGENT" -> "AI agent"
+                                "DEVELOPER_TOOL" -> "Developer toolkit"
                                 else -> tool.category
                             }}",
                             style = MaterialTheme.typography.labelSmall,
@@ -1053,11 +1053,11 @@ private fun ToolCard(
                 // Status Badge
                 StatusBadge(
                     text = when {
-                        isInstalling -> "安装中"
-                        isUpdateAvailable -> "可更新"
-                        isInstalled -> "已就绪"
-                        isFailed -> "安装失败"
-                        else -> "未安装"
+                        isInstalling -> "Install中"
+                        isUpdateAvailable -> "Update available"
+                        isInstalled -> "Ready"
+                        isFailed -> "Install失败"
+                        else -> "未Install"
                     },
                     color = when {
                         isUpdateAvailable -> MaterialTheme.colorScheme.primary
@@ -1118,7 +1118,7 @@ private fun ToolCard(
 
             // Verification info (if any)
             if (verification != null && !verification.healthy) {
-                NoticeBanner(text = "自检异常: ${verification.detail}", isError = true)
+                NoticeBanner(text = "Self-check failed: ${verification.detail}", isError = true)
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f))
@@ -1139,14 +1139,14 @@ private fun ToolCard(
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                     ) {
-                        Text("详情配置", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
+                        Text("Configure", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, softWrap = false)
                     }
 
                     TextButton(
                         onClick = onViewLogs,
                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                     ) {
-                        Text("日志", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                        Text("Logs", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                     }
 
                     if (isInstalled) {
@@ -1154,7 +1154,7 @@ private fun ToolCard(
                             onClick = onUninstall,
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 4.dp),
                         ) {
-                            Text("卸载", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error, maxLines = 1, softWrap = false)
+                            Text("Uninstall", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error, maxLines = 1, softWrap = false)
                         }
                     }
                 }
@@ -1170,7 +1170,7 @@ private fun ToolCard(
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp),
                         ) {
-                            Text("更新", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                            Text("Update", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         }
                     } else if (isFailed) {
                         Button(
@@ -1183,7 +1183,7 @@ private fun ToolCard(
                                 modifier = Modifier.size(14.dp),
                             )
                             Spacer(Modifier.width(3.dp))
-                            Text("AI 自愈", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                            Text("AI repair", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         }
                         FilledTonalButton(
                             onClick = onInstall,
@@ -1208,7 +1208,7 @@ private fun ToolCard(
                                 modifier = Modifier.size(14.dp),
                             )
                             Spacer(Modifier.width(4.dp))
-                            Text("安装", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                            Text("Install", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         }
                     }
                 }
