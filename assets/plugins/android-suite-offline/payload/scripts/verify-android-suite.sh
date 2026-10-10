@@ -29,9 +29,9 @@ require_executable /opt/taixu/bin/javac
 require_executable /opt/taixu/bin/gradle
 require_executable /opt/taixu/bin/cmake
 require_executable /opt/taixu/bin/ninja
-# 静态断言先于任何 -version 执行：java 启动器若被换成包装脚本并与软链
-# 形成回环，require_command 会挂死在无限 exec 上；先用 ELF 魔数拦下。
-# od 会跟随软链，符号链接链最终必须落在 JDK 的 AArch64 ELF 上。
+# Run static assertions before any -version command: if the java launcher is replaced by a wrapper script and symlinks
+# form a loop, require_command can hang in an infinite exec cycle; detect this first using the ELF magic bytes.
+# od follows symlinks; the resolved symlink chain must end at the JDK's AArch64 ELF binary.
 require_aarch64 /opt/taixu/bin/java
 require_aarch64 /opt/taixu/bin/javac
 require_file /opt/android-sdk/platforms/android-34/android.jar
@@ -46,7 +46,7 @@ require_executable /opt/taixu/bin/adb
 if is_aarch64_elf /opt/taixu/bin/adb; then
     :
 else
-    # /opt/taixu/bin/adb 为智能连接包装脚本，校验底层真实 ELF
+    # /opt/taixu/bin/adb is a smart-connection wrapper; verify the underlying real ELF binary.
     REAL_ADB="${TAIXU_TOOL_DIR:-/opt/taixu/tools/android-suite-offline}/bin/adb"
     test -x "$REAL_ADB" || REAL_ADB="/opt/android-sdk/platform-tools/adb"
     require_executable "$REAL_ADB"
