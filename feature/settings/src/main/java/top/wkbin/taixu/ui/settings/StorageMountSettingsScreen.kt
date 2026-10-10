@@ -186,7 +186,7 @@ fun StorageMountSettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                "点击上方“Add mount”将 Android 目录映射进 Linux 沙箱（仅终端 / 智枢 / 构建可见）",
+                                "Tap Add Mount above to map an Android directory into the Linux sandbox (visible only to the terminal, Agent, and build tasks)",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -271,7 +271,7 @@ fun StorageMountSettingsScreen(
             onDismissRequest = { pendingDeleteBindingId = null },
             title = { Text("Delete mount", fontWeight = FontWeight.Bold) },
             text = {
-                Text("确定要Delete mount「${binding.name}」（${binding.hostPath} ➔ ${binding.guestPath}）吗？删除后新建的终端 / 构建任务将不再映射该目录。")
+                Text("Delete mount “${binding.name}” (${binding.hostPath} ➔ ${binding.guestPath})? Newly created terminal sessions and build tasks will no longer mount this directory.")
             },
             confirmButton = {
                 Button(
