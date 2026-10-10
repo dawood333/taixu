@@ -41,24 +41,24 @@ export function ContextPane({
   return (
     <aside className="context-pane">
       <div className="mobile-context-header">
-        <button className="appbar-icon" type="button" aria-label="打开对话列表" onClick={onOpenConversations}>
+        <button className="appbar-icon" type="button" aria-label="Open conversation list" onClick={onOpenConversations}>
           <Icon name="menu" size={20} />
         </button>
-        <strong>Linux 工作区</strong>
+        <strong>Linux workspace</strong>
         <span />
       </div>
 
       <section id="workspace-panel" className="context-panel active">
         <header className="context-header">
           <div>
-            <strong>Linux 工作区</strong>
+            <strong>Linux workspace</strong>
             <button className="path-button" type="button" title={workspacePath} onClick={onWorkspacePath}>
               {workspacePath || "/workspace"}
             </button>
           </div>
           <div className="header-actions">
-            <label className="quiet-button" title="上传文件到当前目录">
-              <Icon name="upload" size={14} /><span>上传</span>
+            <label className="quiet-button" title="Upload a file to the current directory">
+              <Icon name="upload" size={14} /><span>Upload</span>
               <input
                 type="file"
                 multiple
@@ -69,31 +69,31 @@ export function ContextPane({
                 }}
               />
             </label>
-            <button className="quiet-button" type="button" title="新建文件" onClick={() => onWorkspaceCreate("file")}>
+            <button className="quiet-button" type="button" title="Create file" onClick={() => onWorkspaceCreate("file")}>
               <Icon name="file" size={14} />
             </button>
-            <button className="quiet-button" type="button" title="新建文件夹" onClick={() => onWorkspaceCreate("dir")}>
+            <button className="quiet-button" type="button" title="Create file夹" onClick={() => onWorkspaceCreate("dir")}>
               <Icon name="folder" size={14} />
             </button>
             {workspaceFilePath && (
-              <a className="quiet-link" href={workspaceDownloadUrl(workspaceFilePath)} title="下载文件">
-                <Icon name="download" size={15} /><span>下载</span>
+              <a className="quiet-link" href={workspaceDownloadUrl(workspaceFilePath)} title="Download file">
+                <Icon name="download" size={15} /><span>Download</span>
               </a>
             )}
             <button className="quiet-button" type="button" onClick={onWorkspaceRefresh}>
-              <Icon name="refresh" size={14} /><span>刷新</span>
+              <Icon name="refresh" size={14} /><span>Refresh</span>
             </button>
             <button
               className="primary-small-button"
               type="button"
               disabled={!workspaceDirty || !workspaceFilePath}
               onClick={onWorkspaceSave}
-            ><Icon name="save" size={14} /><span>保存</span></button>
+            ><Icon name="save" size={14} /><span>Save</span></button>
           </div>
         </header>
         <div className="workspace-layout">
           <div className="workspace-list">
-            {!workspaceItems.length && <div className="list-empty">当前工作区为空</div>}
+            {!workspaceItems.length && <div className="list-empty">The current workspace is empty</div>}
             {workspaceItems.map((item) => (
               <div className={`workspace-item-row${item.path === workspaceFilePath ? " active" : ""}`} key={item.path}>
                 <button className="workspace-item" type="button" onClick={() => onWorkspaceItem(item)}>
@@ -101,17 +101,17 @@ export function ContextPane({
                   <span>{item.name}</span>
                   <small>{item.isDirectory ? "" : formatBytes(item.size)}</small>
                 </button>
-                <button className="item-action" type="button" title="重命名" onClick={() => onWorkspaceRename(item)}>
+                <button className="item-action" type="button" title="Rename" onClick={() => onWorkspaceRename(item)}>
                   <Icon name="pencil" size={13} />
                 </button>
-                <button className="item-action danger" type="button" title="删除" onClick={() => onWorkspaceDelete(item)}>
+                <button className="item-action danger" type="button" title="Delete" onClick={() => onWorkspaceDelete(item)}>
                   <Icon name="trash" size={13} />
                 </button>
               </div>
             ))}
           </div>
           <div className="workspace-editor-wrap">
-            <p>{workspaceFilePath || "选择文件以查看或编辑"}</p>
+            <p>{workspaceFilePath || "Select a file to view or edit"}</p>
             <textarea
               id="workspace-editor"
               spellCheck={false}
