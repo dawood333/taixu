@@ -11,7 +11,7 @@ internal object WorkspaceAtomicWriter {
     fun write(file: File, writeContent: (File) -> Unit) {
         val target = file.canonicalFile
         val parent = requireNotNull(target.parentFile)
-        check(parent.isDirectory || parent.mkdirs()) { "无法创建父目录" }
+        check(parent.isDirectory || parent.mkdirs()) { "Unable to create parent directory" }
         val permissions = if (target.exists()) {
             Files.getFileAttributeView(target.toPath(), PosixFileAttributeView::class.java)
                 ?.readAttributes()?.permissions()
