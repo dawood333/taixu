@@ -331,8 +331,8 @@ class HostCapabilityToolBackend(
                 append(app.label).append(" | ").append(app.packageName)
                 append(" | ").append(if (app.isSystemApp) "System" else "User")
                 append(" | ").append(if (app.isEnabled) "Enabled" else "Disabled")
-                if (app.isSuspended) append(" | 冻结")
-                if (app.isNetworkRestricted) append(" | 后台联网受限")
+                if (app.isSuspended) append(" | Frozen")
+                if (app.isNetworkRestricted) append(" | Background network restricted")
             }
         }
     }
@@ -345,13 +345,13 @@ class HostCapabilityToolBackend(
 
     private fun requireSettingsNamespace(args: JsonObject): String {
         val namespace = JsonArgs.requireString(args, "namespace").trim().lowercase()
-        require(namespace in setOf("system", "secure", "global")) { "namespace 仅支持 system/secure/global" }
+        require(namespace in setOf("system", "secure", "global")) { "namespace supports only system/secure/global" }
         return namespace
     }
 
     private fun requireHostIdentifier(args: JsonObject, key: String, pattern: Regex): String {
         val value = JsonArgs.requireString(args, key).trim()
-        require(pattern.matches(value)) { "$key 格式不合法" }
+        require(pattern.matches(value)) { "Invalid format for $key" }
         return value
     }
 
