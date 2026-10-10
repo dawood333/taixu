@@ -251,7 +251,7 @@ export function TerminalPane({ active }: TerminalPaneProps) {
       <div className="terminal-host" ref={containerRef} />
       {!terminals.length && (
         <div className="terminal-empty">
-          <p>还没有Remote terminal会话</p>
+          <p>No remote terminal sessions yet</p>
           <button className="primary-small-button" type="button" onClick={() => void handleCreate()}>
             <Icon name="plus" size={14} /><span>Start the first terminal</span>
           </button>
