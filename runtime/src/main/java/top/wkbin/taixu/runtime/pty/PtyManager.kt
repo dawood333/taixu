@@ -77,7 +77,7 @@ class NativePtyManager(
         cleanup: suspend () -> Unit,
     ): LinuxSession {
         if (!NativePty.tryLoad()) {
-            throw IllegalStateException("JNI forkpty 后端不可用，请使用兼容后端")
+            throw IllegalStateException("JNI forkpty backend is unavailable; use the compatibility backend")
         }
         return NativePtySession(command, hostEnvironment, config, cleanup)
     }
