@@ -192,7 +192,7 @@ private fun validateAndBuild(
     workspacePath: String,
     modelId: String,
 ): Result<WorkflowScheduleEntity> {
-    if (name.isBlank()) return Result.failure(IllegalArgumentException("请填写Schedule name"))
+    if (name.isBlank()) return Result.failure(IllegalArgumentException("Enter a schedule name"))
     if (definitions.none { it.id == workflowId }) return Result.failure(IllegalArgumentException("Select…Workflow"))
     val variables = parseVariables(variablesText).fold(
         onSuccess = { it },
@@ -201,16 +201,16 @@ private fun validateAndBuild(
     val now = System.currentTimeMillis()
     return when (repeat) {
         WorkflowScheduleRepeat.DAILY -> {
-            val h = hour.toIntOrNull() ?: return Result.failure(IllegalArgumentException("时必须是数字"))
-            val m = minute.toIntOrNull() ?: return Result.failure(IllegalArgumentException("分必须是数字"))
-            if (h !in 0..23 || m !in 0..59) return Result.failure(IllegalArgumentException("时刻超出范围"))
+            val h = hour.toIntOrNull() ?: return Result.failure(IllegalArgumentException("Hour must be a number"))
+            val m = minute.toIntOrNull() ?: return Result.failure(IllegalArgumentException("Minute must be a number"))
+            if (h !in 0..23 || m !in 0..59) return Result.failure(IllegalArgumentException("Time is out of range"))
             Result.success(buildEntity(existing, name, workflowId, repeat, h, m, null, null, variables, workspacePath, modelId, now))
         }
         WorkflowScheduleRepeat.INTERVAL -> {
             val minutes = intervalMinutes.toIntOrNull()
-                ?: return Result.failure(IllegalArgumentException("间隔必须是数字"))
+                ?: return Result.failure(IllegalArgumentException("Interval must be a number"))
             if (minutes < WorkflowScheduleRepository.MIN_INTERVAL_MINUTES) {
-                return Result.failure(IllegalArgumentException("间隔至少 ${WorkflowScheduleRepository.MIN_INTERVAL_MINUTES} 分钟"))
+                return Result.failure(IllegalArgumentException("Interval must be at least ${WorkflowScheduleRepository.MIN_INTERVAL_MINUTES} minutes"))
             }
             Result.success(buildEntity(existing, name, workflowId, repeat, null, null, minutes, null, variables, workspacePath, modelId, now))
         }
@@ -220,8 +220,8 @@ private fun validateAndBuild(
                 parser.parse(onceAt.trim())?.time
             } catch (_: ParseException) {
                 null
-            } ?: return Result.failure(IllegalArgumentException("触发时间格式应为 yyyy-MM-dd HH:mm"))
-            if (target <= now) return Result.failure(IllegalArgumentException("触发时间必须晚于当前时刻"))
+            } ?: return Result.failure(IllegalArgumentException("Trigger time must use the format yyyy-MM-dd HH:mm"))
+            if (target <= now) return Result.failure(IllegalArgumentException("Trigger time must be in the future"))
             Result.success(buildEntity(existing, name, workflowId, repeat, null, null, null, target, variables, workspacePath, modelId, now))
         }
     }
@@ -265,7 +265,7 @@ private fun parseVariables(text: String): Result<Map<String, String>> {
     text.lines().forEach { raw ->
         val line = raw.trim().takeIf { it.isNotEmpty() } ?: return@forEach
         val index = line.indexOf('=')
-        if (index <= 0) return Result.failure(IllegalArgumentException("变量行格式错误：$line"))
+        if (index <= 0) return Result.failure(IllegalArgumentException("Invalid variable line format: $line"))
         map[line.substring(0, index).trim()] = line.substring(index + 1).trim()
     }
     return Result.success(map)
