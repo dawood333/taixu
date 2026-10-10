@@ -11,7 +11,7 @@ internal fun retainLatestImages(messages: List<ApiMessage>, keep: Int = 1): List
         if (index !in drop) message
         else message.copy(
             imageUrls = emptyList(),
-            content = message.content.orEmpty() + "\n[历史图片已省略，只保留最近的画面后重试。]",
+            content = message.content.orEmpty() + "\n[Previous images omitted; retry with only the most recent image.]",
         )
     }
 }
@@ -27,6 +27,6 @@ internal suspend fun stripEmptyResponseImages(
     if (attempt != maxRetries) return messages
     val pending = messages.sumOf { it.imageUrls.size }
     if (pending <= 1) return messages
-    logger.log(sessionId, "EmptyResponseImageStrip", "连续空响应，请求含 $pending 张图片，只保留最近 1 张后重试", error)
+    logger.log(sessionId, "EmptyResponseImageStrip", "Repeated empty responses for a request with $pending images; retrying with only the most recent image", error)
     return retainLatestImages(messages, keep = 1)
 }
