@@ -16,7 +16,7 @@ export function diffLines(before: string, after: string): DiffRow[] {
     const rows: DiffRow[] = [];
     for (const text of left.slice(0, MAX_DIFF_LINES)) rows.push({ kind: "del", text });
     for (const text of right.slice(0, MAX_DIFF_LINES)) rows.push({ kind: "add", text });
-    rows.push({ kind: "same", text: `… 内容过长，仅显示前 ${MAX_DIFF_LINES} 行 …` });
+    rows.push({ kind: "same", text: `… Content too long; showing only the first ${MAX_DIFF_LINES} lines …` });
     return rows;
   }
 
