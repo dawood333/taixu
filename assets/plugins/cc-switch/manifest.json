@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "id": "cc-switch",
-  "name": "CC-Switch 智能体中枢",
-  "description": "Claude Code、OpenClaw、Hermes Agent 与 Codex 统一多模型切源、版本管理与本地协议代理中枢",
+  "name": "CC-Switch Agent Hub",
+  "description": "Unified multi-model provider switching, version management, and local protocol proxying for Claude Code, OpenClaw, Hermes Agent, and Codex",
   "version": "1.0.0",
   "latestVersion": "1.0.0",
   "publisher": "TaiXu Ecosystem",
