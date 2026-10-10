@@ -108,7 +108,7 @@ class WorkspaceViewModel(
             _busy.value = true
             runCatching {
                 val input = requireNotNull(context.contentResolver.openInputStream(Uri.parse(uri))) {
-                    "无法读取模板文件"
+                    "Unable to read template file"
                 }
                 input.use(projectTemplateStore::importZip)
             }.onSuccess { template ->
@@ -127,7 +127,7 @@ class WorkspaceViewModel(
             _busy.value = true
             runCatching {
                 val output = requireNotNull(context.contentResolver.openOutputStream(Uri.parse(uri), "wt")) {
-                    "无法创建模板文件"
+                    "Unable to create template file"
                 }
                 output.use { projectTemplateStore.exportZip(id, it) }
             }.onSuccess {
@@ -158,8 +158,8 @@ class WorkspaceViewModel(
             _templateScriptPreview.value = runCatching {
                 projectTemplateStore.hookScripts(id).joinToString("\n\n") { (path, script) ->
                     "===== $path =====\n$script"
-                }.ifBlank { "该模板没有构造脚本" }
-            }.getOrElse { error -> "读取脚本失败：${error.message.orEmpty()}" }
+                }.ifBlank { "This template has no build script" }
+            }.getOrElse { error -> "Failed to read script:${error.message.orEmpty()}" }
         }
     }
 
