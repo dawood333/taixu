@@ -53,18 +53,18 @@ data class StorageMountBinding(
         }
 
         /**
-         * 返回绑定的第一个校验错误（人类可读中文），null 表示合法。
+         * 返回绑定的第一个校验错误（human-readable message），null 表示合法。
          * 供 PRoot 命令构建前的安全校验、运行时过滤脏数据、设置页保存/展示共用，
          * 保证三处规则永不漂移。
          */
         fun validationError(binding: StorageMountBinding): String? {
-            if (':' in binding.hostPath || '\u0000' in binding.hostPath) return "宿主挂载路径包含非法字符"
-            if (':' in binding.guestPath || '\u0000' in binding.guestPath) return "容器挂载路径包含非法字符"
-            if (!binding.guestPath.startsWith('/')) return "容器挂载路径必须是绝对路径"
+            if (':' in binding.hostPath || '\u0000' in binding.hostPath) return "Host mount path contains invalid characters"
+            if (':' in binding.guestPath || '\u0000' in binding.guestPath) return "Container mount path contains invalid characters"
+            if (!binding.guestPath.startsWith('/')) return "Container mount path must be absolute"
             val segments = binding.guestPath.split('/').filter { it.isNotBlank() && it != "." }
-            if (segments.any { it == ".." }) return "容器挂载路径不允许包含 .."
-            if (!isGuestPathAllowed(binding.guestPath)) return "容器挂载仅允许位于 /mnt 或 /sdcard 内"
-            if (!isHostPathAllowed(binding.hostPath)) return "宿主挂载仅允许位于 $SHARED_STORAGE_ROOT 内"
+            if (segments.any { it == ".." }) return "Container mount path must not contain .."
+            if (!isGuestPathAllowed(binding.guestPath)) return "Container mounts are allowed only under /mnt or /sdcard"
+            if (!isHostPathAllowed(binding.hostPath)) return "Host mounts are allowed only under $SHARED_STORAGE_ROOT"
             return null
         }
     }
