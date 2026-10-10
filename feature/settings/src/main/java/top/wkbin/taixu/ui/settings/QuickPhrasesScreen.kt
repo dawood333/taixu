@@ -491,17 +491,17 @@ private fun QuickPhraseEditorDialog(
     )
 
     val projectTypeOptions = listOf(
-        null to "General（所有会话可见）",
-        "ANDROID" to "Android 工程专属",
-        "FLUTTER" to "Flutter 工程专属",
-        "REVERSE" to "Reverse engineering专属",
+        null to "General (visible in all sessions)",
+        "ANDROID" to "Android projects only",
+        "FLUTTER" to "Flutter projects only",
+        "REVERSE" to "Reverse engineering projects only",
     )
 
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (phrase == null) "Add quick phrase" else "Edit快捷短语",
+                text = if (phrase == null) "Add quick phrase" else "Edit quick phrase",
                 fontWeight = FontWeight.Bold,
             )
         },
@@ -516,8 +516,8 @@ private fun QuickPhraseEditorDialog(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("短语Title") },
-                    placeholder = { Text("例如：运行代码 / 代码审查") },
+                    label = { Text("Phrase title") },
+                    placeholder = { Text("e.g. Run code / Review code") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -525,8 +525,8 @@ private fun QuickPhraseEditorDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("简短说明（可选）") },
-                    placeholder = { Text("例如：执行当前工作区的单元测试") },
+                    label = { Text("Short description (optional)") },
+                    placeholder = { Text("e.g. Run unit tests in the current workspace") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -534,8 +534,8 @@ private fun QuickPhraseEditorDialog(
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
-                    label = { Text("提示词 / 命令模板") },
-                    placeholder = { Text("输入要自动填入或触发的指令/Prompt...") },
+                    label = { Text("Prompt / command template") },
+                    placeholder = { Text("Enter the command or prompt to insert or trigger automatically…") },
                     minLines = 3,
                     maxLines = 8,
                     modifier = Modifier.fillMaxWidth(),
@@ -550,7 +550,7 @@ private fun QuickPhraseEditorDialog(
                         value = projectTypeOptions.firstOrNull { it.first == targetProjectType }?.second ?: "General",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("适用工程类型") },
+                        label = { Text("Applicable project type") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(projectTypeDropdownExpanded) },
                         modifier = Modifier
                             .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
@@ -573,7 +573,7 @@ private fun QuickPhraseEditorDialog(
                 }
 
                 // 图标选择器
-                Text("选择图标：", style = MaterialTheme.typography.labelMedium)
+                Text("Choose an icon:", style = MaterialTheme.typography.labelMedium)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
