@@ -108,7 +108,7 @@ import top.wkbin.taixu.runtime.DistributionCatalog
 // 悬浮玻璃底栏实际占高 = 上下 8dp padding + 64dp 条体 = 80dp，留 2dp 微缝防贴死
 private val AgentBottomBarHeight = 82.dp
 
-// 浏览器 URL 栏贴合版：与底栏总占位一致（8 + 64 + 8 = 80dp），零缝隙直接贴在底栏上方
+// Browser URL 栏贴合版：与底栏总占位一致（8 + 64 + 8 = 80dp），零缝隙直接贴在底栏上方
 private val BrowserBottomBarHeight = 80.dp
 
 /** 会改动工作区文件的工具：这些工具执行后「仓库」入口按需高亮提示新改动 */
@@ -379,9 +379,9 @@ fun ChatScreen(
         if (opened != null && opened.sessionId != currentSessionId) viewModel.closeSubagentResult()
     }
 
-    // 模型·权限·主线·轮次 工具条：单栏浏览器分页模式下随对话页一起滑走（浏览器页全屏），
+    // 模型·权限·主线·轮次 工具条：单栏Browser分页模式下随对话页一起滑走（Browser页全屏），
     // 双栏/纯对话模式固定在顶部。提出为局部 lambda 避免三处重复传参。
-    // onOpenBrowser 非空时工具条末尾追加"浏览器"入口（agent 有新动态时高亮）。
+    // onOpenBrowser 非空时工具条末尾追加"Browser"入口（agent 有新动态时高亮）。
     // onOpenRepository 非空即追加"仓库"入口（Git 分支管理）；未绑定项目时点击给提示而非隐藏。
     val noProjectHint = stringResource(R.string.chat_repository_no_project)
     var toolchainGap by remember { mutableStateOf(false) }; var showToolchainPanel by remember { mutableStateOf(false) }
@@ -540,7 +540,7 @@ fun ChatScreen(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                     )
 
-                    // 右栏：实时演武终端 (Terminal) / 浏览器联动视窗（可切换）
+                    // 右栏：实时演武Terminal (Terminal) / Browser联动视窗（可切换）
                     var rightPaneBrowser by rememberSaveable { mutableStateOf(false) }
                     Box(
                         modifier = Modifier
@@ -565,7 +565,7 @@ fun ChatScreen(
                                 ) {
                                     TextButton(onClick = { rightPaneBrowser = false }) {
                                         Text(
-                                            "终端",
+                                            "Terminal",
                                             fontWeight = if (rightPaneBrowser) FontWeight.Normal else FontWeight.Bold,
                                             color = if (rightPaneBrowser) {
                                                 MaterialTheme.colorScheme.onSurfaceVariant
@@ -576,7 +576,7 @@ fun ChatScreen(
                                     }
                                     TextButton(onClick = { rightPaneBrowser = true }) {
                                         Text(
-                                            "浏览器",
+                                            "Browser",
                                             fontWeight = if (rightPaneBrowser) FontWeight.Bold else FontWeight.Normal,
                                             color = if (rightPaneBrowser) {
                                                 MaterialTheme.colorScheme.primary
@@ -607,7 +607,7 @@ fun ChatScreen(
                 LaunchedEffect(pagerState.currentPage, browserActivityTick) {
                     if (pagerState.currentPage == 1) lastSeenBrowserTick = browserActivityTick
                 }
-                // 浏览器页系统返回：优先回退 WebView 历史，耗尽后切回对话页
+                // Browser页系统返回：优先回退 WebView 历史，耗尽后切回对话页
                 BackHandler(enabled = pagerState.currentPage == 1) {
                     if (browserBackPressed?.invoke() != true) {
                         coroutineScope.launch { pagerState.scrollToPage(0) }
@@ -616,7 +616,7 @@ fun ChatScreen(
                 Box(modifier = Modifier.fillMaxSize()) {
                     HorizontalPager(state = pagerState, userScrollEnabled = false) { page ->
                         if (page == 0) {
-                            // 对话页：顶部工具条（模型·权限·主线·轮次·浏览器）属于对话的一部分。
+                            // 对话页：顶部工具条（模型·权限·主线·轮次·Browser）属于对话的一部分。
                             Column(modifier = Modifier.fillMaxSize()) {
                                 chatTopBar(
                                     {
@@ -633,7 +633,7 @@ fun ChatScreen(
                                 )
                             }
                         } else {
-                            // 浏览器页：全屏，仅保留自己的极薄状态栏（末尾带"返回对话"）+ URL 栏；
+                            // Browser页：全屏，仅保留自己的极薄状态栏（末尾带"返回对话"）+ URL 栏；
                             // 底部用贴合版 insets（无呼吸空间），URL 栏直接贴在底部导航栏上方
                             Box(
                                 Modifier
@@ -1226,7 +1226,7 @@ private fun ProactiveWorkflowBanner(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                         modifier = Modifier.height(28.dp),
                     ) {
-                        Text("运行", style = MaterialTheme.typography.labelSmall)
+                        Text("Run", style = MaterialTheme.typography.labelSmall)
                     }
                     IconButton(
                         onClick = { onDismiss(suggestion.workflowId) },
