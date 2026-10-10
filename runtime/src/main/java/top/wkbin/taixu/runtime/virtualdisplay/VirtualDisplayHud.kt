@@ -69,18 +69,18 @@ object VirtualDisplayHud {
         private set
 
     /** 标题栏上的当前步骤。窗口还没挂上时先记着，挂上后写进去。 */
-    private var stepText: String = "等待操作"
+    private var stepText: String = "Waiting for action"
     private var statusView: TextView? = null
 
     /** 把当前做到哪一步写到悬浮窗标题上，用户不用翻聊天记录也能看到。 */
     fun setStep(step: String) {
-        val text = step.trim().ifBlank { "等待操作" }
+        val text = step.trim().ifBlank { "Waiting for action" }
         stepText = text
         mainHandler.post { statusView?.text = titleFor(showingSessionId, text) }
     }
 
     private fun titleFor(sessionId: String?, step: String): String =
-        "虚拟屏 · ${sessionId.orEmpty()} · $step"
+        "Virtual screen · ${sessionId.orEmpty()} · $step"
 
     /**
      * 显示指定会话的虚拟屏悬浮窗。
@@ -89,7 +89,7 @@ object VirtualDisplayHud {
     @Synchronized
     fun show(context: Context, sessionId: String, coordinator: VirtualDisplayCoordinator) {
         if (showingSessionId == sessionId && rootView != null) {
-            ShowerLog.d(TAG, "show: 悬浮窗已在展示 session=$sessionId")
+            ShowerLog.d(TAG, "show: overlay already visible for session=$sessionId")
             return
         }
         hide()
@@ -97,11 +97,11 @@ object VirtualDisplayHud {
         val appContext = context.applicationContext
         mainHandler.post {
             if (generation.get() != gen) {
-                ShowerLog.d(TAG, "show: 丢弃迟到的挂载请求（已被 hide 或新一轮 show 取代）")
+                ShowerLog.d(TAG, "show: discarding late attach request (superseded by hide or a newer show)")
                 return@post
             }
             runCatching { attach(appContext, sessionId, coordinator) }
-                .onFailure { ShowerLog.e(TAG, "show: 悬浮窗挂载失败", it) }
+                .onFailure { ShowerLog.e(TAG, "show: failed to attach overlay", it) }
         }
     }
 
@@ -118,7 +118,7 @@ object VirtualDisplayHud {
         mainHandler.post {
             runCatching {
                 windowManager?.removeView(view)
-            }.onFailure { ShowerLog.w(TAG, "hide: 移除悬浮窗失败（可能已随窗口销毁）: ${it.message}") }
+            }.onFailure { ShowerLog.w(TAG, "hide: failed to remove overlay (the window may already be destroyed): ${it.message}") }
             windowManager = null
         }
     }
@@ -163,7 +163,7 @@ object VirtualDisplayHud {
             setTextColor(Color.parseColor("#AAAAAA"))
             textSize = 14f
             setPadding(px(12), px(4), px(12), px(4))
-            contentDescription = "停止任务并隐藏虚拟屏"
+            contentDescription = "Stop task and hide virtual screen"
             setOnClickListener { coordinator.phoneTasks.cancel(sessionId); hide() }
         }
         titleBar.addView(title)
@@ -207,7 +207,7 @@ object VirtualDisplayHud {
             forwardScopeSupplier = { scope }
             onManualTouch = {
                 coordinator.phoneTasks.pause(sessionId, manual = true)
-                setStep("人工操作中 · 点继续后重新观察")
+                setStep("Manual interaction in progress · tap Resume to inspect again")
             }
         }
 
@@ -278,6 +278,6 @@ object VirtualDisplayHud {
         windowManager = wm
         rootView = root
         showingSessionId = sessionId
-        ShowerLog.d(TAG, "attach: 悬浮窗已挂载 session=$sessionId")
+        ShowerLog.d(TAG, "attach: overlay attached for session=$sessionId")
     }
 }
