@@ -76,9 +76,9 @@ import top.wkbin.taixu.core.model.CcSwitchDaemonStatus
  * - Claude Code / OpenClaw / Hermes / Codex 矩阵管理
  * - 一键热切换各 Agent 的 Provider（支持从太墟本地模型库同步）
  * - 版本查看与一键升降级
- * - 实时安装与编译构建日志监视（支持Copy全量报错）
+ * - 实时Install与编译构建日志监视（支持Copy全量报错）
  * - Token 记账与反向代理状态监控
- * - 原生 PTY 终端拉起与系统外部浏览器 Web 控制台访问
+ * - 原生 PTY 终端拉起与系统外部浏览器 Web Console访问
  */
 @Composable
 fun CcSwitchScreen(
@@ -269,7 +269,7 @@ fun CcSwitchScreen(
         )
     }
 
-    // 版本管理 / 升级弹窗
+    // 版本管理 / Upgrade弹窗
     state.upgradingAgent?.let { agent ->
         UpgradeVersionDialog(
             agent = agent,
@@ -278,7 +278,7 @@ fun CcSwitchScreen(
         )
     }
 
-    // 安装与构建实时日志弹窗
+    // Install与构建实时日志弹窗
     if (state.showLogDialog) {
         InstallLogDialog(
             agentName = state.logAgentTitle,
@@ -288,7 +288,7 @@ fun CcSwitchScreen(
             onDismiss = { viewModel.dismissInstallLogs() },
             onClear = { viewModel.clearInstallLogs() },
             onCopy = { logsText ->
-                copyText(context, logsText, "已复制完整Installation log (${state.installLogs.size} 行)")
+                copyText(context, logsText, "Copied full installation log (${state.installLogs.size} lines)")
             },
         )
     }
@@ -365,7 +365,7 @@ private fun DaemonServiceCard(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Web 控制台凭据区域（完全扁平化，去除卡片套卡片）
+            // Web Console凭据区域（完全扁平化，去除卡片套卡片）
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -415,7 +415,7 @@ private fun DaemonServiceCard(
             }
 
             Text(
-                text = "💡 外部浏览器访问提示登录时输入上方账号密码即可",
+                text = "💡 If the external browser asks you to sign in, use the username and password above",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
             )
@@ -436,7 +436,7 @@ private fun DaemonServiceCard(
                     RuntimeIcon(name = RuntimeIconName.Refresh, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
-                        text = "重启",
+                        text = "Restart",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                         maxLines = 1,
                         softWrap = false,
@@ -451,7 +451,7 @@ private fun DaemonServiceCard(
                     RuntimeIcon(name = RuntimeIconName.Close, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
-                        text = "停止",
+                        text = "Stop",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                         maxLines = 1,
                         softWrap = false,
@@ -460,7 +460,7 @@ private fun DaemonServiceCard(
                 RuntimeButton(
                     onClick = {
                         val creds = "${state.webUsername} / ${state.webPassword}"
-                        copyText(context, creds, "已复制登录凭据: $creds")
+                        copyText(context, creds, "Login credentials copied: $creds")
                         onOpenWebConsole()
                     },
                     modifier = Modifier.weight(1f),
@@ -469,7 +469,7 @@ private fun DaemonServiceCard(
                     RuntimeIcon(name = RuntimeIconName.OpenInNew, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
-                        text = "控制台",
+                        text = "Console",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                         maxLines = 1,
                         softWrap = false,
@@ -489,7 +489,7 @@ private fun DaemonServiceCard(
                     RuntimeIcon(name = RuntimeIconName.Play, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-                Text("启动中枢服务 (Port ${state.servicePort})")
+                Text("Start hub service (port ${state.servicePort})")
             }
         }
     }
@@ -509,12 +509,12 @@ private fun TokenUsageCard(daemon: CcSwitchDaemonStatus) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "今日反代 Token 记账",
+                text = "Today's proxy token usage",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "${daemon.todayTokens.requestCount} 次请求",
+                text = "${daemon.todayTokens.requestCount} requests",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -525,15 +525,15 @@ private fun TokenUsageCard(daemon: CcSwitchDaemonStatus) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column {
-                Text("输入 Token", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Input tokens", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${daemon.todayTokens.promptTokens}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             Column {
-                Text("输出 Token", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Output tokens", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${daemon.todayTokens.completionTokens}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             Column {
-                Text("总消耗 Tokens", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Total tokens used", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${daemon.todayTokens.totalTokens}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
         }
@@ -641,7 +641,7 @@ private fun AgentCard(
                 when {
                     !isDaemonRunning -> {
                         StatusBadge(
-                            text = "未运行",
+                            text = "Not running",
                             color = MaterialTheme.colorScheme.outline,
                         )
                     }
@@ -650,7 +650,7 @@ private fun AgentCard(
                             RuntimeCircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "检测中",
+                                text = "Checking",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -663,7 +663,7 @@ private fun AgentCard(
                         ) {
                             RuntimeCircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 1.5.dp)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("安装中", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                            Text("Installing", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         }
                     }
                     !agent.installed -> {
@@ -674,7 +674,7 @@ private fun AgentCard(
                         ) {
                             RuntimeIcon(name = RuntimeIconName.Download, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("安装", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                            Text("Install", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         }
                     }
                     agent.hasUpdate -> {
@@ -685,12 +685,12 @@ private fun AgentCard(
                         ) {
                             RuntimeIcon(name = RuntimeIconName.ArrowUp, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("升级", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                            Text("Upgrade", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         }
                     }
                     else -> {
                         StatusBadge(
-                            text = "已就绪",
+                            text = "Ready",
                             color = Color(0xFF4CAF50),
                         )
                     }
@@ -715,7 +715,7 @@ private fun AgentCard(
                 modifier = Modifier.weight(1f, fill = false),
             ) {
                 Text(
-                    text = "版本:",
+                    text = "Version:",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -723,8 +723,8 @@ private fun AgentCard(
                     text = when {
                         !isDaemonRunning -> "--"
                         agent.isChecking -> "Checking..."
-                        agent.installed -> agent.currentVersion ?: "已安装"
-                        else -> "未安装"
+                        agent.installed -> agent.currentVersion ?: "已Install"
+                        else -> "未Install"
                     },
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = if (agent.installed) FontWeight.Bold else FontWeight.Normal,
@@ -741,7 +741,7 @@ private fun AgentCard(
 
                 if (agent.installed && agent.hasUpdate) {
                     Text(
-                        text = "(最新: ${agent.latestVersion ?: agent.type.defaultLatestVersion})",
+                        text = "(Latest: ${agent.latestVersion ?: agent.type.defaultLatestVersion})",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                         color = Color(0xFFFF9800),
                         maxLines = 1,
@@ -761,12 +761,12 @@ private fun AgentCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        text = "模型源:",
+                        text = "Model provider:",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = agent.activeProviderName ?: if (agent.installed) "默认网关" else "未绑定",
+                        text = agent.activeProviderName ?: if (agent.installed) "Default gateway" else "Not configured",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                         color = if (agent.activeProviderName != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -802,18 +802,18 @@ private fun AdvancedSyncCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "与太墟模型库深度互通",
+                text = "Integrated with the TaiXu model catalog",
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
             )
             StatusBadge(
-                text = "${taiXuModels.size} 个可用源",
+                text = "${taiXuModels.size} available providers",
                 color = MaterialTheme.colorScheme.primary,
             )
         }
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "点击可将太墟已配置的模型服务商一键导入为 CC-Switch 的纳管 Provider，无需重复填写 Key 与 Base URL：",
+            text = "Tap to import a configured TaiXu model provider into CC-Switch without re-entering the API key or base URL:",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -852,7 +852,7 @@ private fun AdvancedSyncCard(
                     onClick = { onImportModel(model) },
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                 ) {
-                    Text("导入", style = MaterialTheme.typography.labelSmall)
+                    Text("Import", style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -870,7 +870,7 @@ private fun SwitchProviderDialog(
 ) {
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("为 ${agent.type.displayName} 切换模型源") },
+        title = { Text("Switch model provider for ${agent.type.displayName}") },
         text = {
             Column(
                 modifier = Modifier
@@ -879,14 +879,14 @@ private fun SwitchProviderDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = "已配置的 CC-Switch 预设源：",
+                    text = "Configured CC-Switch providers:",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
 
                 if (providers.isEmpty()) {
                     Text(
-                        text = "暂未配置独立的 Provider，可直接从下方太墟模型库选择一键导入并绑定。",
+                        text = "暂未配置独立的 Provider，可直接从下方太墟模型库选择一键Import并绑定。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -910,7 +910,7 @@ private fun SwitchProviderDialog(
                             Text("${provider.protocol} · ${provider.selectedModel}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         RuntimeTextButton(onClick = { onSelectProvider(provider) }) {
-                            Text("应用")
+                            Text("Apply")
                         }
                     }
                 }
@@ -920,7 +920,7 @@ private fun SwitchProviderDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "从太墟已存模型一键绑定：",
+                    text = "Bind a saved TaiXu model with one tap:",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -943,7 +943,7 @@ private fun SwitchProviderDialog(
                             Text("${model.provider} · ${model.model}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         RuntimeTextButton(onClick = { onImportAndSelect(model) }) {
-                            Text("同步并切换")
+                            Text("Sync & switch")
                         }
                     }
                 }
@@ -967,7 +967,7 @@ private fun UpgradeVersionDialog(
 
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (agent.installed) "升级 ${agent.type.displayName}" else "安装 ${agent.type.displayName}") },
+        title = { Text(if (agent.installed) "Upgrade ${agent.type.displayName}" else "Install ${agent.type.displayName}") },
         text = {
             Column(
                 modifier = Modifier
@@ -975,7 +975,7 @@ private fun UpgradeVersionDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                InfoRow(label = "当前版本", value = agent.currentVersion ?: "未安装")
+                InfoRow(label = "当前版本", value = agent.currentVersion ?: "未Install")
                 InfoRow(label = "推荐版本", value = agent.latestVersion ?: agent.type.defaultLatestVersion.ifBlank { "latest" })
 
                 OutlinedTextField(
@@ -997,7 +997,7 @@ private fun UpgradeVersionDialog(
             RuntimeButton(
                 onClick = { onConfirmUpgrade(versionInput.trim()) },
             ) {
-                Text(if (agent.installed) "确认升级" else "确认安装")
+                Text(if (agent.installed) "确认Upgrade" else "确认Install")
             }
         },
         dismissButton = {
@@ -1083,7 +1083,7 @@ private fun InstallLogDialog(
                     Box(modifier = Modifier.fillMaxSize()) {
                         if (logs.isEmpty()) {
                             Text(
-                                text = "暂无命令输出日志。点击安装或升级后，将在沙箱内实时捕获并输出详细构建过程...",
+                                text = "暂无命令输出日志。点击Install或Upgrade后，将在沙箱内实时捕获并输出详细构建过程...",
                                 style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                                 color = Color(0xFF888888),
                                 modifier = Modifier.padding(12.dp),
