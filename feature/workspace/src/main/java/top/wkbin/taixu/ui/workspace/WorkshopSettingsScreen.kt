@@ -205,8 +205,8 @@ private fun ProjectScriptBindingRow(projectName: String, projectType: ProjectTyp
 
 @Composable
 private fun ManagedScriptEditorDialog(script: BuildScriptEntity?, onDismiss: () -> Unit, onSave: (String, String, ProjectType, String) -> String?) {
-    val defaultAndroidTemplate = "#!/bin/sh\n# 太墟标准 Android 构建脚本入口\nset -eu\nPROJECT_DIR=\"\${1:-.}\"\nTASK=\"\${2:-assembleDebug}\"\nexec /bin/sh /opt/taixu/scripts/taixu-build.sh android \"\$PROJECT_DIR\" \"\$TASK\"\n"
-    val defaultFlutterTemplate = "#!/bin/sh\n# 太墟标准 Flutter 构建脚本入口\nset -eu\nPROJECT_DIR=\"\${1:-.}\"\nTARGET=\"\${2:-apk --debug --target-platform android-arm64}\"\nexec /bin/sh /opt/taixu/scripts/taixu-build.sh flutter \"\$PROJECT_DIR\" \$TARGET\n"
+    val defaultAndroidTemplate = "#!/bin/sh\n# TaiXu standard Android build script entry point\nset -eu\nPROJECT_DIR=\"\${1:-.}\"\nTASK=\"\${2:-assembleDebug}\"\nexec /bin/sh /opt/taixu/scripts/taixu-build.sh android \"\$PROJECT_DIR\" \"\$TASK\"\n"
+    val defaultFlutterTemplate = "#!/bin/sh\n# TaiXu standard Flutter build script entry point\nset -eu\nPROJECT_DIR=\"\${1:-.}\"\nTARGET=\"\${2:-apk --debug --target-platform android-arm64}\"\nexec /bin/sh /opt/taixu/scripts/taixu-build.sh flutter \"\$PROJECT_DIR\" \$TARGET\n"
     var name by androidx.compose.runtime.saveable.rememberSaveable(script?.id) { mutableStateOf(script?.name.orEmpty()) }
     var description by androidx.compose.runtime.saveable.rememberSaveable(script?.id) { mutableStateOf(script?.description.orEmpty()) }
     var type by androidx.compose.runtime.saveable.rememberSaveable(script?.id) { mutableStateOf(runCatching { ProjectType.valueOf(script?.projectType ?: ProjectType.ANDROID.name) }.getOrDefault(ProjectType.ANDROID)) }
