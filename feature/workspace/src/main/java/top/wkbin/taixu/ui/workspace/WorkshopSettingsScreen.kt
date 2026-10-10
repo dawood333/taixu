@@ -298,9 +298,9 @@ fun WorkshopEnvironmentSettingsScreen(onBack: () -> Unit, viewModel: WorkshopSet
                         PathField("Flutter SDK", draft.flutterSdkPath) { viewModel.update(draft.copy(flutterSdkPath = it)) }
                         PathField("CMake", draft.cmakePath) { viewModel.update(draft.copy(cmakePath = it)) }
                         PathField("Ninja", draft.ninjaPath) { viewModel.update(draft.copy(ninjaPath = it)) }
-                        PathField("Gradle 缓存", draft.gradleUserHome) { viewModel.update(draft.copy(gradleUserHome = it)) }
-                        PathField("Flutter Pub 缓存", draft.pubCache) { viewModel.update(draft.copy(pubCache = it)) }
-                        PathField("Android 工具目录 / ADB", draft.toolDir) { viewModel.update(draft.copy(toolDir = it)) }
+                        PathField("Gradle cache", draft.gradleUserHome) { viewModel.update(draft.copy(gradleUserHome = it)) }
+                        PathField("Flutter Pub cache", draft.pubCache) { viewModel.update(draft.copy(pubCache = it)) }
+                        PathField("Android tools directory / ADB", draft.toolDir) { viewModel.update(draft.copy(toolDir = it)) }
                     }
                 }
             }
