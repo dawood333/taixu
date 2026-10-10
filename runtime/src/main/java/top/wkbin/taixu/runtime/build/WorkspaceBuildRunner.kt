@@ -486,8 +486,8 @@ class WorkspaceBuildRunner(
                 )
 
                 if (!useQemuBuild && !outcome.isSuccess && shouldRetryWithQemu(outcome) && qemuEnabled) {
-                    log("[TaiXu Build] ARM64 工具链无法执行，检测到兼容开关已开启，切换隔离 x86_64 QEMU 构建环境...")
-                    send(BuildRunProgress(step = "正在切换 QEMU x86_64 兼容环境...", progress = 0.25f, logOutput = snapshotLogs()))
+                    log("[TaiXu Build] ARM64 toolchain cannot run; compatibility mode is enabled. Switching to an isolated x86_64 QEMU build environment...")
+                    send(BuildRunProgress(step = "Switching to the QEMU x86_64 compatibility environment...", progress = 0.25f, logOutput = snapshotLogs()))
                     outcome = runCatching {
                         linuxRuntime.execute(ShellCommand(
                             commandLine = if (androidScriptPath.endsWith("taixu-build.sh")) "/bin/sh $androidScriptPath android \"${project.linuxPath}\" $androidTask --qemu" else "/bin/sh $androidScriptPath \"${project.linuxPath}\" $androidTask --qemu",
@@ -503,7 +503,7 @@ class WorkspaceBuildRunner(
                                 val now = System.currentTimeMillis()
                                 if (now - lastEmitTime > 100) {
                                     lastEmitTime = now
-                                    progressChannel.trySend(BuildRunProgress(step = "正在执行 QEMU x86_64 Android 构建...", progress = 0.5f, logOutput = snapshotLogs(), currentDependency = dependencyObservation.current, dependencyItemsObserved = dependencyObservation.seenItems.size, dependenciesTotal = dependencyObservation.total, dependencyProgressPercent = dependencyObservation.percent))
+                                    progressChannel.trySend(BuildRunProgress(step = "Running the Android build in QEMU x86_64...", progress = 0.5f, logOutput = snapshotLogs(), currentDependency = dependencyObservation.current, dependencyItemsObserved = dependencyObservation.seenItems.size, dependenciesTotal = dependencyObservation.total, dependencyProgressPercent = dependencyObservation.percent))
                                 }
                                 }
                             },
@@ -577,9 +577,9 @@ class WorkspaceBuildRunner(
                     return@channelFlow
                 }
 
-                log("[TaiXu Build] 校验 APK 产物: ${apkFile.absolutePath} (${apkFile.length() / 1024} KB)")
+                log("[TaiXu Build] Verifying APK artifact: ${apkFile.absolutePath} (${apkFile.length() / 1024} KB)")
                 val artifactVerification = ApkArtifactVerifier.verify(apkFile)
-                log("[TaiXu Build] APK 产物校验: ${artifactVerification.message}")
+                log("[TaiXu Build] APK artifact validation: ${artifactVerification.message}")
                 if (!artifactVerification.isValid) {
                     send(
                         BuildRunProgress(
@@ -593,48 +593,48 @@ class WorkspaceBuildRunner(
                     return@channelFlow
                 }
 
-                log("[TaiXu Build] 找到 APK: ${apkFile.absolutePath} (${apkFile.length() / 1024} KB)")
+                log("[TaiXu Build] Found APK: ${apkFile.absolutePath} (${apkFile.length() / 1024} KB)")
 
                 // 导出到手机公共存储 Download 目录
-                send(BuildRunProgress(step = "正在导出 APK 到手机下载目录...", progress = 0.93f, logOutput = snapshotLogs()))
+                send(BuildRunProgress(step = "Exporting APK to the phone's Downloads directory...", progress = 0.93f, logOutput = snapshotLogs()))
                 val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val totalApkBytes = apkFile.length()
                 val targetApk = copyApkAtomically(apkFile, File(downloadDir, "${project.name}.apk")) { copied, _ ->
                     val fraction = if (totalApkBytes > 0) copied.toFloat() / totalApkBytes else 0f
                     progressChannel.trySend(
                         BuildRunProgress(
-                            step = "正在导出 APK 到手机下载目录... ${copied / 1024 / 1024} MB / ${totalApkBytes / 1024 / 1024} MB",
+                            step = "Exporting APK to the phone's Downloads directory... ${copied / 1024 / 1024} MB / ${totalApkBytes / 1024 / 1024} MB",
                             progress = 0.93f + 0.04f * fraction.coerceIn(0f, 1f),
                             logOutput = snapshotLogs(),
                         ),
                     )
                 }
-                log("[TaiXu Build] APK 已成功导出至: ${targetApk.absolutePath}")
+                log("[TaiXu Build] APK exported to: ${targetApk.absolutePath}")
 
                 // 多通道安装调度：1. 无线 ADB 直装；2. 调起系统原生 PackageInstaller
-                send(BuildRunProgress(step = "正在安装到手机...", progress = 0.97f, logOutput = snapshotLogs()))
-                var installNotice = "APK 已导出至手机 Download/${targetApk.name}"
+                send(BuildRunProgress(step = "Installing on the phone...", progress = 0.97f, logOutput = snapshotLogs()))
+                var installNotice = "APK exported to the phone's Downloads/${targetApk.name}"
                 val adbInstallResult = runCatching { embeddedAdbManager.installApk(targetApk) }
                 if (adbInstallResult.isSuccess) {
-                    log("[TaiXu Build] ✅ 通过内置 ADB 成功直装到手机！")
-                    installNotice = "已通过内置 ADB 成功直装到手机！"
+                    log("[TaiXu Build] ✅ APK installed directly via built-in ADB!")
+                    installNotice = "Installed directly via built-in ADB!"
                     if (project.packageName.isNotBlank()) {
-                        log("[TaiXu Build] 启动应用: ${project.packageName} ...")
+                        log("[TaiXu Build] Launching app: ${project.packageName} ...")
                         embeddedAdbManager.executeShell("monkey -p ${project.packageName} -c android.intent.category.LAUNCHER 1")
                     }
                 } else {
                     log("[TaiXu Build] 自动调起系统应用安装器 (PackageInstaller)...")
                     val installerLaunched = launchPackageInstaller(targetApk)
                     if (installerLaunched) {
-                        installNotice = "已自动调起系统安装器，请在弹窗中点击【安装】"
+                        installNotice = "System package installer opened. Tap Install in the dialog."
                     }
                 }
 
                 flushLogBuffer()
-                recordStepDuration("运行就绪")
+                recordStepDuration("Ready to run")
                 send(
                     BuildRunProgress(
-                        step = "运行就绪",
+                        step = "Ready to run",
                         progress = 1.0f,
                         isRunning = false,
                         isSuccess = true,
@@ -647,8 +647,8 @@ class WorkspaceBuildRunner(
                 )
             }
             ProjectType.FLUTTER -> {
-                log("[TaiXu Build] Flutter 跨平台编译，环境: PUB_HOSTED_URL=https://pub.flutter-io.cn")
-                send(BuildRunProgress(step = "正在预检 Flutter 跨端开发环境...", progress = 0.15f, logOutput = snapshotLogs()))
+                log("[TaiXu Build] Flutter cross-platform build environment: PUB_HOSTED_URL=https://pub.flutter-io.cn")
+                send(BuildRunProgress(step = "Checking the Flutter development environment...", progress = 0.15f, logOutput = snapshotLogs()))
 
                 // 1. 预检 Flutter、Dart 与 Android ARM64 工具链。
                 val qemuEnabled = runtimePreferences.qemuCompatibilityEnabled.first()
@@ -669,7 +669,7 @@ class WorkspaceBuildRunner(
                     }.getOrNull()
                     if (qemuProbe?.isSuccess == true) {
                         useQemuBuild = true
-                        log("[TaiXu Build] Flutter ARM64 工具架构不兼容，QEMU x86_64 环境预检通过")
+                        log("Flutter ARM64 toolchain is incompatible; QEMU x86_64 environment preflight passed")
                     }
                 }
                 if (!probeFlutter.isSuccess && !useQemuBuild) {
@@ -681,7 +681,7 @@ class WorkspaceBuildRunner(
                     log("[TaiXu Build] 💡 提示：请先在【插件与工具中心】中装配【Android & 移动全栈开发套件 (含 Flutter)】")
                     send(
                         BuildRunProgress(
-                            step = "缺少 Flutter 构建环境",
+                            step = "Flutter build environment missing",
                             isRunning = false,
                             isSuccess = false,
                             message = "Flutter 构建前置检查失败：${missing ?: reason.ifBlank { "工具链不完整" }}",
@@ -692,10 +692,10 @@ class WorkspaceBuildRunner(
                     return@channelFlow
                 }
 
-                log("[TaiXu Build] 执行 Flutter APK 构建 (flutter build $flutterTarget)...")
-                send(BuildRunProgress(step = "正在执行 Flutter 构建 (flutter build $flutterTarget)...", progress = 0.3f, logOutput = snapshotLogs()))
+                log("[TaiXu Build] Building Flutter APK (flutter build $flutterTarget)...")
+                send(BuildRunProgress(step = "Running Flutter build (flutter build $flutterTarget)...", progress = 0.3f, logOutput = snapshotLogs()))
 
-                heartbeatStep = "正在执行 Flutter 构建 (flutter build $flutterTarget)..."
+                heartbeatStep = "Running Flutter build (flutter build $flutterTarget)..."
                 heartbeatProgress = 0.5f
                 val buildCmd = if (flutterScriptPath.endsWith("taixu-build.sh")) {
                     "/bin/sh $flutterScriptPath flutter \"${project.linuxPath}\" $flutterTarget"
@@ -719,7 +719,7 @@ class WorkspaceBuildRunner(
                             val now = System.currentTimeMillis()
                             if (now - lastEmitTime > 100) {
                                 lastEmitTime = now
-                                progressChannel.trySend(BuildRunProgress(step = "正在执行 Flutter 构建...", progress = 0.5f, logOutput = snapshotLogs(), currentDependency = dependencyObservation.current, dependencyItemsObserved = dependencyObservation.seenItems.size, dependenciesTotal = dependencyObservation.total, dependencyProgressPercent = dependencyObservation.percent))
+                                progressChannel.trySend(BuildRunProgress(step = "Running Flutter build...", progress = 0.5f, logOutput = snapshotLogs(), currentDependency = dependencyObservation.current, dependencyItemsObserved = dependencyObservation.seenItems.size, dependenciesTotal = dependencyObservation.total, dependencyProgressPercent = dependencyObservation.percent))
                             }
                             }
                         },
@@ -727,8 +727,8 @@ class WorkspaceBuildRunner(
                 )
 
                 if (!useQemuBuild && !outcome.isSuccess && shouldRetryWithQemu(outcome) && qemuEnabled) {
-                    log("[TaiXu Build] Flutter ARM64 工具链无法执行，切换隔离 x86_64 QEMU 构建环境...")
-                    send(BuildRunProgress(step = "正在切换 QEMU x86_64 Flutter 环境...", progress = 0.25f, logOutput = snapshotLogs()))
+                    log("[TaiXu Build] Flutter ARM64 toolchain cannot run; switching to an isolated x86_64 QEMU build environment...")
+                    send(BuildRunProgress(step = "Switching to the QEMU x86_64 Flutter environment...", progress = 0.25f, logOutput = snapshotLogs()))
                     outcome = runCatching {
                         linuxRuntime.execute(ShellCommand(
                             commandLine = if (flutterScriptPath.endsWith("taixu-build.sh")) "/bin/sh $flutterScriptPath flutter \"${project.linuxPath}\" --qemu" else "/bin/sh $flutterScriptPath \"${project.linuxPath}\" --qemu",
@@ -744,7 +744,7 @@ class WorkspaceBuildRunner(
                                 val now = System.currentTimeMillis()
                                 if (now - lastEmitTime > 100) {
                                     lastEmitTime = now
-                                    progressChannel.trySend(BuildRunProgress(step = "正在执行 QEMU x86_64 Flutter 构建...", progress = 0.5f, logOutput = snapshotLogs(), currentDependency = dependencyObservation.current, dependencyItemsObserved = dependencyObservation.seenItems.size, dependenciesTotal = dependencyObservation.total, dependencyProgressPercent = dependencyObservation.percent))
+                                    progressChannel.trySend(BuildRunProgress(step = "Running the Flutter build in QEMU x86_64...", progress = 0.5f, logOutput = snapshotLogs(), currentDependency = dependencyObservation.current, dependencyItemsObserved = dependencyObservation.seenItems.size, dependenciesTotal = dependencyObservation.total, dependencyProgressPercent = dependencyObservation.percent))
                                 }
                                 }
                             },
@@ -785,7 +785,7 @@ class WorkspaceBuildRunner(
                 }
 
                 log("[TaiXu Build] ✅ Flutter 编译完成，耗时: ${outcome.durationMs}ms")
-                send(BuildRunProgress(step = "编译成功，正在导出 APK...", progress = 0.8f, logOutput = snapshotLogs()))
+                send(BuildRunProgress(step = "Compilation succeeded; exporting APK...", progress = 0.8f, logOutput = snapshotLogs()))
 
                 // 取最新 mtime 的 APK（理由同 Android 路径）：flutter-apk 目录可能
                 // 残留旧构建的胖 APK，目录序 firstOrNull 会任意挑导致误判。
@@ -803,7 +803,7 @@ class WorkspaceBuildRunner(
                     log("[TaiXu Build] ❌ 未在 outputs 目录找到 Flutter APK 产物")
                     send(
                         BuildRunProgress(
-                            step = "未找到生成的 Flutter APK 产物",
+                            step = "Generated Flutter APK artifact not found",
                             isRunning = false,
                             isSuccess = false,
                             message = "Build completed, but no APK was found in the outputs directory",
@@ -813,13 +813,13 @@ class WorkspaceBuildRunner(
                     return@channelFlow
                 }
 
-                log("[TaiXu Build] 校验 Flutter APK 产物: ${apkFile.absolutePath} (${apkFile.length() / 1024} KB)")
+                log("[TaiXu Build] Verifying Flutter APK artifact: ${apkFile.absolutePath} (${apkFile.length() / 1024} KB)")
                 val artifactVerification = ApkArtifactVerifier.verify(apkFile)
-                log("[TaiXu Build] Flutter APK 产物校验: ${artifactVerification.message}")
+                log("[TaiXu Build] Flutter APK artifact validation: ${artifactVerification.message}")
                 if (!artifactVerification.isValid) {
                     send(
                         BuildRunProgress(
-                            step = "Flutter APK 架构校验失败",
+                            step = "Flutter APK architecture validation failed",
                             isRunning = false,
                             isSuccess = false,
                             message = artifactVerification.message,
@@ -829,14 +829,14 @@ class WorkspaceBuildRunner(
                     return@channelFlow
                 }
 
-                log("[TaiXu Build] 找到 Flutter APK: ${apkFile.absolutePath}")
+                log("[TaiXu Build] Found Flutter APK: ${apkFile.absolutePath}")
                 val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
                 val totalApkBytes = apkFile.length()
                 val targetApk = copyApkAtomically(apkFile, File(downloadDir, "${project.name}.apk")) { copied, _ ->
                     val fraction = if (totalApkBytes > 0) copied.toFloat() / totalApkBytes else 0f
                     progressChannel.trySend(
                         BuildRunProgress(
-                            step = "正在导出 APK 到手机下载目录... ${copied / 1024 / 1024} MB / ${totalApkBytes / 1024 / 1024} MB",
+                            step = "Exporting APK to the phone's Downloads directory... ${copied / 1024 / 1024} MB / ${totalApkBytes / 1024 / 1024} MB",
                             progress = 0.93f + 0.04f * fraction.coerceIn(0f, 1f),
                             logOutput = snapshotLogs(),
                         ),
@@ -844,24 +844,24 @@ class WorkspaceBuildRunner(
                 }
                 log("[TaiXu Build] Flutter APK 已导出至: ${targetApk.absolutePath}")
 
-                send(BuildRunProgress(step = "正在安装到手机...", progress = 0.95f, logOutput = snapshotLogs()))
-                var installNotice = "Flutter APK 已导出至手机 Download/${targetApk.name}"
+                send(BuildRunProgress(step = "Installing on the phone...", progress = 0.95f, logOutput = snapshotLogs()))
+                var installNotice = "Flutter APK exported to the phone's Downloads/${targetApk.name}"
                 val adbInstallResult = runCatching { embeddedAdbManager.installApk(targetApk) }
                 if (adbInstallResult.isSuccess) {
-                    log("[TaiXu Build] ✅ 通过内置 ADB 成功直装 Flutter App！")
-                    installNotice = "已通过内置 ADB 成功直装 Flutter App 到手机！"
+                    log("[TaiXu Build] ✅ Flutter app installed directly via built-in ADB!")
+                    installNotice = "Flutter app installed directly via built-in ADB!"
                 } else {
                     log("[TaiXu Build] 自动调起系统应用安装器 (PackageInstaller)...")
                     val installerLaunched = launchPackageInstaller(targetApk)
                     if (installerLaunched) {
-                        installNotice = "已自动调起系统安装器，请在弹窗中点击【安装】"
+                        installNotice = "System package installer opened. Tap Install in the dialog."
                     }
                 }
 
                 flushLogBuffer()
                 send(
                     BuildRunProgress(
-                        step = "运行就绪",
+                        step = "Ready to run",
                         progress = 1.0f,
                         isRunning = false,
                         isSuccess = true,
@@ -873,7 +873,7 @@ class WorkspaceBuildRunner(
                 )
             }
             ProjectType.REVERSE -> {
-                log("[TaiXu Build] APK 逆向工程，无编译流程；直接提供 jadx / apktool 分析指引")
+                log("[TaiXu Build] APK reverse-engineering project; no build is required. Providing jadx/apktool analysis instructions.")
                 send(
                     BuildRunProgress(
                         step = "APK 逆向工程",
@@ -885,13 +885,13 @@ class WorkspaceBuildRunner(
                 )
             }
             ProjectType.GENERAL -> {
-                log("[TaiXu Build] 通用工程，无默认 APK 打包流程")
+                log("[TaiXu Build] Generic project; no default APK packaging workflow")
                 send(
                     BuildRunProgress(
                         step = "通用工程",
                         isRunning = false,
                         isSuccess = true,
-                        message = "通用工程请在太墟终端中执行自定义命令或自定义构建脚本",
+                        message = "For a generic project, run custom commands or build scripts in the TaiXu terminal",
                         logOutput = snapshotLogs(),
                     )
                 )
@@ -900,7 +900,7 @@ class WorkspaceBuildRunner(
         } finally {
             // 先停心跳再收尾：保证终态是通道里最后一条消息（见 heartbeatJob 声明处说明）。
             heartbeatJob.cancel()
-            log("[TaiXu Build] 📄 构建结束，完整日志已保存至: ${project.linuxPath}/.taixu/logs/${buildLogFile.name}")
+            log("[TaiXu Build] 📄 Build finished. Full log saved to: ${project.linuxPath}/.taixu/logs/${buildLogFile.name}")
             runCatching {
                 flushLogBuffer()
                 buildLogWriter.flush()
@@ -941,7 +941,7 @@ class WorkspaceBuildRunner(
         target: File,
         onProgress: (copiedBytes: Long, totalBytes: Long) -> Unit = { _, _ -> },
     ): File {
-        check(source.isFile && source.length() > 0L) { "APK 源文件不存在或为空：${source.absolutePath}" }
+        check(source.isFile && source.length() > 0L) { "APK source file does not exist or is empty: ${source.absolutePath}" }
         target.parentFile?.mkdirs()
         val temporary = File(target.parentFile, ".${target.name}.${System.nanoTime()}.part")
         try {
@@ -962,15 +962,15 @@ class WorkspaceBuildRunner(
                 }
             }
             check(temporary.length() == source.length()) {
-                "APK 导出不完整：${temporary.length()} / ${source.length()} 字节"
+                "APK export is incomplete: ${temporary.length()} / ${source.length()} bytes"
             }
             // 优先覆盖固定名；若旧文件受 scoped storage 保护无法覆盖，则回退到带时间戳的唯一文件名。
             val exported = if (replaceTarget(temporary, target)) target else {
                 val unique = uniqueTarget(target)
-                check(replaceTarget(temporary, unique)) { "APK 导出失败：无法写入手机 Download 目录" }
+                check(replaceTarget(temporary, unique)) { "APK export failed: unable to write to the phone's Downloads directory" }
                 unique
             }
-            check(exported.isFile && exported.length() == source.length()) { "APK 导出目标无效" }
+            check(exported.isFile && exported.length() == source.length()) { "APK export target is invalid" }
             return exported
         } finally {
             temporary.delete()
