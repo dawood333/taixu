@@ -1,42 +1,41 @@
-# RTK 终端命令优化器 — 离线插件包
+# RTK Terminal Command Optimizer — Offline Plugin Package
 
-本目录是 `rtk-suite-offline` 插件的源文件布局，用于打包为可直接导入太墟的本地 `.txplugin`。
+This directory contains the source layout for the `rtk-suite-offline` plugin, which is packaged as a local `.txplugin` that can be imported directly into TaiXu.
 
-## 用途
+## Purpose
 
-在 ARM64（`arm64-v8a`）Android 运行时上，为 Agent 调度执行命令提供实时输出压缩与过滤重写（`rtk rewrite`），降低 60%~90% 的上下文 Token 消耗。
+On ARM64 (`arm64-v8a`) Android, it compresses command output and filters/rewrites it in real time (`rtk rewrite`) for commands executed by Agents. This can reduce context-token usage by 60%–90%.
 
-- 官方项目：[rtk-ai/rtk](https://github.com/rtk-ai/rtk)
-- 对应版本：`v0.47.0`
-- 架构：Linux `aarch64-unknown-linux-gnu`
-- 许可证：Apache-2.0
+- Official project: [rtk-ai/rtk](https://github.com/rtk-ai/rtk)
+- Version: `v0.47.0`
+- Architecture: Linux `aarch64-unknown-linux-gnu`
+- License: Apache-2.0
 
-## 打包内容
+## Package contents
 
 ```text
 manifest.json
 payload/
   checksums/SHA256SUMS
-  config/rtk/config.toml
   scripts/install-rtk.sh
-  scripts/verify-rtk.sh
   scripts/uninstall-rtk.sh
+  scripts/verify-rtk.sh
   bin/rtk
-  LICENSE
+  lib/rtk-aarch64-unknown-linux-gnu.tar.gz
 ```
 
-## 来源 URL 与哈希
+## Source URL and checksums
 
-- 归档：`https://github.com/rtk-ai/rtk/releases/download/v0.47.0/rtk-aarch64-unknown-linux-gnu.tar.gz`
-- 归档 SHA256：`960ceb5f1f5f0b0939b32b5b1d41dec6d9a7113137b0703c68dca0d169a260fc`
-- 二进制 `bin/rtk` SHA256：`e440fc61077925d98fdea5c6bf817df2c3c85e6b96aea5d02659c2a6f42d93ce`
+- Archive: `https://github.com/rtk-ai/rtk/releases/download/v0.47.0/rtk-aarch64-unknown-linux-gnu.tar.gz`
+- Archive SHA-256: `960ceb5f1f5f0b0939b32b5b1d41dec6d9a7113137b0703c68dca0d169a260fc`
+- Binary `bin/rtk` SHA-256: `e440fc61077925d98fdea5c6bf817df2c3c85e6b96aea5d02659c2a6f42d93ce`
 
-## 打包成 `.txplugin`
+## Package as `.txplugin`
 
-在项目根目录下运行：
+Run from the project root:
 
 ```bash
 python tools/package-rtk-plugin.py
 ```
 
-产物将输出至：`dist/plugins/taixu-plugin-rtk-v1.0.0-arm64.txplugin`。
+The artifact is written to `dist/plugins/taixu-plugin-rtk-v1.0.0-arm64.txplugin`.
