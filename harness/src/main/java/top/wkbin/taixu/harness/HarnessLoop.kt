@@ -1585,11 +1585,11 @@ class HarnessLoop(
                                 createdAt = now(),
                                 toolCallId = request.toolCallId,
                                 success = false,
-                                output = "批准操作Execution failed：${friendly(throwable)}",
+                                output = "Failed to execute the approved operation: ${friendly(throwable)}",
                             ),
                         )
                     }
-                    RunResult.Failed(throwable.message ?: "审批操作Execution failed：${throwable::class.simpleName}")
+                    RunResult.Failed(throwable.message ?: "Failed to execute approved operation: ${throwable::class.simpleName}")
                 }
             }
         }
