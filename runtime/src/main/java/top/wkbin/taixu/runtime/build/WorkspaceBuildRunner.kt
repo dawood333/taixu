@@ -396,7 +396,7 @@ class WorkspaceBuildRunner(
                 }
 
                 log("[TaiXu Build] Running Gradle compilation ($androidTask)...")
-                send(BuildRunProgress(step = "正在Running Gradle compilation ($androidTask)...", progress = 0.3f, logOutput = snapshotLogs()))
+                send(BuildRunProgress(step = "Running Gradle compilation ($androidTask)...", progress = 0.3f, logOutput = snapshotLogs()))
 
                 // 构建阶段时长追踪
                 val buildStartTime = System.currentTimeMillis()
