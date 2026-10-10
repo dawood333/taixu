@@ -308,7 +308,7 @@ class SettingsViewModel(
             res.onSuccess { info ->
                 _updateCheckState.value = UpdateCheckState.Success(info)
             }.onFailure { err ->
-                _updateCheckState.value = UpdateCheckState.Error(err.message ?: "检查更新失败，请检查网络")
+                _updateCheckState.value = UpdateCheckState.Error(err.message ?: "Update check failed. Check your network.")
             }
         }
     }
@@ -330,7 +330,7 @@ class SettingsViewModel(
                 appUpdateManager.installApk(apkFile)
             }.onFailure { err ->
                 _downloadProgress.value = null
-                _updateCheckState.value = UpdateCheckState.Error("下载更新包失败：${err.message}")
+                _updateCheckState.value = UpdateCheckState.Error("Failed to download update package: ${err.message}")
             }
         }
     }
@@ -388,15 +388,15 @@ class SettingsViewModel(
         viewModelScope.launch {
             _distroInstallState.value = DistroInstallUiState(
                 isInstalling = true,
-                progressText = "准备拉取镜像...",
+                progressText = "Preparing to download image...",
                 progressFraction = 0.05f,
             )
             val res = linuxRuntime.installDistro(request) { p ->
                 _distroInstallState.value = _distroInstallState.value.copy(
                     progressText = if (p.totalMegabytes != null) {
-                        "下载中：${p.downloadedMegabytes} / ${p.totalMegabytes} MB"
+                        "Downloading: ${p.downloadedMegabytes} / ${p.totalMegabytes} MB"
                     } else {
-                        "已下载：${p.downloadedMegabytes} MB"
+                        "Downloaded: ${p.downloadedMegabytes} MB"
                     },
                     progressFraction = (p.fraction ?: 0f) * 0.8f + 0.1f,
                 )
@@ -408,7 +408,7 @@ class SettingsViewModel(
                 res.errorOrNull()?.let { logger.e("Distro install failed: ${it.message}", it.cause) }
                 _distroInstallState.value = _distroInstallState.value.copy(
                     isInstalling = false,
-                    errorMessage = "安装失败，请检查网络与存储空间后重试",
+                    errorMessage = "Installation failed. Check your network and available storage, then try again.",
                 )
             }
         }
@@ -427,10 +427,10 @@ class SettingsViewModel(
             }
             _restoringDistroId.value = null
             if (res is AppResult.Success) {
-                onResult?.invoke(true, "已恢复初始状态")
+                onResult?.invoke(true, "Restored initial state")
             } else {
                 res.errorOrNull()?.let { logger.e("Distro reset failed: ${it.message}", it.cause) }
-                onResult?.invoke(false, "重置沙箱失败，请稍后重试")
+                onResult?.invoke(false, "Failed to reset sandbox. Try again later.")
             }
         }
     }
@@ -445,10 +445,10 @@ class SettingsViewModel(
             val res = linuxRuntime.uninstallDistro(distroId)
             _deletingDistroId.value = null
             if (res is AppResult.Success) {
-                onResult?.invoke(true, "系统已成功删除")
+                onResult?.invoke(true, "Distribution deleted successfully")
             } else {
                 res.errorOrNull()?.let { logger.e("Distro uninstall failed: ${it.message}", it.cause) }
-                onResult?.invoke(false, "删除系统失败，请稍后重试")
+                onResult?.invoke(false, "Failed to delete distribution. Try again later.")
             }
         }
     }
@@ -524,7 +524,7 @@ class SettingsViewModel(
                 mcpManager.refreshConnection(serverId)
             } catch (error: Exception) {
                 _mcpToggleOverrides.value = _mcpToggleOverrides.value - serverId
-                logger.e("MCP 开关切换失败: $serverId", error)
+                logger.e("Failed to toggle MCP service: $serverId", error)
             }
         }
     }
@@ -643,7 +643,7 @@ class SettingsViewModel(
                 _localMcpDiscovery.value = LocalMcpDiscoveryState.Results(found)
             } catch (throwable: Throwable) {
                 _localMcpDiscovery.value = LocalMcpDiscoveryState.Error(
-                    throwable.message ?: "本机 MCP 探测失败",
+                    throwable.message ?: "Local MCP scan failed",
                 )
             }
         }
@@ -667,9 +667,9 @@ class SettingsViewModel(
             _switchingMode.value = false
             if (result.isSuccess) {
                 val authorized = result.getOrNull()
-                onResult(true, authorized?.details ?: "已成功切换至 ${mode.title}")
+                onResult(true, authorized?.details ?: "Switched to ${mode.title} successfully")
             } else {
-                onResult(false, result.errorOrNull()?.message ?: "授权失败")
+                onResult(false, result.errorOrNull()?.message ?: "Authorization failed")
             }
         }
     }
@@ -704,9 +704,9 @@ class SettingsViewModel(
             try {
                 val result = privilegeManager.removePhantomProcessLimit()
                 _phantomProcessMessage.value = if (result.success) {
-                    "解除命令执行成功，已重新读取系统状态。"
+                    "The command succeeded and system status was refreshed."
                 } else {
-                    result.stderr.ifBlank { "解除失败（退出码 ${result.exitCode}）" }
+                    result.stderr.ifBlank { "Operation failed (exit code ${result.exitCode})" }
                 }
                 _phantomProcessStatus.value = privilegeManager.checkPhantomProcessLimit()
             } finally {
@@ -862,7 +862,7 @@ class SettingsViewModel(
     /**
      * 当前全局激活模型的生效上下文上限：显式 `contextTokens` 优先；
      * 未填写时自动适配主流模型元数据（DeepSeek V4 / Gemini / GPT-4.1 等）；
-     * 都识别不到时返回 null，由全局预算兜底。
+     * 都识别不到时返回 null，由global budget兜底。
      */
     val activeModelDeclaredTokens: StateFlow<Int?> = models.map { list ->
         list.firstOrNull { it.isActive }?.let { model ->
@@ -872,7 +872,7 @@ class SettingsViewModel(
 
     /**
      * 当前**实际生效**的上下文预算，与 Harness 引擎保持同一口径：
-     * `clampedBudget(activeModel.contextTokens, 全局预算)`（先 resolve 再钳到 [ContextWindowPolicy.MAX_CONTEXT_BUDGET]）。
+     * `clampedBudget(activeModel.contextTokens, global budget)`（先 resolve 再钳到 [ContextWindowPolicy.MAX_CONTEXT_BUDGET]）。
      *
      * 设置页的「折叠线预览」必须基于本值计算，才能做到「填多少、看到多少、按多少折叠」三处一致。
      */
@@ -946,7 +946,7 @@ class SettingsViewModel(
                     _isMarketOfflinePreset.value = client.lastCatalogUsedOfflineFallback
                 }
                 is AppResult.Failure -> {
-                    logger.w("加载 ClawHub 技能市场失败: ${res.error.message}", res.error.cause)
+                    logger.w("Failed to load the ClawHub skills marketplace: ${res.error.message}", res.error.cause)
                 }
             }
             _isMarketLoading.value = false
@@ -955,7 +955,7 @@ class SettingsViewModel(
 
     fun prepareInstallMarketSkill(skillId: String) {
         val installer = skillInstallationManager ?: run {
-            _skillArchiveMessage.value = "技能安全审计与安装引擎未就绪"
+            _skillArchiveMessage.value = "Skill security audit and installation engine are not ready"
             _skillArchiveMessageIsError.value = true
             return
         }
