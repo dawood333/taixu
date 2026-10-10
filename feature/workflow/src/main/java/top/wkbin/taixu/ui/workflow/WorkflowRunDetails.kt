@@ -28,16 +28,16 @@ internal fun WorkflowNodeDetails(run: WorkflowNodeRunState?) {
         LinearProgressIndicator(Modifier.fillMaxWidth())
     }
     output?.let {
-        Text("耗时 ${it.durationMs / 1000.0} 秒 · 退出码 ${it.exitCode}", style = MaterialTheme.typography.labelSmall)
+        Text("Duration: ${it.durationMs / 1000.0}s · Exit code: ${it.exitCode}", style = MaterialTheme.typography.labelSmall)
         it.error?.let { error -> SelectionContainer { Text(error, color = MaterialTheme.colorScheme.error) } }
         if (it.artifacts.isNotEmpty()) {
-            Text("产物路径", style = MaterialTheme.typography.labelLarge)
+            Text("Artifact paths", style = MaterialTheme.typography.labelLarge)
             SelectionContainer { Text(it.artifacts.joinToString("\n"), fontFamily = FontFamily.Monospace) }
         }
     }
     val log = output?.textOutput?.takeIf { it.isNotBlank() } ?: run?.progressMessage.orEmpty()
     if (log.isNotBlank()) {
-        RuntimeOutlinedButton(onClick = { expanded = !expanded }) { Text(if (expanded) "收起日志" else "展开日志 / Diff") }
+        RuntimeOutlinedButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Collapse logs" else "Expand logs / Diff") }
         if (expanded) SelectionContainer {
             Text(log, Modifier.fillMaxWidth().heightIn(max = 480.dp).verticalScroll(rememberScrollState()), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
         }
@@ -51,7 +51,7 @@ internal fun WorkflowElapsed(state: WorkflowRuntimeState) {
         while (state.finishedAt == null) { now = System.currentTimeMillis(); delay(1000) }
     }
     val elapsed = ((state.finishedAt ?: now) - (state.startedAt ?: now)).coerceAtLeast(0) / 1000
-    Text("运行耗时 ${elapsed / 60} 分 ${elapsed % 60} 秒", style = MaterialTheme.typography.labelSmall)
+    Text("Elapsed: ${elapsed / 60}m ${elapsed % 60}s", style = MaterialTheme.typography.labelSmall)
 }
 
 @Composable
@@ -117,7 +117,7 @@ internal fun WorkflowStartDialog(
 
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("运行 ${definition.name}") },
+        title = { Text("Run ${definition.name}") },
         text = {
             Column(
                 modifier = Modifier
@@ -128,10 +128,10 @@ internal fun WorkflowStartDialog(
             ) {
                 Text(definition.description)
                 if (needsModel) {
-                    Text("执行模型（点选即可，避免 403 请换可用账号）", style = MaterialTheme.typography.labelLarge)
+                    Text("Execution model (select one; if you get a 403, choose an account with access)", style = MaterialTheme.typography.labelLarge)
                     if (models.isEmpty()) {
                         Text(
-                            "尚未配置可用模型。请先到设置 → 模型管理添加账号，再回来运行含智能体节点的工作流。",
+                            "No usable model is configured. Go to Settings → Model Profiles to add an account, then return to run workflows with Agent nodes.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                         )
@@ -167,7 +167,7 @@ internal fun WorkflowStartDialog(
                                         text = buildString {
                                             append(if (selected) "✓ " else "")
                                             append(model.name)
-                                            if (model.isActive) append("（当前默认）")
+                                            if (model.isActive) append("(current default)")
                                         },
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
@@ -179,7 +179,7 @@ internal fun WorkflowStartDialog(
                                     )
                                     if (model.pureChatMode) {
                                         Text(
-                                            "纯聊天模式：可能无法调用 host 工具",
+                                            "Chat-only mode: host tools may be unavailable",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.error,
                                         )
@@ -188,7 +188,7 @@ internal fun WorkflowStartDialog(
                             }
                         }
                         if (variants.size > 1) {
-                            Text("模型变体", style = MaterialTheme.typography.labelMedium)
+                            Text("Model variant", style = MaterialTheme.typography.labelMedium)
                             variants.forEach { variant ->
                                 val selected = variant == selectedVariant
                                 Surface(
@@ -209,10 +209,10 @@ internal fun WorkflowStartDialog(
                                 }
                             }
                         } else if (variants.size == 1) {
-                            Text("变体：${variants.first()}", style = MaterialTheme.typography.bodySmall)
+                            Text("Variant: ${variants.first()}", style = MaterialTheme.typography.bodySmall)
                         }
                         Text(
-                            "此处选择只影响本次工作流，不会改全局默认模型。",
+                            "This selection applies only to this workflow run and does not change the global default model.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -230,7 +230,7 @@ internal fun WorkflowStartDialog(
                     OutlinedTextField(
                         value = values[key].orEmpty(),
                         onValueChange = { values[key] = it },
-                        label = { Text("$key（必填）") },
+                        label = { Text("$key (required)") },
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
@@ -244,7 +244,7 @@ internal fun WorkflowStartDialog(
                 }
             }
         },
-        dismissButton = { RuntimeOutlinedButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = { RuntimeOutlinedButton(onClick = onDismiss) { Text("Cancel") } },
         confirmButton = {
             RuntimeButton(
                 onClick = {
@@ -257,7 +257,7 @@ internal fun WorkflowStartDialog(
                     onStart(payload)
                 },
                 enabled = canStart,
-            ) { Text("开始执行") }
+            ) { Text("Start run") }
         },
     )
 }
@@ -280,7 +280,7 @@ private fun ApkSelectorSection(
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 RuntimeIcon(RuntimeIconName.Android, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(6.dp))
-                Text("选择安装 APK", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Text("Select APK to install", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
             }
             if (onRefresh != null) {
                 TextButton(
@@ -289,7 +289,7 @@ private fun ApkSelectorSection(
                 ) {
                     RuntimeIcon(RuntimeIconName.Refresh, Modifier.size(14.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("重新扫描", style = MaterialTheme.typography.labelSmall)
+                    Text("Rescan", style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -339,7 +339,7 @@ private fun ApkSelectorSection(
                                     color = MaterialTheme.colorScheme.primary,
                                 ) {
                                     Text(
-                                        text = "✨ 最新生成",
+                                        text = "✨ Latest build",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onPrimary,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -383,7 +383,7 @@ private fun ApkSelectorSection(
                 )
                 Spacer(Modifier.width(4.dp))
                 Text(
-                    if (showManualInput) "收起手动输入" else "手动指定其他 APK 路径...",
+                    if (showManualInput) "Hide manual entry" else "Enter another APK path manually...",
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
@@ -398,10 +398,10 @@ private fun ApkSelectorSection(
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         RuntimeIcon(RuntimeIconName.Info, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(6.dp))
-                        Text("未在工程中扫描到 APK", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                        Text("No APK found in the project", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                     }
                     Text(
-                        "若您已在终端完成编译构建，可点击右上角「重新扫描」；或在下方直接输入 APK 文件路径。",
+                        "若您已在终端完成编译构建，可点击右上角「Rescan」；或在下方直接输入 APK 文件路径。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
