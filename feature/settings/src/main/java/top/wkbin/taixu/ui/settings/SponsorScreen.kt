@@ -316,7 +316,7 @@ private fun SponsorQrDialog(
                             ) {
                                 RuntimeIcon(RuntimeIconName.Sponsor, Modifier.size(32.dp), tint = accent.copy(alpha = 0.6f))
                                 Text(
-                                    "二维码加载失败，请稍后Retry",
+                                    "Failed to load QR code. Please try again later.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -325,7 +325,7 @@ private fun SponsorQrDialog(
                     )
                 }
                 Text(
-                    "Open对应 App 扫一扫即可赞赏，感谢支持",
+                    "Open the corresponding app and scan the code to donate. Thank you for your support.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -337,9 +337,9 @@ private fun SponsorQrDialog(
                     val prefix = if (title.contains("微信")) "wechat" else "alipay"
                     val success = saveSponsorQrToGallery(context, qrRes, prefix)
                     if (success) {
-                        Toast.makeText(context, "二维码已保存至相册", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "QR code saved to gallery", Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(context, "保存失败，请稍后Retry", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Save failed. Please try again later.", Toast.LENGTH_SHORT).show()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = accent),
@@ -349,13 +349,13 @@ private fun SponsorQrDialog(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     RuntimeIcon(RuntimeIconName.Download, Modifier.size(16.dp), tint = Color.White)
-                    Text("保存到相册", color = Color.White)
+                    Text("Save to gallery", color = Color.White)
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("关闭")
+                Text("Close")
             }
         },
     )
@@ -364,16 +364,16 @@ private fun SponsorQrDialog(
 /** 唤起邮件客户端撰写 API token sponsorship邮件（正文预填模板）；无邮件客户端时Copy邮箱兜底 */
 private fun sendSponsorEmail(context: Context) {
     val body = buildString {
-        appendLine("你好，我想赞助太墟一个 Token，支持你继续开发：")
+        appendLine("Hello, I'd like to sponsor an API token for TaiXu to support continued development:")
         appendLine()
         appendLine("API Base URL：")
         appendLine("API Key：")
-        appendLine("模型名称（可选）：")
+        appendLine("Model name (optional):")
         appendLine()
-        appendLine("感谢你的付出！")
+        appendLine("Thank you for your support!")
     }
     val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$SPONSOR_EMAIL")).apply {
-        putExtra(Intent.EXTRA_SUBJECT, "太墟 API token sponsorship")
+        putExtra(Intent.EXTRA_SUBJECT, "TaiXu API token sponsorship")
         putExtra(Intent.EXTRA_TEXT, body)
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
@@ -381,8 +381,8 @@ private fun sendSponsorEmail(context: Context) {
         context.startActivity(intent)
     }.onFailure {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-        clipboard?.setPrimaryClip(ClipData.newPlainText("太墟赞助邮箱", SPONSOR_EMAIL))
-        Toast.makeText(context, "已Copy赞助邮箱：$SPONSOR_EMAIL，请Open邮箱写信", Toast.LENGTH_LONG).show()
+        clipboard?.setPrimaryClip(ClipData.newPlainText("TaiXu sponsorship email", SPONSOR_EMAIL))
+        Toast.makeText(context, "Sponsorship email copied: $SPONSOR_EMAIL. Open your email app to send a message.", Toast.LENGTH_LONG).show()
     }
 }
 
@@ -403,7 +403,7 @@ private fun SponsorKindGroup(
         )
         if (entries.isEmpty()) {
             Text(
-                text = "暂无，感谢每一位默默支持的朋友",
+                text = "None yet. Thank you to everyone who supports the project.",
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             )
