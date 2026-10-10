@@ -46,30 +46,30 @@ internal fun AddMountDialog(
 
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("新增存储挂载点", fontWeight = FontWeight.Bold) },
+        title = { Text("Add storage mount", fontWeight = FontWeight.Bold) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("挂载点名称") },
-                    placeholder = { Text("例如：相册照片、项目源码") },
+                    label = { Text("Mount name") },
+                    placeholder = { Text("e.g. Photos, project source code") },
                     isError = !nameValid,
-                    supportingText = { if (!nameValid) Text("请输入挂载点名称") },
+                    supportingText = { if (!nameValid) Text("请输入Mount name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = hostPath,
                     onValueChange = { hostPath = it },
-                    label = { Text("宿主路径 (Android)") },
+                    label = { Text("Host path (Android)") },
                     placeholder = { Text("/storage/emulated/0/...") },
                     isError = hostPath.isNotBlank() && !hostPathValid,
                     supportingText = {
                         when {
-                            hostPath.isNotBlank() && hostCharInvalid -> Text("宿主路径不能包含冒号等非法字符")
+                            hostPath.isNotBlank() && hostCharInvalid -> Text("Host path cannot contain colons or other invalid characters")
                             hostPath.isNotBlank() && !hostRootAllowed ->
-                                Text("宿主路径必须位于 /storage/emulated/0 内")
+                                Text("Host path must be inside /storage/emulated/0")
                             else -> {}
                         }
                     },
@@ -79,17 +79,17 @@ internal fun AddMountDialog(
                 OutlinedTextField(
                     value = guestPath,
                     onValueChange = { guestPath = it },
-                    label = { Text("容器挂载路径 (Linux)") },
+                    label = { Text("Container mount path (Linux)") },
                     placeholder = { Text("/mnt/my_folder") },
                     isError = guestPath.isNotBlank() && !guestPathValid,
                     supportingText = {
                         when {
-                            guestPath.isNotBlank() && !guestPath.trim().startsWith("/") -> Text("路径必须以 / 开头")
-                            guestPath.isNotBlank() && guestNormalized == null -> Text("容器路径不允许包含 ..")
-                            guestPath.isNotBlank() && guestCharInvalid -> Text("容器路径不能包含冒号等非法字符")
+                            guestPath.isNotBlank() && !guestPath.trim().startsWith("/") -> Text("Path must start with /")
+                            guestPath.isNotBlank() && guestNormalized == null -> Text("Container path must not contain ..")
+                            guestPath.isNotBlank() && guestCharInvalid -> Text("Container path cannot contain colons or other invalid characters")
                             guestPath.isNotBlank() && !guestRootAllowed ->
-                                Text("容器路径必须位于 /mnt 或 /sdcard 内")
-                            guestDuplicate -> Text("该容器路径已被其他挂载点使用")
+                                Text("Container path must be inside /mnt or /sdcard")
+                            guestDuplicate -> Text("This container path is already used by another mount")
                             else -> {}
                         }
                     },
@@ -103,11 +103,11 @@ internal fun AddMountDialog(
                 onClick = { onConfirm(name, hostPath, guestPath) },
                 enabled = nameValid && hostPathValid && guestPathValid,
             ) {
-                Text("添加挂载")
+                Text("Add mount")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text("Cancel") }
         },
     )
 }
