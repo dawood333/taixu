@@ -48,7 +48,7 @@ class DownloadToolBackend(
         progressReporter: (suspend (String) -> Unit)?,
     ): Pair<Boolean, String> {
         val url = JsonArgs.requireString(args, "url")
-        require(url.startsWith("https://", ignoreCase = true)) { "下载地址必须使用 HTTPS" }
+        require(url.startsWith("https://", ignoreCase = true)) { "Download URL must use HTTPS" }
         val destinationPath = JsonArgs.requireString(args, "destination")
         val destination = activeFileAccess.resolveDownloadDestination(destinationPath)
         val sha256 = args["sha256"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotEmpty() }
@@ -79,7 +79,7 @@ class DownloadToolBackend(
                 }
                 DownloadEvent.Verifying -> {
                     verified = true
-                    progressReporter?.invoke("正在校验下载文件 SHA-256…")
+                    progressReporter?.invoke("Verifying downloaded file SHA-256…")
                 }
                 is DownloadEvent.Completed -> completedFile = event.file
                 DownloadEvent.Started -> Unit
@@ -89,25 +89,25 @@ class DownloadToolBackend(
         val size = file.length()
         if (hasImageExtension(destination) && !isImageMagic(destination)) {
             return false to buildString {
-                append("下载失败：目标应为图片，但内容不是有效的图片格式（JPEG/PNG/GIF/WebP/BMP）。")
-                append("\n来源：").append(url)
-                append("\n大小：").append(size).append(" bytes")
-                append("\n常见原因：图床反爬/防盗链返回了占位图或错误页，或链接已过期。")
-                append("\n建议：更换图源（换站点/换域名）或稍后重试，不要用相同 URL 原样重试。")
+                append("Download failed: the target should be an image, but the content is not a valid image format (JPEG/PNG/GIF/WebP/BMP).")
+                append("\nSource: ").append(url)
+                append("\nSize: ").append(size).append(" bytes")
+                append("\nCommon causes: the image host returned a placeholder/error page due to anti-scraping or hotlink protection, or the link expired.")
+                append("\nRecommendation: use another image source/site/domain or retry later; do not retry the same URL unchanged.")
             }
         }
         val duplicateOf = findDuplicateDownload(destination)
         val body = buildString {
-            append("下载完成：").append(destinationPath)
-            append("\n大小：").append(size).append(" bytes")
+            append("Download complete: ").append(destinationPath)
+            append("\nSize: ").append(size).append(" bytes")
             latestProgress?.totalBytes?.let { append(" / ").append(it).append(" bytes") }
-            append("\n特性：HTTPS、HTTP Range 断点续传、自动重试（最多 ").append(maxAttempts).append(" 次）")
-            if (verified) append("\nSHA-256：已校验")
-            append("\n说明：当前下载器是单连接续传，不是多线程分片下载。")
+            append("\nFeatures: HTTPS, HTTP Range resume, automatic retries (up to ").append(maxAttempts).append(" attempts)")
+            if (verified) append("\nSHA-256: verified")
+            append("\nNote: this downloader resumes a single connection; it does not download chunks in parallel.")
             if (duplicateOf != null) {
-                append("\n\n警告：本次下载内容与工作区已有文件 ").append(duplicateOf)
-                append(" 完全相同（SHA-256 一致），疑似图床反爬占位图。请立即更换图源（换站点/换域名），")
-                append("不要继续从同一图床高频下载，也不要重复下载相同的 URL。")
+                append("\n\nWarning: the downloaded content is identical to an existing workspace file ").append(duplicateOf)
+                append(" (matching SHA-256), which may be an anti-scraping placeholder image. Switch to another source/site/domain immediately;")
+                append("do not repeatedly download from the same image host or download the same URL again.")
             }
         }
         return true to body
@@ -172,7 +172,7 @@ class DownloadToolBackend(
         val total = event.totalBytes?.let(::formatBytes)
         val percent = event.totalBytes?.takeIf { it > 0L }?.let { event.downloadedBytes * 100 / it }
         return buildString {
-            append("下载中：").append(downloaded)
+            append("Downloading: ").append(downloaded)
             if (total != null) {
                 append(" / ").append(total)
                 percent?.let { append(" (").append(it.coerceIn(0L, 100L)).append("%)") }
