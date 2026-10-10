@@ -132,7 +132,7 @@ fun WorkflowEditorView(
         Column(Modifier.fillMaxSize()) {
             state.message?.let { message ->
                 Surface(
-                    color = if (message == "已保存" || message == "请选择目标节点") {
+                    color = if (message == "Saved" || message == "Select a destination node") {
                         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
                     } else {
                         MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.45f)
@@ -142,7 +142,7 @@ fun WorkflowEditorView(
                     Text(
                         text = message,
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (message == "已保存" || message == "请选择目标节点") {
+                        color = if (message == "Saved" || message == "Select a destination node") {
                             MaterialTheme.colorScheme.primary
                         } else {
                             MaterialTheme.colorScheme.error
@@ -245,7 +245,7 @@ fun WorkflowEditorView(
                                                 onSelectNode(null)
                                             },
                                             modifier = Modifier.size(32.dp),
-                                            contentDescription = "关闭面板",
+                                            contentDescription = "Close panel",
                                         ) {
                                             RuntimeIcon(RuntimeIconName.Close, Modifier.size(18.dp))
                                         }
@@ -311,12 +311,12 @@ fun WorkflowEditorView(
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RuntimeIcon(RuntimeIconName.Trash, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.error)
-                    Text("确认删除节点", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Confirm node deletion", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
             },
             text = {
                 Text(
-                    text = "是否确定删除「${target.title}」？\n与该节点相连的所有输入和输出连线也将被一并断开移除。",
+                    text = "Delete “${target.title}”? All incoming and outgoing connections to this node will also be disconnected and removed.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             },
@@ -328,12 +328,12 @@ fun WorkflowEditorView(
                         if (state.selectedNodeId == id) onRemoveNode() else onRemoveNodeById(id)
                     },
                 ) {
-                    Text("确认删除")
+                    Text("Confirm delete")
                 }
             },
             dismissButton = {
                 RuntimeOutlinedButton(onClick = { nodePendingDelete = null }) {
-                    Text("取消")
+                    Text("Cancel")
                 }
             },
         )
@@ -412,7 +412,7 @@ private fun EditorBottomSheetLayout(
                             )
                         }
 
-                        // 弹窗顶部栏：类型彩色药丸、节点标题、关闭按钮
+                        // 弹窗顶部栏：类型彩色药丸、Node title、关闭按钮
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -443,7 +443,7 @@ private fun EditorBottomSheetLayout(
                             RuntimeIconButton(
                                 onClick = { onSheetExpandedChange(false) },
                                 modifier = Modifier.size(32.dp),
-                                contentDescription = "收起面板",
+                                contentDescription = "Collapse panel",
                             ) {
                                 RuntimeIcon(RuntimeIconName.Close, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -502,7 +502,7 @@ private fun EditorBottomDock(
             // 添加节点
             DockActionButton(
                 icon = RuntimeIconName.Plus,
-                label = "添加",
+                label = "Add",
                 onClick = { addDialogVisible = true },
                 tint = MaterialTheme.colorScheme.primary,
             )
@@ -511,14 +511,14 @@ private fun EditorBottomDock(
             if (isRunning) {
                 DockActionButton(
                     icon = RuntimeIconName.Stop,
-                    label = "停止",
+                    label = "Stop",
                     onClick = onCancelRun,
                     tint = MaterialTheme.colorScheme.error,
                 )
             } else {
                 DockActionButton(
                     icon = RuntimeIconName.Play,
-                    label = "运行",
+                    label = "Run",
                     onClick = onRun,
                     tint = MaterialTheme.colorScheme.primary,
                 )
@@ -528,7 +528,7 @@ private fun EditorBottomDock(
             if (activeRunState != null) {
                 DockActionButton(
                     icon = RuntimeIconName.Terminal,
-                    label = if (isRunning) "运行中" else "日志",
+                    label = if (isRunning) "Running" else "Logs",
                     onClick = onToggleConsole,
                     tint = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     badge = if (isRunning) {
@@ -548,7 +548,7 @@ private fun EditorBottomDock(
             if (state.selectedNodeId != null && !isRunning) {
                 DockActionButton(
                     icon = RuntimeIconName.Trash,
-                    label = "删除",
+                    label = "Delete",
                     onClick = onDeleteSelectedNode,
                     tint = MaterialTheme.colorScheme.error,
                 )
@@ -557,14 +557,14 @@ private fun EditorBottomDock(
             // 自动排版
             DockActionButton(
                 icon = RuntimeIconName.Tune,
-                label = "排版",
+                label = "Arrange",
                 onClick = onAutoLayout,
             )
 
             // 撤销
             DockActionButton(
                 icon = RuntimeIconName.Back,
-                label = "撤销",
+                label = "Undo",
                 enabled = state.canUndo && !isRunning,
                 onClick = onUndo,
             )
@@ -572,7 +572,7 @@ private fun EditorBottomDock(
             // 重做
             DockActionButton(
                 icon = RuntimeIconName.Reverse,
-                label = "重做",
+                label = "Redo",
                 enabled = state.canRedo && !isRunning,
                 onClick = onRedo,
             )
@@ -581,9 +581,9 @@ private fun EditorBottomDock(
             DockActionButton(
                 icon = RuntimeIconName.Save,
                 label = when {
-                    state.isSaving -> "保存中"
-                    state.isDirty -> "保存*"
-                    else -> "已保存"
+                    state.isSaving -> "Saving"
+                    state.isDirty -> "Unsaved *"
+                    else -> "Saved"
                 },
                 enabled = !state.isSaving && state.isDirty && !isRunning,
                 tint = if (state.isDirty) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -666,22 +666,22 @@ private fun RunConsoleModal(
 
     val consoleOutput = remember(activeRunState) {
         buildString {
-            appendLine("=== 太墟工作流「${activeRunState.definition.name}」控制台输出 ===")
-            appendLine("全局状态: ${runStatusLabel(activeRunState.status)}  |  执行耗时: ${durationMs}ms")
+            appendLine("=== TaiXu workflow “${activeRunState.definition.name}” console output ===")
+            appendLine("Global status: ${runStatusLabel(activeRunState.status)} | Elapsed: ${durationMs}ms")
             activeRunState.error?.let {
-                appendLine("❌ 异常信息: $it")
+                appendLine("❌ Error: $it")
             }
             appendLine()
             activeRunState.definition.nodes.forEach { node ->
                 val run = activeRunState.nodeStates[node.id]
                 val status = run?.status ?: NodeRunStatus.PENDING
                 appendLine("--------------------------------------------------")
-                appendLine("[${statusLabel(status)}] 节点: ${node.title} (${node.id})")
+                appendLine("[${statusLabel(status)}] Node: ${node.title} (${node.id})")
                 val progress = run?.progressMessage
                 val textOutput = run?.output?.textOutput
                 val errorOutput = run?.output?.error
                 if (!progress.isNullOrBlank()) {
-                    appendLine("进度: $progress")
+                    appendLine("Progress: $progress")
                 }
                 if (!textOutput.isNullOrBlank()) {
                     appendLine(textOutput)
@@ -691,7 +691,7 @@ private fun RunConsoleModal(
                 }
             }
             appendLine("--------------------------------------------------")
-            appendLine("=== 执行输出结束 ===")
+            appendLine("=== End of execution output ===")
         }
     }
 
@@ -709,7 +709,7 @@ private fun RunConsoleModal(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 RuntimeIcon(RuntimeIconName.Terminal, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("运行调试控制台", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("Run Debug Console", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Surface(
                     color = runStatusColor(activeRunState.status).copy(alpha = 0.16f),
                     shape = RoundedCornerShape(50),
@@ -787,15 +787,15 @@ private fun RunConsoleModal(
                         clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("workflow_console", consoleOutput)))
                     }
                 }) {
-                    Text("复制日志")
+                    Text("Copy logs")
                 }
                 if (isRunning) {
                     RuntimeOutlinedButton(onClick = onCancelRun) {
-                        Text("停止运行", color = MaterialTheme.colorScheme.error)
+                        Text("Stop run", color = MaterialTheme.colorScheme.error)
                     }
                 } else {
                     RuntimeButton(onClick = onRerun) {
-                        Text("重新运行")
+                        Text("Run again")
                     }
                 }
             }
@@ -825,12 +825,12 @@ private fun runStatusColor(status: WorkflowRunStatus): Color = when (status) {
 }
 
 private fun runStatusLabel(status: WorkflowRunStatus): String = when (status) {
-    WorkflowRunStatus.IDLE -> "未运行"
-    WorkflowRunStatus.RUNNING -> "运行中"
-    WorkflowRunStatus.WAITING_APPROVAL -> "等待审批"
-    WorkflowRunStatus.SUCCESS -> "执行成功"
-    WorkflowRunStatus.FAILED -> "执行失败"
-    WorkflowRunStatus.CANCELLED -> "已取消"
+    WorkflowRunStatus.IDLE -> "Not running"
+    WorkflowRunStatus.RUNNING -> "Running"
+    WorkflowRunStatus.WAITING_APPROVAL -> "Awaiting approval"
+    WorkflowRunStatus.SUCCESS -> "Succeeded"
+    WorkflowRunStatus.FAILED -> "Failed"
+    WorkflowRunStatus.CANCELLED -> "Cancelled"
 }
 
 
@@ -842,7 +842,7 @@ private fun NodePickerModal(
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("添加工作流节点", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Add workflow node", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         },
         text = {
             Column(
@@ -852,7 +852,7 @@ private fun NodePickerModal(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = "选择要加入画布的节点类型，创建后可在检查面板配置参数：",
+                    text = "Choose a node type to add to the canvas. After creating it, configure its parameters in the inspector:",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -893,7 +893,7 @@ private fun NodePickerModal(
         },
         confirmButton = {},
         dismissButton = {
-            RuntimeOutlinedButton(onClick = onDismiss) { Text("取消") }
+            RuntimeOutlinedButton(onClick = onDismiss) { Text("Cancel") }
         },
     )
 }
@@ -923,7 +923,7 @@ private fun EditorInspector(
 
         if (selected == null) {
             RuntimeCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
-                Text("请点击画布中的节点以配置参数、管理连线或查看执行日志", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Select a node on the canvas to configure parameters, manage connections, or view execution logs", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             val nodeRun = activeRunState?.nodeStates?.get(selected.id)
@@ -935,7 +935,7 @@ private fun EditorInspector(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("调试运行状态", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text("Debug run status", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             Surface(
                                 color = statusColor(nodeRun.status).copy(alpha = 0.16f),
                                 shape = RoundedCornerShape(50),
@@ -951,7 +951,7 @@ private fun EditorInspector(
                         WorkflowNodeDetails(nodeRun)
                         RuntimeOutlinedButton(onClick = onOpenConsole, modifier = Modifier.fillMaxWidth()) {
                             RuntimeIcon(RuntimeIconName.Terminal, Modifier.size(16.dp))
-                            Text("打开完整终端控制台日志", maxLines = 1)
+                            Text("Open full terminal console log", maxLines = 1)
                         }
                     }
                 }
@@ -995,21 +995,21 @@ private fun WorkflowMetadataCard(state: WorkflowEditorUiState, onApply: (String,
                 modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("工作流信息", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("Workflow information", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text(
-                    text = if (expanded) "收起" else "修改",
+                    text = if (expanded) "Collapse" else "Edit",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
             if (expanded) {
-                OutlinedTextField(name, { name = it }, label = { Text("工作流名称") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(category, { category = it }, label = { Text("分类") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(description, { description = it }, label = { Text("说明") }, minLines = 2, maxLines = 3, modifier = Modifier.fillMaxWidth())
-                RuntimeOutlinedButton(onClick = { onApply(name, description, category) }, modifier = Modifier.align(Alignment.End)) { Text("应用信息") }
+                OutlinedTextField(name, { name = it }, label = { Text("Workflow name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(category, { category = it }, label = { Text("Category") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(description, { description = it }, label = { Text("Description") }, minLines = 2, maxLines = 3, modifier = Modifier.fillMaxWidth())
+                RuntimeOutlinedButton(onClick = { onApply(name, description, category) }, modifier = Modifier.align(Alignment.End)) { Text("Apply information") }
             } else {
                 Text(
-                    text = "${name} · [${category}] - ${description.ifBlank { "暂无说明" }}",
+                    text = "${name} · [${category}] - ${description.ifBlank { "暂无Description" }}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -1079,7 +1079,7 @@ private fun NodeInspectorCard(
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     RuntimeIcon(RuntimeIconName.Trash, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.error)
-                    Text("删除", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                    Text("Delete", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                 }
             }
 
@@ -1090,7 +1090,7 @@ private fun NodeInspectorCard(
             ) {
                 Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "💡 节点作用：${meta.summary}",
+                        text = "💡 Node purpose: ${meta.summary}",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
@@ -1106,20 +1106,20 @@ private fun NodeInspectorCard(
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("节点标题") },
+                label = { Text("Node title") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("节点备注 / 说明") },
+                label = { Text("节点备注 / Description") },
                 minLines = 1,
                 maxLines = 2,
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            Text("核心参数配置", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text("Core parameter configuration", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
 
             when (node.type) {
                 WorkflowNodeType.BASH_COMMAND -> {
@@ -1132,26 +1132,26 @@ private fun NodeInspectorCard(
                         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 RuntimeIcon(RuntimeIconName.Terminal, Modifier.size(16.dp), tint = Color(0xFF06B6D4))
-                                Text("终端 Shell 命令行（在沙箱环境中执行）", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFF06B6D4))
+                                Text("Terminal shell command (runs in the sandbox)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFF06B6D4))
                             }
                             OutlinedTextField(
                                 value = configMap["command"].orEmpty(),
                                 onValueChange = { configMap["command"] = it },
-                                label = { Text("Bash 命令（在此输入执行的命令）") },
-                                placeholder = { Text("例如：git status --short && git diff") },
-                                supportingText = { Text("支持引用上游输出：\${previous.output}、工作区：\${WORKSPACE_PATH}") },
+                                label = { Text("Bash command (enter the command to run)") },
+                                placeholder = { Text("e.g. git status --short && git diff") },
+                                supportingText = { Text("Can reference upstream output with \${previous.output} and workspace path with \${WORKSPACE_PATH}") },
                                 minLines = 3,
                                 maxLines = 6,
                                 modifier = Modifier.fillMaxWidth(),
                             )
-                            Text("常用命令预设（点击直接填入）：", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Command presets (tap to insert):", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 listOf(
-                                    "系统内核" to "echo '=== 系统内核 ===' && uname -a && cat /etc/os-release | head -n 8",
-                                    "内存磁盘" to "echo '=== 资源使用 ===' && free -h && df -h /",
-                                    "Git 状态" to "git status --short && git diff --stat",
-                                    "测试网络" to "curl -I -s -m 5 https://www.baidu.com | head -n 4",
-                                    "工具排查" to "for cmd in git python3 curl make; do which \$cmd && echo \"✔ \$cmd\" || echo \"✘ \$cmd\"; done",
+                                    "System information" to "echo '=== System information ===' && uname -a && cat /etc/os-release | head -n 8",
+                                    "Memory and disk" to "echo '=== 资源使用 ===' && free -h && df -h /",
+                                    "Git status" to "git status --short && git diff --stat",
+                                    "Test network" to "curl -I -s -m 5 https://www.baidu.com | head -n 4",
+                                    "Check tools" to "for cmd in git python3 curl make; do which \$cmd && echo \"✔ \$cmd\" || echo \"✘ \$cmd\"; done",
                                 ).forEach { (name, cmd) ->
                                     Surface(
                                         onClick = { configMap["command"] = cmd },
@@ -1170,8 +1170,8 @@ private fun NodeInspectorCard(
                             OutlinedTextField(
                                 value = configMap["workingDirectory"].orEmpty(),
                                 onValueChange = { configMap["workingDirectory"] = it },
-                                label = { Text("工作目录（可选）") },
-                                placeholder = { Text("留空默认为当前工程根目录") },
+                                label = { Text("Working directory (optional)") },
+                                placeholder = { Text("Leave blank to use the current project root") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                             )
@@ -1186,10 +1186,10 @@ private fun NodeInspectorCard(
                             configMap["expression"] = it
                             configMap.remove("condition")
                         },
-                        label = { Text("条件表达式") },
-                        placeholder = { Text("exitCode == 0  或  \${HOST_PRIVILEGED} == true") },
+                        label = { Text("Condition expression") },
+                        placeholder = { Text("exitCode == 0 or \${HOST_PRIVILEGED} == true") },
                         supportingText = {
-                            Text("支持 exitCode / output contains / \${VAR} 比较，以及 && ||。成立→exit 0，否则 exit 1。")
+                            Text("Supports exitCode, output contains, \${VAR} comparisons, and && / ||. True → exit 0; false → exit 1.")
                         },
                         minLines = 2,
                         maxLines = 4,
@@ -1207,9 +1207,9 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["command"].orEmpty(),
                         onValueChange = { configMap["command"] = it },
-                        label = { Text("后台服务启动命令（必填）") },
-                        placeholder = { Text("例如：python3 -m http.server 8080") },
-                        supportingText = { Text("将在沙箱后台常驻运行，进程 ID 保存于 \${PROCESS_ID}") },
+                        label = { Text("Background service start command (required)") },
+                        placeholder = { Text("e.g. python3 -m http.server 8080") },
+                        supportingText = { Text("Runs persistently in the sandbox background; the process ID is stored in \${PROCESS_ID}") },
                         minLines = 2,
                         maxLines = 4,
                         modifier = Modifier.fillMaxWidth(),
@@ -1217,8 +1217,8 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["workingDirectory"].orEmpty(),
                         onValueChange = { configMap["workingDirectory"] = it },
-                        label = { Text("工作目录（可选）") },
-                        placeholder = { Text("留空默认为工程根目录") },
+                        label = { Text("Working directory (optional)") },
+                        placeholder = { Text("Leave blank to use the project root") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -1228,9 +1228,9 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["prompt"].orEmpty(),
                         onValueChange = { configMap["prompt"] = it },
-                        label = { Text("任务需求 / 提示词（必填）") },
-                        placeholder = { Text("例如：审阅上一节点的差异并提出优化建议") },
-                        supportingText = { Text("支持使用 \${previous.output} 引用上游节点输出") },
+                        label = { Text("Task requirements / prompt (required)") },
+                        placeholder = { Text("e.g. Review the previous node's diff and suggest improvements") },
+                        supportingText = { Text("Use \${previous.output} to reference upstream node output") },
                         minLines = 3,
                         maxLines = 6,
                         modifier = Modifier.fillMaxWidth(),
@@ -1238,17 +1238,17 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["role"].orEmpty(),
                         onValueChange = { configMap["role"] = it },
-                        label = { Text("智能体角色（可选）") },
-                        placeholder = { Text("例如：Android 资深架构师") },
+                        label = { Text("Agent role (optional)") },
+                        placeholder = { Text("e.g. Senior Android architect") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     OutlinedTextField(
                         value = configMap["modelId"].orEmpty(),
                         onValueChange = { configMap["modelId"] = it },
-                        label = { Text("固定模型配置 ID（可选）") },
-                        placeholder = { Text("留空则使用运行时选择的 WORKFLOW_MODEL_ID") },
-                        supportingText = { Text("优先于运行对话框所选模型；一般留空即可") },
+                        label = { Text("Fixed model profile ID (optional)") },
+                        placeholder = { Text("Leave blank to use the WORKFLOW_MODEL_ID selected at runtime") },
+                        supportingText = { Text("Takes precedence over the model selected in the run dialog; usually leave blank") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -1258,8 +1258,8 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["prompt"].orEmpty(),
                         onValueChange = { configMap["prompt"] = it },
-                        label = { Text("子任务需求（必填）") },
-                        placeholder = { Text("例如：执行单元测试并尝试修复失败用例") },
+                        label = { Text("Subtask requirements (required)") },
+                        placeholder = { Text("e.g. Run unit tests and try to fix failing cases") },
                         minLines = 3,
                         maxLines = 5,
                         modifier = Modifier.fillMaxWidth(),
@@ -1267,8 +1267,8 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["role"].orEmpty(),
                         onValueChange = { configMap["role"] = it },
-                        label = { Text("子智能体角色（可选）") },
-                        placeholder = { Text("例如：测试修复助手") },
+                        label = { Text("子Agent role (optional)") },
+                        placeholder = { Text("e.g. Test-fixing assistant") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -1283,17 +1283,17 @@ private fun NodeInspectorCard(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Column(Modifier.weight(1f)) {
                             RuntimeOutlinedButton(onClick = { modeExpanded = true }, modifier = Modifier.fillMaxWidth()) {
-                                Text("模式：$currentMode", maxLines = 1)
+                                Text("Mode: $currentMode", maxLines = 1)
                             }
                             DropdownMenu(expanded = modeExpanded, onDismissRequest = { modeExpanded = false }) {
-                                listOf("build" to "标准构建", "doctor" to "环境体检", "analyze" to "静态分析").forEach { (m, l) ->
+                                listOf("build" to "Standard build", "doctor" to "Environment check", "analyze" to "Static analysis").forEach { (m, l) ->
                                     DropdownMenuItem(text = { Text("$l ($m)") }, onClick = { configMap["mode"] = m; modeExpanded = false })
                                 }
                             }
                         }
                         Column(Modifier.weight(1f)) {
                             RuntimeOutlinedButton(onClick = { typeExpanded = true }, modifier = Modifier.fillMaxWidth()) {
-                                Text("类型：$currentType", maxLines = 1)
+                                Text("Type: $currentType", maxLines = 1)
                             }
                             DropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
                                 listOf("android", "cmake", "cargo", "gradle").forEach { t ->
@@ -1305,8 +1305,8 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["task"] ?: "assembleDebug",
                         onValueChange = { configMap["task"] = it },
-                        label = { Text("构建 Task 任务") },
-                        placeholder = { Text("例如：assembleDebug 或 build") },
+                        label = { Text("Build task") },
+                        placeholder = { Text("e.g. assembleDebug or build") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -1324,9 +1324,9 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["variables"].orEmpty(),
                         onValueChange = { configMap["variables"] = it },
-                        label = { Text("变量赋值（每行 KEY=value）") },
+                        label = { Text("Variable assignments (one KEY=value per line)") },
                         placeholder = { Text("FOO=bar\nPATH=\${WORKSPACE_PATH}") },
-                        supportingText = { Text("支持 \${VAR} / \${previous.output} / \${nodeId.output}") },
+                        supportingText = { Text("Supports \${VAR}, \${previous.output}, and \${nodeId.output}") },
                         minLines = 3,
                         maxLines = 8,
                         modifier = Modifier.fillMaxWidth(),
@@ -1337,8 +1337,8 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["prompt"].orEmpty(),
                         onValueChange = { configMap["prompt"] = it },
-                        label = { Text("审批确认说明（必填）") },
-                        placeholder = { Text("例如：是否确认将修复推送到远程仓库？") },
+                        label = { Text("审批确认Description（必填）") },
+                        placeholder = { Text("e.g. Confirm pushing the fix to the remote repository?") },
                         minLines = 2,
                         maxLines = 4,
                         modifier = Modifier.fillMaxWidth(),
@@ -1347,7 +1347,7 @@ private fun NodeInspectorCard(
 
                 WorkflowNodeType.TRIGGER -> {
                     Text(
-                        text = "工作流启动入口。在顶部点击“运行调试”即可从此处触发整个 DAG 流程。",
+                        text = "Workflow entry point. Tap Run Debug at the top to start the entire DAG from here.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1355,7 +1355,7 @@ private fun NodeInspectorCard(
 
                 WorkflowNodeType.TERMINAL_OUTPUT -> {
                     Text(
-                        text = "工作流终点节点。将自动收集并归档上游所有步骤的标准输出、错误日志与产物文件。",
+                        text = "Workflow terminal node. Collects and archives stdout, error logs, and artifacts from all upstream steps.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1370,7 +1370,7 @@ private fun NodeInspectorCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = if (showAdvancedJson) "收起高级配置 (JSON)" else "展开高级配置 (JSON)",
+                    text = if (showAdvancedJson) "Collapse高级配置 (JSON)" else "Expand advanced configuration (JSON)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
@@ -1391,7 +1391,7 @@ private fun NodeInspectorCard(
                             configMap.putAll(parsed)
                         }
                     },
-                    label = { Text("原始 JSON 配置") },
+                    label = { Text("Raw JSON configuration") },
                     isError = parsedConfig == null,
                     minLines = 3,
                     maxLines = 6,
@@ -1403,14 +1403,14 @@ private fun NodeInspectorCard(
                 OutlinedTextField(
                     value = timeout,
                     onValueChange = { timeout = it.filter(Char::isDigit).take(4) },
-                    label = { Text("超时（秒）") },
+                    label = { Text("Timeout (seconds)") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                 )
                 Column(Modifier.weight(1.2f)) {
                     RuntimeOutlinedButton(onClick = { policyExpanded = true }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                        Text("策略：${policy.editorLabel()}", maxLines = 1)
+                        Text("Policy: ${policy.editorLabel()}", maxLines = 1)
                     }
                     DropdownMenu(expanded = policyExpanded, onDismissRequest = { policyExpanded = false }) {
                         FailurePolicy.entries.forEach { item ->
@@ -1425,7 +1425,7 @@ private fun NodeInspectorCard(
                     onClick = if (isConnecting) onCancelConnection else onBeginConnection,
                     modifier = Modifier.weight(1f),
                 ) {
-                    Text(if (isConnecting) "取消连线" else "在画布连线…", maxLines = 1)
+                    Text(if (isConnecting) "Cancel connection" else "Connect on canvas…", maxLines = 1)
                 }
                 RuntimeButton(
                     onClick = {
@@ -1442,7 +1442,7 @@ private fun NodeInspectorCard(
                     },
                     modifier = Modifier.weight(1f),
                 ) {
-                    Text("应用参数更改", maxLines = 1)
+                    Text("Apply parameter changes", maxLines = 1)
                 }
             }
         }
@@ -1462,7 +1462,7 @@ private fun HostActionConfigFields(configMap: MutableMap<String, String>) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(modifier = Modifier.weight(1f)) {
                 RuntimeOutlinedButton(onClick = { categoryExpanded = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text("分类：$currentCategory", maxLines = 1)
+                    Text("Category：$currentCategory", maxLines = 1)
                 }
                 DropdownMenu(expanded = categoryExpanded, onDismissRequest = { categoryExpanded = false }) {
                     grouped.keys.forEach { category ->
@@ -1488,7 +1488,7 @@ private fun HostActionConfigFields(configMap: MutableMap<String, String>) {
                                 Text(
                                     buildString {
                                         append(action.label)
-                                        if (action.privilege == HostWorkflowPrivilege.PRIVILEGED) append(" · 需特权")
+                                        if (action.privilege == HostWorkflowPrivilege.PRIVILEGED) append(" · privileged")
                                     },
                                 )
                             },
@@ -1505,7 +1505,7 @@ private fun HostActionConfigFields(configMap: MutableMap<String, String>) {
         currentDef?.let { def ->
             Text(
                 text = def.description + if (def.privilege == HostWorkflowPrivilege.PRIVILEGED) {
-                    "\n⚠ 需要 Shizuku 或 Root 生效。"
+                    "\n⚠ Requires Shizuku or Root."
                 } else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1525,8 +1525,8 @@ private fun HostActionConfigFields(configMap: MutableMap<String, String>) {
         } ?: OutlinedTextField(
             value = configMap["command"].orEmpty(),
             onValueChange = { configMap["command"] = it },
-            label = { Text("自定义宿主命令（逃逸舱）") },
-            supportingText = { Text("未知 action 时将按特权 shell 执行此命令") },
+            label = { Text("Custom host command (escape hatch)") },
+            supportingText = { Text("If the action is unknown, this command runs through a privileged shell") },
             minLines = 2,
             maxLines = 4,
             modifier = Modifier.fillMaxWidth(),
@@ -1561,7 +1561,7 @@ private fun BranchRouterCard(
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 RuntimeIcon(RuntimeIconName.Link, Modifier.size(16.dp), tint = Color(0xFFEAB308))
-                Text("可视化条件分支路由器", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFFEAB308))
+                Text("Visual condition-branch router", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFFEAB308))
             }
 
             Surface(
@@ -1570,8 +1570,8 @@ private fun BranchRouterCard(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = "💡 节点会求值上方表达式：成立 exitCode=0，不成立 exitCode=1（节点本身仍成功，便于分流）。\n" +
-                        "下面可快速把成功/失败分支连到目标节点。",
+                    text = "💡 The node evaluates the expression above: true sets exitCode=0; false sets exitCode=1 (the node itself still succeeds, allowing routing).\n" +
+                        "Connect the success and failure branches to destination nodes below.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(8.dp),
@@ -1580,7 +1580,7 @@ private fun BranchRouterCard(
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Surface(shape = RoundedCornerShape(50), color = Color(0xFF10B981).copy(alpha = 0.18f)) {
-                    Text("✔ 成功分支 (exitCode == 0)", style = MaterialTheme.typography.labelSmall, color = Color(0xFF10B981), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                    Text("✔ Success branch (exitCode == 0)", style = MaterialTheme.typography.labelSmall, color = Color(0xFF10B981), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                 }
                 if (successEdge != null) {
                     val target = state.definition.nodes.firstOrNull { it.id == successEdge.toNodeId }
@@ -1589,12 +1589,12 @@ private fun BranchRouterCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text("已连接至: ${target?.title ?: successEdge.toNodeId}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Text("Connected to: ${target?.title ?: successEdge.toNodeId}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                         RuntimeOutlinedButton(
                             onClick = { onRemoveEdge(successEdge.id) },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                         ) {
-                            Text("断开", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                            Text("Disconnect", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                         }
                     }
                 } else if (otherNodes.isNotEmpty()) {
@@ -1602,7 +1602,7 @@ private fun BranchRouterCard(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(Modifier.weight(1f)) {
                             RuntimeOutlinedButton(onClick = { successExpanded = true }, modifier = Modifier.fillMaxWidth()) {
-                                Text("目标: ${currentSuccessNode.title}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text("Target: ${currentSuccessNode.title}", maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                             DropdownMenu(expanded = successExpanded, onDismissRequest = { successExpanded = false }) {
                                 otherNodes.forEach { target ->
@@ -1617,7 +1617,7 @@ private fun BranchRouterCard(
                             onClick = { onConnectNodes(node.id, currentSuccessNode.id, "output", "exitCode == 0") },
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                         ) {
-                            Text("连接", maxLines = 1)
+                            Text("Connect", maxLines = 1)
                         }
                     }
                 }
@@ -1625,7 +1625,7 @@ private fun BranchRouterCard(
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Surface(shape = RoundedCornerShape(50), color = Color(0xFFF43F5E).copy(alpha = 0.18f)) {
-                    Text("✘ 失败分支 (exitCode != 0)", style = MaterialTheme.typography.labelSmall, color = Color(0xFFF43F5E), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                    Text("✘ Failure branch (exitCode != 0)", style = MaterialTheme.typography.labelSmall, color = Color(0xFFF43F5E), modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                 }
                 if (failureEdge != null) {
                     val target = state.definition.nodes.firstOrNull { it.id == failureEdge.toNodeId }
@@ -1634,12 +1634,12 @@ private fun BranchRouterCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text("已连接至: ${target?.title ?: failureEdge.toNodeId}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Text("Connected to: ${target?.title ?: failureEdge.toNodeId}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                         RuntimeOutlinedButton(
                             onClick = { onRemoveEdge(failureEdge.id) },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                         ) {
-                            Text("断开", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                            Text("Disconnect", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                         }
                     }
                 } else if (otherNodes.isNotEmpty()) {
@@ -1647,7 +1647,7 @@ private fun BranchRouterCard(
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(Modifier.weight(1f)) {
                             RuntimeOutlinedButton(onClick = { failureExpanded = true }, modifier = Modifier.fillMaxWidth()) {
-                                Text("目标: ${currentFailureNode.title}", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text("Target: ${currentFailureNode.title}", maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                             DropdownMenu(expanded = failureExpanded, onDismissRequest = { failureExpanded = false }) {
                                 otherNodes.forEach { target ->
@@ -1662,7 +1662,7 @@ private fun BranchRouterCard(
                             onClick = { onConnectNodes(node.id, currentFailureNode.id, "output", "exitCode != 0") },
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                         ) {
-                            Text("连接", maxLines = 1)
+                            Text("Connect", maxLines = 1)
                         }
                     }
                 }
@@ -1707,7 +1707,7 @@ private fun NodeConnectionsCard(
                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.14f),
                     ) {
                         Text(
-                            text = "一键断开全部",
+                            text = "一键Disconnect全部",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -1768,7 +1768,7 @@ private fun NodeConnectionsCard(
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             ) {
                                 RuntimeIcon(RuntimeIconName.Close, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.error)
-                                Text("断开", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                                Text("Disconnect", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
@@ -1817,7 +1817,7 @@ private fun NodeConnectionsCard(
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             ) {
                                 RuntimeIcon(RuntimeIconName.Close, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.error)
-                                Text("断开", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                                Text("Disconnect", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
