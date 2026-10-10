@@ -1,67 +1,63 @@
-# Baseline Profile 启动优化指南
+# Baseline Profile Startup Optimization Guide
 
-> 太墟冷启动优化第二阶段：安装时预编译（AOT）热点方法，消除首次启动 JIT 现场编译开销。
+> Phase two of TaiXu cold-start optimization: precompile hot methods at install time (AOT) to reduce JIT compilation during the first launch.
 
-## 原理
+## How it works
 
-APK 内嵌 `assets/dexopt/baseline.prof`（由 `app/src/release/generated/baselineProfiles/` 编译打包）。
-首次安装后 `androidx.profileinstaller` 在后台把它提交给 ART 预编译，覆盖：
+The APK bundles `assets/dexopt/baseline.prof` (compiled from `app/src/release/generated/baselineProfiles/`). After installation, `androidx.profileinstaller` submits it to ART in the background for precompilation. It covers:
 
-- `Application.onCreate` → Koin 图构建 → 首屏 Compose 组合的完整启动路径
-- 首帧 LazyColumn 滚动路径
+- The full startup path from `Application.onCreate` through Koin graph creation to the first Compose screen.
+- The first-frame LazyColumn scrolling path.
 
-## 模块结构
+## Module structure
 
-| 路径 | 职责 |
+| Path | Responsibility |
 | :--- | :--- |
-| `baselineprofile/` | 生成者模块（`com.android.test` + macrobenchmark），含采集用例 |
-| `baselineprofile/.../StartupBaselineProfile.kt` | 采集场景：冷启动 + 首页轻滑动 |
-| `app/src/release/generated/baselineProfiles/` | 产物，**随版本库提交** |
-| `app/build.gradle.kts` | 消费者接线：插件 + `baselineProfile(project(":baselineprofile"))` |
+| `baselineprofile/` | Generator module (`com.android.test` + macrobenchmark), including collection scenarios |
+| `baselineprofile/.../StartupBaselineProfile.kt` | Collection scenario: cold start + light scrolling on the home screen |
+| `app/src/release/generated/baselineProfiles/` | Generated output, **committed to version control** |
+| `app/build.gradle.kts` | Consumer wiring: plugin + `baselineProfile(project(":baselineprofile"))` |
 
-## 重新采集（App UI 或启动链路大改后）
+## Re-collect the profile (after major UI or startup-path changes)
 
-前置：一台已连接、已解锁的设备/模拟器（真机或 AVD 均可）。
+Prerequisite: a connected, unlocked device or emulator (physical device or AVD).
 
 ```powershell
 $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"
 .\gradlew.bat :app:generateBaselineProfile --console=plain
 ```
 
-成功标志：`app/src/release/generated/baselineProfiles/*.txt` 更新，测试 `1/1 completed (0 failed)`。
+Success indicators: `app/src/release/generated/baselineProfiles/*.txt` is updated and the test reports `1/1 completed (0 failed)`.
 
-### 多设备并存时锁定目标
+### Select a target when multiple devices are connected
 
 ```powershell
-$env:ANDROID_SERIAL = "emulator-5554"   # 或具体设备序列号
+$env:ANDROID_SERIAL = "emulator-5554"   # Or a specific device serial
 ```
 
-### 本机无设备时：手动起一个无头 AVD
+### If no device is available: start a headless AVD manually
 
 ```powershell
-# 一次性创建（本仓库已有 android-37.1 google_apis_playstore x86_64 镜像时可直接用）
-powershell -NoProfile -Command "Start-Process -FilePath \"$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe\" -ArgumentList '@<avd名>','-no-window','-no-audio','-no-boot-anim'"
+# One-time setup (if this repository already has the android-37.1 google_apis_playstore x86_64 image, use it directly)
+powershell -NoProfile -Command "Start-Process -FilePath \"$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe\" -ArgumentList '@<avd-name>','-no-window','-no-audio','-no-boot-anim'"
 adb -s emulator-5554 shell settings put secure user_setup_complete 1
 adb -s emulator-5554 shell settings put global device_provisioned 1
 ```
 
-x86_64 模拟器可以运行 arm64-only 应用（模拟器 37+ 自动二进制翻译），太墟仅 arm64-v8a 不受影响。
+An x86_64 emulator can run an arm64-only app (emulator 37+ performs automatic binary translation); TaiXu's arm64-v8a-only target is not a problem.
 
-## 已知坑位
+## Known pitfalls
 
-1. **vivo 等国产 ROM 的 USB 安全加固**会以 `Calling from not trusted UID!` 拦截仪器化注入，
-   表现为 `Failed to install split APK(s)` 或 instrumentation 进程秒死——这类设备无法用于采集，换模拟器。
-2. 采集用的是 nonMinified 变体；若 release 主线程抛错（如 R8 后才暴露的正则问题），
-   采集阶段就会以 `Process crashed` 失败。先修崩溃再采集。
-3. 强杀 Gradle daemon 可能留下损坏的 KSP 缓存（报 `NoSuchFileException ... kspCaches\...\*_Factory.java`），
-   删除对应模块的 `build/kspCaches` 重跑即可。
+1. **USB security hardening on some domestic ROMs, including vivo,** may block instrumentation with `Calling from not trusted UID!`. Symptoms include `Failed to install split APK(s)` or the instrumentation process exiting immediately. Such devices cannot be used for collection; use an emulator instead.
+2. Collection uses a non-minified variant. If the release main thread crashes (for example, due to a regex issue exposed only after R8), collection fails with `Process crashed`. Fix the crash first.
+3. Force-killing the Gradle daemon can leave a corrupted KSP cache (for example, `NoSuchFileException ... kspCaches\...\*_Factory.java`). Delete the affected module's `build/kspCaches` directory and rerun.
 
-## 收益验证
+## Verify the benefit
 
 ```powershell
 adb install -r app/build/outputs/apk/release/taixu-v0.6.0-release.apk
-adb shell am start -W top.wkbin.taixu/.MainActivity   # 对比 TotalTime
-adb logcat -s TaiXuStartup                            # splash dismissed 耗时
+adb shell am start -W top.wkbin.taixu/.MainActivity   # Compare TotalTime
+adb logcat -s TaiXuStartup                            # Time until splash dismissal
 ```
 
-Koin 迁移已移除旧 DI 生成类的 profile 条目；完整的新启动热点需按本文流程在 ARM64 设备上重新采集，不能仅替换类名。
+The Koin migration removed profile entries for old DI-generated classes. Re-collect the complete startup hot path on an ARM64 device using this guide; simply replacing class names is not sufficient.
