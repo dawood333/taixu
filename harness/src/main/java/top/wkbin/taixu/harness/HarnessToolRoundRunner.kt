@@ -57,8 +57,8 @@ class HarnessToolRoundRunner(
                 args = buildJsonObject {},
                 reasoning = reasoning,
                 rawToolName = spec.name.trim(),
-                output = "本回合工具调用数量（${allCalls.size}）超过单轮上限（$maxToolsPerRound），已跳过本次多余的 $dropped 个调用。" +
-                    "请拆分任务、分步调用工具，避免一次性发起过多工具请求。",
+                output = "This round has ${allCalls.size} tool calls, exceeding the per-round limit of $maxToolsPerRound. Skipped the extra $dropped calls." +
+                    "Split the task and call tools step by step instead of issuing too many requests at once.",
             )
         }
         return allCalls.take(maxToolsPerRound)
@@ -150,7 +150,7 @@ class HarnessToolRoundRunner(
                     args = buildJsonObject {},
                     reasoning = reasoning,
                     rawToolName = toolNameTrimmed,
-                    output = "工具参数 JSON 解析失败（${friendly(parseError)}）。请重新发起完整的工具调用，参数必须是合法的 JSON 对象。",
+                    output = "Failed to parse tool argument JSON (${friendly(parseError)}). Submit the complete tool call again with a valid JSON object.",
                 )
                 loopDetector.recordSettled(toolNameTrimmed, buildJsonObject {}, success = false)
                 metrics.toolCallRecorded(failed = true)
@@ -169,7 +169,7 @@ class HarnessToolRoundRunner(
             if (schemaProblems.isNotEmpty()) {
                 // 常见错配定向提示：模型想把 url 交给通用 shell 时，直接指向正确的专用工具
                 val urlHint = if (args.containsKey("url") && tool != HarnessTool.DOWNLOAD) {
-                    "提示：url 是 download 工具的参数，下载网页/图片/文件请调用 download(url, destination)。"
+                    "Hint: url is a parameter of the download tool. Use download(url, destination) to download webpages, images, or files."
                 } else ""
                 appendToolCallAndResult(
                     sessId = sessId,
@@ -178,8 +178,8 @@ class HarnessToolRoundRunner(
                     args = args,
                     reasoning = reasoning,
                     rawToolName = toolNameTrimmed,
-                    output = "工具参数校验未通过：${schemaProblems.joinToString("；")}。" +
-                        "请按工具定义修正参数后重新调用，必填字段不可省略。$urlHint",
+                    output = "Tool argument validation failed: ${schemaProblems.joinToString("; ")}." +
+                        "Correct the arguments according to the tool definition and try again. Required fields cannot be omitted. $urlHint",
                 )
                 loopDetector.recordSettled(toolNameTrimmed, args, success = false)
                 metrics.toolCallRecorded(failed = true)
@@ -255,7 +255,7 @@ class HarnessToolRoundRunner(
                     )
                 },
                 executionFailure = { throwable ->
-                    ToolResult(newId(), now(), toolCall.id, false, "工具执行异常：${friendly(throwable)}")
+                    ToolResult(newId(), now(), toolCall.id, false, "Tool execution error: ${friendly(throwable)}")
                 },
                 commitResult = { outcome ->
                     publicationMutex.withLock {
@@ -263,7 +263,7 @@ class HarnessToolRoundRunner(
                         agentEventLogger.log(sessId, "ToolResult", "Tool=${item.tool.name}, CallId=${toolCall.id}, Success=${outcome.success}, Duration=${duration}ms, OutputChars=${outcome.output.length}, AwaitingApproval=${outcome.awaitingApproval}")
                         if (outcome.awaitingApproval) {
                             metrics.approvalRequested()
-                            stateMirrors.setStatus(sessId, "等待用户批准")
+                            stateMirrors.setStatus(sessId, "Waiting for user approval")
                             // Stop queued calls; in-flight calls settle before the approval boundary.
                             pause.abort()
                             approvalPauseRequested.set(true)
@@ -282,7 +282,7 @@ class HarnessToolRoundRunner(
         if (approvalPauseRequested.get()) {
             // All in-flight results must settle before persisting the approval boundary.
             operationCoordinator.waitingApproval(operationId)
-            stateMirrors.setStatus(sessId, "等待用户批准")
+            stateMirrors.setStatus(sessId, "Waiting for user approval")
             throw ApprovalPauseException()
         }
         return roundHadSuccess.get()
@@ -297,7 +297,7 @@ class HarnessToolRoundRunner(
         val nativeTools = KNOWN_TOOL_NAMES.sorted()
         val mcpTools = model.dynamicMcpTools
         val mcpList = if (mcpTools.isEmpty()) {
-            "（当前没有已启用的 MCP 工具）"
+            "(No MCP tools are currently enabled)"
         } else {
             mcpTools.joinToString("；") { tool ->
                 "${McpToolApiName.encode(tool)}（${tool.serverName}·${tool.name}）"
@@ -312,10 +312,10 @@ class HarnessToolRoundRunner(
             .minByOrNull { it.second }
             ?.first
         return buildString {
-            append("未知工具：$called。工具名不可编造或猜测，必须从下列清单中原样选取。")
-            append("原生工具：${nativeTools.joinToString(" / ")}。")
-            append("已启用 MCP 工具：$mcpList。")
-            nearest?.let { append("最接近的候选是 $it，是否想调用它？") }
+            append("Unknown tool: $called. Do not invent or guess tool names; select one exactly as listed below.")
+            append("Native tools: ${nativeTools.joinToString(" / ")}.")
+            append("Enabled MCP tools: $mcpList.")
+            nearest?.let { append("The closest match is $it. Did you mean to call it?") }
         }
     }
 
