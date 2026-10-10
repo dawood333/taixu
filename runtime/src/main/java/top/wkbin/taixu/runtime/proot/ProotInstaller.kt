@@ -29,18 +29,18 @@ class ProotInstaller(
             val proot = pathManager.bundledProotFile
             val loader = pathManager.bundledProotLoaderFile
             require(proot.isFile && proot.length() > MIN_RUNTIME_COMPONENT_BYTES) {
-                "APK 缺少 ARM64 PRoot 主程序（libproot.so）"
+                "APK is missing the ARM64 PRoot executable (libproot.so)"
             }
             require(
                 loader.isFile &&
                     loader.length() > MIN_RUNTIME_COMPONENT_BYTES &&
                     loader.length() <= MAX_LOADER_BYTES,
             ) {
-                "APK 缺少 PRoot ARM64 loader（libproot-loader.so）。" +
-                    "Termux 版 PRoot 没有内置 loader，不能只复制 proot 主程序。"
+                "APK is missing the ARM64 PRoot loader (libproot-loader.so)." +
+                    "The Termux PRoot build does not bundle a loader; copying only the proot executable is insufficient."
             }
             require(loader.canExecute()) {
-                "PRoot loader 不可执行；必须从 APK nativeLibraryDir 解压，不能放在 filesDir"
+                "PRoot loader is not executable; it must be extracted from APK nativeLibraryDir, not placed in filesDir"
             }
             elfInspector.requireAarch64(proot)
             elfInspector.requireAarch64(loader)
@@ -54,7 +54,7 @@ class ProotInstaller(
             AppResult.Failure(
                 AppError(
                     code = ErrorCode.INSTALLATION_FAILED,
-                    message = "PRoot 运行组件校验失败：${throwable.message ?: "未知错误"}",
+                    message = "PRoot runtime validation failed: ${throwable.message ?: "unknown error"}",
                     cause = throwable,
                 ),
             )
@@ -72,17 +72,17 @@ class ProotInstaller(
                 .start()
         } catch (throwable: Throwable) {
             throw IllegalStateException(
-                "无法启动 ${file.absolutePath}：${throwable.message}",
+                "Unable to start ${file.absolutePath}: ${throwable.message}",
                 throwable,
             )
         }
         val output = process.inputStream.bufferedReader().use { it.readText() }
         val exitCode = process.waitFor()
         require(exitCode == 0) {
-            "PRoot 主程序执行失败（exit=$exitCode）：${output.trim().ifBlank { "无输出" }}"
+            "PRoot executable failed (exit=$exitCode): ${output.trim().ifBlank { "no output" }}"
         }
         require(output.contains(EXPECTED_PROOT_VERSION)) {
-            "PRoot 主程序版本不匹配，期望 $EXPECTED_PROOT_VERSION"
+            "PRoot executable version mismatch; expected $EXPECTED_PROOT_VERSION"
         }
     }
 
