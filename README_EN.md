@@ -2,7 +2,7 @@
   <img src="app/src/main/res/drawable/taixu_logo.webp" width="96" alt="TaiXu Logo" />
 </p>
 
-<h1 align="center">TaiXu · 太墟</h1>
+<h1 align="center">TaiXu</h1>
 
 <p align="center"><strong>The Myriad Manifestations in the Great Void.</strong></p>
 
@@ -17,14 +17,14 @@
 <p align="center">
   <a href="https://github.com/wkbin/taixu/releases">Releases</a> ·
   <a href="https://github.com/wkbin/taixu/issues">Issues</a> ·
-  <a href="README.md">简体中文</a> · <strong>English</strong>
+  <a href="README_ZH.md">Chinese</a> · <strong>English</strong>
 </p>
 
 ---
 
 ## 🌌 What is TaiXu?
 
-**TaiXu (太墟)** takes its name from GuiXu, the vast ravine described in *Liezi*. It brings a **runnable, observable, recoverable, and extensible** Linux and AI automation environment to Android within the app's permissions.
+**TaiXu** takes its name from GuiXu, the vast ravine described in *Liezi*. It brings a **runnable, observable, recoverable, and extensible** Linux and AI automation environment to Android within the app's permissions.
 
 Agents, MCP tools, Linux processes, native PTY terminals, browsers, Git, and project workspaces work together to turn natural language goals into files, running processes, verified code, and Android / Flutter build artifacts. Visual workflows make repeatable tasks persistent, schedulable, and subject to approval.
 
@@ -88,11 +88,11 @@ A script stops at an inner call that requires approval. Approval applies to that
 
 Main entries:
 
-- **Chat (智枢)**: Agent conversations, plans, tool calls, subagents, and code changes.
+- **Chat**: Agent conversations, plans, tool calls, subagents, and code changes.
 - **Terminal**: PTY sessions in the active Linux distribution.
-- **Workshop (工坊)**: Projects, source browsing, diffs, builds, and APK delivery.
+- **Workshop**: Projects, source browsing, diffs, builds, and APK delivery.
 - **Workflows / Git / Browser / Wireless ADB**: Automation, repository management, web debugging, and authorized device diagnostics.
-- **乾坤 → 特色功能**: One-sentence app creation, AI Roundtable, Morning Sentinel, LAN WebChat, and A2UI surfaces.
+- **Features**: One-sentence app creation, AI Roundtable, Morning Sentinel, LAN WebChat, and A2UI surfaces.
 - **Settings backups and model profiles**: Export/restore local data and migrate model configuration.
 
 Notifications and exemption from battery optimization help long-running tasks. Android background restrictions can still delay or interrupt execution.
