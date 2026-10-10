@@ -70,7 +70,7 @@ fun StorageMountSettingsScreen(
     val customBindings by viewModel.customMountBindings.collectAsStateWithLifecycle()
 
     var showAddDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    // 待确认删除的挂载点 id（破坏性操作二次确认）
+    // 待Confirm delete的挂载点 id（破坏性操作二次确认）
     var pendingDeleteBindingId by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     val pendingDeleteBinding = pendingDeleteBindingId?.let { id -> customBindings.firstOrNull { it.id == id } }
 
@@ -78,8 +78,8 @@ fun StorageMountSettingsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "存储挂载与共享",
-                statusText = "PRoot 宿主存储映射 (-b)",
+                title = "Storage Mounts & Sharing",
+                statusText = "PRoot host storage mapping (-b)",
                 onBack = onBack,
             )
         },
@@ -93,14 +93,14 @@ fun StorageMountSettingsScreen(
         ) {
             item {
                 NoticeBanner(
-                    text = "挂载仅作用于 Linux 沙箱内的进程（终端、智枢 Agent、构建任务与后台服务），不影响文件浏览器——文件浏览器始终直接访问宿主存储。挂载在会话启动时注入，修改后新建的终端 / 构建任务才会应用。完整读写还需在系统设置中授予「所有文件访问」权限。",
+                    text = "Mounts apply only to processes inside the Linux sandbox (terminal, Agent, build tasks, and background services), not the file browser, which accesses host storage directly. Mounts are injected when a session starts, so changes apply to newly created terminal sessions and build tasks. Full read/write access also requires the system's “All files access” permission.",
                 )
             }
 
             // 1. 系统预置快捷挂载
             item {
                 Text(
-                    text = "系统预设快捷挂载",
+                    text = "Preset mounts",
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -114,7 +114,7 @@ fun StorageMountSettingsScreen(
                     Column {
                         MountToggleRow(
                             icon = RuntimeIconName.FolderDownload,
-                            title = "下载目录 (Download)",
+                            title = "Downloads (Download)",
                             hostPath = "/storage/emulated/0/Download",
                             guestPath = "/sdcard/Download",
                             checked = downloadEnabled,
@@ -123,7 +123,7 @@ fun StorageMountSettingsScreen(
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                         MountToggleRow(
                             icon = RuntimeIconName.Document,
-                            title = "文档目录 (Documents)",
+                            title = "Documents",
                             hostPath = "/storage/emulated/0/Documents",
                             guestPath = "/sdcard/Documents",
                             checked = documentsEnabled,
@@ -132,7 +132,7 @@ fun StorageMountSettingsScreen(
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                         MountToggleRow(
                             icon = RuntimeIconName.SdCard,
-                            title = "完整共享存储 (/sdcard)",
+                            title = "Shared storage (/sdcard)",
                             hostPath = "/storage/emulated/0",
                             guestPath = "/sdcard",
                             checked = sharedStorageEnabled,
@@ -142,7 +142,7 @@ fun StorageMountSettingsScreen(
                 }
             }
 
-            // 2. 自定义映射绑定
+            // 2. Custom mappings
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -150,7 +150,7 @@ fun StorageMountSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "自定义映射绑定",
+                        text = "Custom mappings",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 4.dp),
@@ -162,7 +162,7 @@ fun StorageMountSettingsScreen(
                     ) {
                         RuntimeIcon(RuntimeIconName.Plus, Modifier.size(14.dp))
                         Spacer(Modifier.size(4.dp))
-                        Text("新增挂载", style = MaterialTheme.typography.labelSmall)
+                        Text("Add mount", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -181,12 +181,12 @@ fun StorageMountSettingsScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Text(
-                                "暂无自定义挂载点",
+                                "No custom mount points",
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                "点击上方“新增挂载”将 Android 目录映射进 Linux 沙箱（仅终端 / 智枢 / 构建可见）",
+                                "点击上方“Add mount”将 Android 目录映射进 Linux 沙箱（仅终端 / 智枢 / 构建可见）",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -228,7 +228,7 @@ fun StorageMountSettingsScreen(
                                 val bindingError = remember(binding) { StorageMountBinding.validationError(binding) }
                                 if (bindingError != null) {
                                     Text(
-                                        text = "无效挂载：$bindingError（删除后重新添加）",
+                                        text = "Invalid mount: $bindingError (delete and add it again)",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.error,
                                     )
@@ -251,7 +251,7 @@ fun StorageMountSettingsScreen(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
                                     .size(32.dp),
-                                contentDescription = "删除挂载点 ${binding.name}",
+                                contentDescription = "Delete mount ${binding.name}",
                             ) {
                                 RuntimeIcon(
                                     name = RuntimeIconName.Trash,
@@ -269,9 +269,9 @@ fun StorageMountSettingsScreen(
     pendingDeleteBinding?.let { binding ->
         RuntimeAlertDialog(
             onDismissRequest = { pendingDeleteBindingId = null },
-            title = { Text("删除挂载点", fontWeight = FontWeight.Bold) },
+            title = { Text("Delete mount", fontWeight = FontWeight.Bold) },
             text = {
-                Text("确定要删除挂载点「${binding.name}」（${binding.hostPath} ➔ ${binding.guestPath}）吗？删除后新建的终端 / 构建任务将不再映射该目录。")
+                Text("确定要Delete mount「${binding.name}」（${binding.hostPath} ➔ ${binding.guestPath}）吗？删除后新建的终端 / 构建任务将不再映射该目录。")
             },
             confirmButton = {
                 Button(
@@ -283,11 +283,11 @@ fun StorageMountSettingsScreen(
                         containerColor = MaterialTheme.colorScheme.error,
                     ),
                 ) {
-                    Text("确认删除")
+                    Text("Confirm delete")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { pendingDeleteBindingId = null }) { Text("取消") }
+                TextButton(onClick = { pendingDeleteBindingId = null }) { Text("Cancel") }
             },
         )
     }
