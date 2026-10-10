@@ -69,22 +69,22 @@ fun QuickPhrasesScreen(
     viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val phrases by viewModel.quickPhrases.collectAsStateWithLifecycle()
-    // QuickPhrase 非 Parcelable：仅保存 id，旋转后从列表按 id 恢复编辑对象
+    // QuickPhrase 非 Parcelable：仅Save id，旋转后从列表按 id 恢复Edit对象
     var editingPhraseId by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     val editingPhrase = editingPhraseId?.let { id -> phrases.firstOrNull { it.id == id } }
     var isCreating by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showResetDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var selectedFilter by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>("ALL") }
-    // 待确认删除的短语 id（破坏性操作二次确认）
+    // 待Confirm delete的短语 id（破坏性操作二次确认）
     var pendingDeletePhraseId by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     val pendingDeletePhrase = pendingDeletePhraseId?.let { id -> phrases.firstOrNull { it.id == id } }
 
     val filterOptions = listOf(
-        "ALL" to "全部 (${phrases.size})",
-        "GENERAL" to "通用",
+        "ALL" to "All (${phrases.size})",
+        "GENERAL" to "General",
         "ANDROID" to "Android",
         "FLUTTER" to "Flutter",
-        "REVERSE" to "逆向分析",
+        "REVERSE" to "Reverse engineering",
     )
 
     val filteredPhrases = remember(phrases, selectedFilter) {
@@ -101,8 +101,8 @@ fun QuickPhrasesScreen(
     if (showResetDialog) {
         RuntimeAlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("重置快捷短语预设", fontWeight = FontWeight.Bold) },
-            text = { Text("确定要恢复出厂默认的快捷短语与指令吗？这将清除你自定义添加的短语。") },
+            title = { Text("Reset quick phrase presets", fontWeight = FontWeight.Bold) },
+            text = { Text("Restore the default quick phrases and commands? This will remove any custom phrases you added.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -110,12 +110,12 @@ fun QuickPhrasesScreen(
                         showResetDialog = false
                     },
                 ) {
-                    Text("确认重置", color = MaterialTheme.colorScheme.error)
+                    Text("Confirm reset", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) {
-                    Text("取消")
+                    Text("Cancel")
                 }
             },
         )
@@ -147,8 +147,8 @@ fun QuickPhrasesScreen(
     pendingDeletePhrase?.let { phrase ->
         RuntimeAlertDialog(
             onDismissRequest = { pendingDeletePhraseId = null },
-            title = { Text("删除快捷短语", fontWeight = FontWeight.Bold) },
-            text = { Text("确定要删除「${phrase.title}」吗？删除后不可恢复。") },
+            title = { Text("Delete quick phrase", fontWeight = FontWeight.Bold) },
+            text = { Text("Delete “${phrase.title}”? This cannot be undone.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -156,12 +156,12 @@ fun QuickPhrasesScreen(
                         pendingDeletePhraseId = null
                     },
                 ) {
-                    Text("确认删除", color = MaterialTheme.colorScheme.error)
+                    Text("Confirm delete", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { pendingDeletePhraseId = null }) {
-                    Text("取消")
+                    Text("Cancel")
                 }
             },
         )
@@ -171,12 +171,12 @@ fun QuickPhrasesScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "快捷短语与常用指令",
+                title = "Quick Phrases & Commands",
                 onBack = onBack,
                 actions = {
                     IconButton(
                         onClick = { showResetDialog = true },
-                        contentDescription = "重置快捷短语预设",
+                        contentDescription = "Reset quick phrase presets",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Refresh,
@@ -186,7 +186,7 @@ fun QuickPhrasesScreen(
                     }
                     IconButton(
                         onClick = { isCreating = true },
-                        contentDescription = "新增快捷短语",
+                        contentDescription = "Add quick phrase",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Plus,
@@ -253,12 +253,12 @@ fun QuickPhrasesScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         )
                         Text(
-                            text = "暂无匹配的快捷短语",
+                            text = "No matching quick phrases",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Button(onClick = { isCreating = true }) {
-                            Text("添加首条快捷短语")
+                            Text("Add your first quick phrase")
                         }
                     }
                 }
@@ -336,8 +336,8 @@ private fun QuickPhraseCard(
                         val typeLabel = when (phrase.targetProjectType) {
                             "ANDROID" -> "Android"
                             "FLUTTER" -> "Flutter"
-                            "REVERSE" -> "逆向分析"
-                            else -> "通用"
+                            "REVERSE" -> "Reverse engineering"
+                            else -> "General"
                         }
                         Surface(
                             shape = RoundedCornerShape(4.dp),
@@ -366,7 +366,7 @@ private fun QuickPhraseCard(
                 }
             }
 
-            // 提示词/指令内容预览
+            // 提示词/指令Content预览
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
@@ -385,7 +385,7 @@ private fun QuickPhraseCard(
                 )
             }
 
-            // 底部三等分等宽操作栏 (状态切换 + 编辑 + 删除)
+            // 底部三等分等宽操作栏 (状态切换 + Edit + Delete)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -403,7 +403,7 @@ private fun QuickPhraseCard(
                     )
                 }
 
-                // 2. 编辑按钮 (1/3 宽)
+                // 2. Edit按钮 (1/3 宽)
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.4f),
@@ -418,14 +418,14 @@ private fun QuickPhraseCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "编辑",
+                            text = "Edit",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
 
-                // 3. 删除按钮 (1/3 宽)
+                // 3. Delete按钮 (1/3 宽)
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
@@ -440,7 +440,7 @@ private fun QuickPhraseCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "删除",
+                            text = "Delete",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.error,
                         )
@@ -491,17 +491,17 @@ private fun QuickPhraseEditorDialog(
     )
 
     val projectTypeOptions = listOf(
-        null to "通用（所有会话可见）",
+        null to "General（所有会话可见）",
         "ANDROID" to "Android 工程专属",
         "FLUTTER" to "Flutter 工程专属",
-        "REVERSE" to "逆向分析专属",
+        "REVERSE" to "Reverse engineering专属",
     )
 
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (phrase == null) "新增快捷短语" else "编辑快捷短语",
+                text = if (phrase == null) "Add quick phrase" else "Edit快捷短语",
                 fontWeight = FontWeight.Bold,
             )
         },
@@ -516,7 +516,7 @@ private fun QuickPhraseEditorDialog(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("短语标题") },
+                    label = { Text("短语Title") },
                     placeholder = { Text("例如：运行代码 / 代码审查") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -547,7 +547,7 @@ private fun QuickPhraseEditorDialog(
                     onExpandedChange = { projectTypeDropdownExpanded = !projectTypeDropdownExpanded },
                 ) {
                     OutlinedTextField(
-                        value = projectTypeOptions.firstOrNull { it.first == targetProjectType }?.second ?: "通用",
+                        value = projectTypeOptions.firstOrNull { it.first == targetProjectType }?.second ?: "General",
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("适用工程类型") },
@@ -621,12 +621,12 @@ private fun QuickPhraseEditorDialog(
                 },
                 enabled = title.isNotBlank() && content.isNotBlank(),
             ) {
-                Text("保存")
+                Text("Save")
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text("Cancel")
             }
         },
     )
