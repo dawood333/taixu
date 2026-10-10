@@ -66,13 +66,13 @@ class WorkshopSigningManager(
         val safeName = name.trim()
         val safeAlias = alias.trim().ifBlank { safeName }
         if (safeName.isBlank()) {
-            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "签名名称不能为空"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "Signing key name cannot be empty"))
         }
         if (storePassword.length < 6) {
-            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "密钥库口令至少需要 6 位"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "Keystore password must contain at least 6 characters"))
         }
         if (keyPassword.isNotBlank() && keyPassword.length < 6) {
-            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "密钥口令至少需要 6 位"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "Key password must contain at least 6 characters"))
         }
 
         val distroId = linuxRuntime.activeDistroId.value
@@ -117,7 +117,7 @@ class WorkshopSigningManager(
         val hostFile = File(hostKeystoreDir().apply { mkdirs() }, fileName)
         runCatching { sandboxFile.copyTo(hostFile, overwrite = true) }
             .onFailure {
-                return@withContext AppResult.Failure(AppError(ErrorCode.IO, "签名主副本保存失败: ${it.message}"))
+                return@withContext AppResult.Failure(AppError(ErrorCode.IO, "Failed to save primary/backup signing key: ${it.message}"))
             }
         val record = WorkshopKeystore(
             id = UUID.randomUUID().toString(),
@@ -143,27 +143,27 @@ class WorkshopSigningManager(
     ): AppResult<WorkshopKeystore> = withContext(Dispatchers.IO) {
         val safeName = name.trim()
         if (safeName.isBlank()) {
-            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "签名名称不能为空"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "Signing key name cannot be empty"))
         }
         if (storePassword.isBlank()) {
-            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "请填写密钥库口令"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "Enter the keystore password"))
         }
         val parsed = runCatching { Uri.parse(uri) }.getOrNull()
         if (parsed == null) {
-            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "签名文件地址无效"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.UNKNOWN, "Invalid signing file path"))
         }
         val fileName = "${sanitizeFileName(safeName)}-${UUID.randomUUID().toString().substring(0, 8)}.p12"
         val hostFile = File(hostKeystoreDir().apply { mkdirs() }, fileName)
         try {
             context.contentResolver.openInputStream(parsed)?.use { input ->
                 hostFile.outputStream().use { output -> input.copyTo(output) }
-            } ?: return@withContext AppResult.Failure(AppError(ErrorCode.IO, "无法读取所选签名文件"))
+            } ?: return@withContext AppResult.Failure(AppError(ErrorCode.IO, "Unable to read the selected signing file"))
         } catch (throwable: Throwable) {
-            return@withContext AppResult.Failure(AppError(ErrorCode.IO, "读取签名文件失败: ${throwable.message}"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.IO, "Failed to read signing file: ${throwable.message}"))
         }
         if (!hostFile.isFile || hostFile.length() == 0L) {
             hostFile.delete()
-            return@withContext AppResult.Failure(AppError(ErrorCode.IO, "签名文件为空"))
+            return@withContext AppResult.Failure(AppError(ErrorCode.IO, "Signing file is empty"))
         }
         // 用沙箱内 keytool 校验文件确实是可用密钥库且口令正确。
         val distroId = linuxRuntime.activeDistroId.value
@@ -183,12 +183,12 @@ class WorkshopSigningManager(
             hostFile.delete()
             val rawReason = (verify.stderr + "\n" + verify.stdout).trim()
             val reason = if (verify.exitCode == 127 || rawReason.contains("not found", ignoreCase = true)) {
-                "环境缺失：未检测到 keytool 工具链"
+                "Environment is missing the keytool toolchain"
             } else {
-                "口令错误或文件不是有效密钥库"
+                "Incorrect password or invalid keystore file"
             }
             return@withContext AppResult.Failure(
-                AppError(ErrorCode.UNKNOWN, "签名校验失败（$reason）"),
+                AppError(ErrorCode.UNKNOWN, "Signing key validation failed ($reason)"),
             )
         }
         // 从 keytool 输出中解析首个别名作为默认 alias。
@@ -217,7 +217,7 @@ class WorkshopSigningManager(
     suspend fun deleteKeystore(id: String): AppResult<Unit> = withContext(Dispatchers.IO) {
         val current = preferences.keystores.first()
         val target = current.firstOrNull { it.id == id }
-            ?: return@withContext AppResult.Failure(AppError(ErrorCode.IO, "签名不存在或已删除"))
+            ?: return@withContext AppResult.Failure(AppError(ErrorCode.IO, "Signing key does not exist or has been deleted"))
         preferences.setKeystores(current.filterNot { it.id == id })
         File(hostKeystoreDir(), target.fileName).delete()
         val sandboxFile = File(sandboxKeystoreDir(linuxRuntime.activeDistroId.value), target.fileName)
@@ -237,7 +237,7 @@ class WorkshopSigningManager(
             val hostFile = File(hostKeystoreDir(), keystore.fileName)
             if (!hostFile.isFile || hostFile.length() == 0L) {
                 return@withContext AppResult.Failure(
-                    AppError(ErrorCode.IO, "签名文件主副本缺失，请重新导入签名 ${keystore.name}"),
+                    AppError(ErrorCode.IO, "Primary or backup signing file is missing. Re-import signing key ${keystore.name}."),
                 )
             }
             val distroId = linuxRuntime.activeDistroId.value
@@ -246,7 +246,7 @@ class WorkshopSigningManager(
             val sandboxFile = File(sandboxDir, keystore.fileName)
             runCatching { hostFile.copyTo(sandboxFile, overwrite = true) }
                 .onFailure {
-                    return@withContext AppResult.Failure(AppError(ErrorCode.IO, "签名同步进沙箱失败: ${it.message}"))
+                    return@withContext AppResult.Failure(AppError(ErrorCode.IO, "Failed to sync signing key to the sandbox: ${it.message}"))
                 }
             if (!sandboxFile.isFile || sandboxFile.length() != hostFile.length()) {
                 return@withContext AppResult.Failure(AppError(ErrorCode.IO, "签名同步进沙箱不完整"))
