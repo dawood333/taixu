@@ -415,7 +415,7 @@ class LinuxRuntimeImpl(
         withContext(Dispatchers.IO) {
             if (_state.value !is RuntimeState.Ready) {
                 return@withContext AppResult.Failure(
-                    AppError(ErrorCode.INSTALLATION_FAILED, "只有Ready的 Linux Runtime 才能更新"),
+                    AppError(ErrorCode.INSTALLATION_FAILED, "Only a ready Linux runtime can be updated"),
                 )
             }
             try {
@@ -475,7 +475,7 @@ class LinuxRuntimeImpl(
         withContext(Dispatchers.IO) {
             if (_state.value !is RuntimeState.Ready) {
                 return@withContext AppResult.Failure(
-                    AppError(ErrorCode.INSTALLATION_FAILED, "只有Ready的 Linux Runtime 才能检查更新"),
+                    AppError(ErrorCode.INSTALLATION_FAILED, "Only a ready Linux runtime can check for updates"),
                 )
             }
             val targetDistro = distroId?.lowercase()?.trim() ?: _activeDistroId.value
@@ -892,7 +892,7 @@ class LinuxRuntimeImpl(
         val detail = if (progress.totalMegabytes != null) {
             "${progress.downloadedMegabytes} / ${progress.totalMegabytes} MB"
         } else {
-            "已Downloads ${progress.downloadedMegabytes} MB"
+            "Downloaded ${progress.downloadedMegabytes} MB"
         }
         updateInitializing(step, scaled, detail)
     }
