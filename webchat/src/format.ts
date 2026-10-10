@@ -147,9 +147,9 @@ export function relativeDate(raw?: number): string {
   if (!Number.isFinite(value) || value <= 0) return "";
   const date = new Date(value);
   const diff = Date.now() - value;
-  if (diff < 60_000) return "刚刚";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时`;
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} min`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} hr`;
   return `${date.getMonth() + 1}-${date.getDate()}`;
 }
 
