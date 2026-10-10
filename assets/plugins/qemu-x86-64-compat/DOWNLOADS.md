@@ -39,11 +39,7 @@ The `payload/checksums/SHA256SUMS` file is verified with `sha256sum -c checksums
 
 ## Package as `.txplugin`
 
-Run inside `assets/plugins/qemu-x86-64-compat/`:
-
-```bash
-python ../../../tools/package-qemu-compat-plugin.py
-```
+There is currently no dedicated packaging script for this plugin in the repository. Do not assume a packager exists; add and validate one before automating package creation.
 
 The package must contain only:
 - Root `manifest.json`
