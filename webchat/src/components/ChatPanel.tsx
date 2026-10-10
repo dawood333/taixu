@@ -34,11 +34,11 @@ interface ChatPanelProps {
   quickPhrases: QuickPhrase[];
 }
 
-const GREETING_WORDS = ["聊天", "执行", "构建", "探索", "规划", "总结", "检索", "记忆"];
+const GREETING_WORDS = ["Chat", "Execute", "Build", "Explore", "Plan", "Summarize", "Search", "Memory"];
 const WORD_ROTATE_INTERVAL = 1800;
 const WORD_SPIN_DURATION = 460;
 
-/** 轮播展示智枢与太墟运行时紧密相关的核心能力。 */
+/** Rotates through core capabilities of the Agent hub and TaiXu runtime. */
 function SlotWordRotator({ words }: { words: string[] }) {
   const [current, setCurrent] = useState(() => Math.floor(Math.random() * words.length));
   const [previous, setPrevious] = useState<number | null>(null);
@@ -64,7 +64,7 @@ function SlotWordRotator({ words }: { words: string[] }) {
 
   return (
     <span className="greeting-word">
-      {/* 隐藏测量层: 容器宽度始终取最长词, 避免换词时抖动 */}
+      {/* Hidden measuring layer: size the container to the longest word to prevent layout shifts. */}
       {words.map((word) => (
         <span className="word-sizer" aria-hidden="true" key={word}>{word}</span>
       ))}
@@ -80,8 +80,8 @@ function EmptyGreeting() {
   return (
     <div className="empty-state">
       <div className="empty-greeting">
-        <p>你好👋，这里是太墟智枢</p>
-        <p>可以与你一起 <SlotWordRotator words={GREETING_WORDS} /></p>
+        <p>Hello 👋, welcome to the TaiXu Agent Hub</p>
+        <p>Ready to help you <SlotWordRotator words={GREETING_WORDS} /></p>
       </div>
     </div>
   );
@@ -97,13 +97,13 @@ function fileToAttachment(file: File): Promise<Attachment> {
       dataUrl: String(reader.result),
       isImage: file.type.startsWith("image/"),
     });
-    reader.onerror = () => reject(reader.error ?? new Error(`无法读取 ${file.name}`));
+    reader.onerror = () => reject(reader.error ?? new Error(`Could not read ${file.name}`));
     reader.readAsDataURL(file);
   });
 }
 
 function attachmentName(attachment: Record<string, unknown>): string {
-  return String(attachment.fileName ?? attachment.name ?? "附件");
+  return String(attachment.fileName ?? attachment.name ?? "Attachment");
 }
 
 function attachmentImage(attachment: Record<string, unknown>): string {
@@ -140,14 +140,14 @@ function MessageAttachments({ attachments }: { attachments: Record<string, unkno
 
 function statusLabel(status: unknown): string {
   return ({
-    running: "运行中",
-    completed: "已完成",
-    success: "已完成",
-    error: "失败",
-    timeout: "超时",
-    interrupted: "已中断",
-    cancelled: "已停止",
-  } as Record<string, string>)[String(status)] ?? String(status || "已完成");
+    running: "Running",
+    completed: "Completed",
+    success: "Completed",
+    error: "Failed",
+    timeout: "Timed out",
+    interrupted: "Interrupted",
+    cancelled: "Stopped",
+  } as Record<string, string>)[String(status)] ?? String(status || "Completed");
 }
 
 function statusClass(status: unknown): string {
@@ -162,13 +162,13 @@ function statusClass(status: unknown): string {
 
 function toolTypeLabel(card: Record<string, unknown>): string {
   const raw = `${String(card.toolType ?? "")} ${String(card.type ?? "")}`.toLowerCase();
-  if (/terminal|shell|command|process/.test(raw)) return "终端";
-  if (/browser|web|navigate/.test(raw)) return "网络工具";
-  if (/search/.test(raw)) return "搜索";
-  if (/file|read|write|edit/.test(raw)) return "文件";
-  if (/subagent/.test(raw)) return "协同智能体";
+  if (/terminal|shell|command|process/.test(raw)) return "Terminal";
+  if (/browser|web|navigate/.test(raw)) return "Web tool";
+  if (/search/.test(raw)) return "Search";
+  if (/file|read|write|edit/.test(raw)) return "File";
+  if (/subagent/.test(raw)) return "Collaborative agent";
   if (/mcp/.test(raw)) return "MCP";
-  return "工具";
+  return "Tool";
 }
 
 function toolIcon(card: Record<string, unknown>): "terminal" | "search" | "file" | "agent" | "workspace" {
@@ -181,7 +181,7 @@ function toolIcon(card: Record<string, unknown>): "terminal" | "search" | "file"
   return "workspace";
 }
 
-/** 从文件类工具调用参数提取 diff 行；无法解析时返回 null，回退到 JSON 展示。 */
+/** 从File类Tool调用参数提取 diff 行；无法解析时返回 null，回退到 JSON 展示。 */
 function toolDiffRows(card: Record<string, unknown>): DiffRow[] | null {
   const raw = card.arguments;
   let args: Record<string, unknown> | null = null;
@@ -227,9 +227,9 @@ function Message({
   const isCard = Number(message.type) === 2 || rawCard;
   const diffRows = isCard ? toolDiffRows(card) : null;
 
-  // 太墟 Harness 的工具调用、工具结果与能力事件。
+  // 太墟 Harness 的Tool调用、Tool结果与能力事件。
   if (isCard) {
-    const title = card.toolTitle ?? card.toolName ?? card.displayName ?? card.title ?? card.toolType ?? "工具运行";
+    const title = card.toolTitle ?? card.toolName ?? card.displayName ?? card.title ?? card.toolType ?? "Tool运行";
     const status = card.status ?? (message.isLoading ? "running" : "completed");
     const running = String(status) === "running";
     return (
@@ -275,7 +275,7 @@ function Message({
           <details className={`message-reasoning${reasoningStreaming ? " streaming" : ""}`} open={reasoningStreaming}>
             <summary>
               <span className="reasoning-toggle-label">
-                <span className="reasoning-label">{reasoningStreaming ? "正在思考" : "思考过程"}</span>
+                <span className="reasoning-label">{reasoningStreaming ? "Thinking" : "Reasoning"}</span>
                 <Icon className="reasoning-chevron" name="chevron-down" size={16} />
               </span>
             </summary>
@@ -285,7 +285,7 @@ function Message({
           </details>
         )}
         {message.isLoading && !text ? (
-          <span className="thinking-dots" role="status" aria-label="正在思考">
+          <span className="thinking-dots" role="status" aria-label="Thinking">
             <span /><span /><span />
           </span>
         ) : (
@@ -361,7 +361,7 @@ export function ChatPanel({
     }
   }
 
-  // 与 Android 端 applyQuickPhrase 一致：点击短语直接替换输入框内容
+  // Matches Android applyQuickPhrase: clicking a phrase replaces the input text.
   function applyPhrase(phrase: QuickPhrase) {
     setDraft(phrase.content);
     textareaRef.current?.focus();
@@ -385,7 +385,7 @@ export function ChatPanel({
         <button
           className="appbar-icon menu-trigger"
           type="button"
-          aria-label="打开对话列表"
+          aria-label="Open conversation list"
           onClick={onOpenConversations}
         >
           <Icon name="menu" size={20} />
@@ -394,8 +394,8 @@ export function ChatPanel({
           <button
             className="appbar-icon danger"
             type="button"
-            aria-label="删除对话"
-            title="删除对话"
+            aria-label="Delete conversation"
+            title="Delete conversation"
             disabled={!canManageConversation}
             onClick={onDelete}
           >
@@ -426,7 +426,7 @@ export function ChatPanel({
             <p>{approval.reason}</p>
             {approval.workspace && <small>工作区：{approval.workspace}</small>}
             <details>
-              <summary>查看工具参数</summary>
+              <summary>查看Tool参数</summary>
               <pre>{approval.argumentsJson}</pre>
             </details>
             <div className="approval-actions">
@@ -492,8 +492,8 @@ export function ChatPanel({
             <button
               className="composer-icon-button"
               type="button"
-              aria-label="添加附件"
-              title="添加附件"
+              aria-label="添加Attachment"
+              title="添加Attachment"
               onClick={() => attachmentInputRef.current?.click()}
             >
               <ComposerAttachmentIcon />
