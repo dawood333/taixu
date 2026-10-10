@@ -1,128 +1,129 @@
-# 太墟可移植项目模板规范（v1）
+# TaiXu Portable Project Template Specification (v1)
 
-太墟模板是一个可导入、导出和分享的 ZIP 包。用户可在“工坊 → 更多 → 模板管理”中导入 ZIP，也可导出任意内置模板作为制作样例。
+A TaiXu template is a ZIP package that can be imported, exported, and shared. In the Android app, use **Workshop → More → Template Manager** to import a ZIP or export a built-in template as a starting example.
 
-## 1. 目录结构
+## 1. Directory structure
 
-ZIP 根目录可以直接包含 `template.json`，也可以只包含一个模板目录：
+A ZIP may contain the manifest at its root or contain a single template directory. A typical package is:
 
 ```text
-my-template/
+my-template.zip
 ├── template.json
-├── preview.png                   # 可选，固定 270×270
-├── template-hooks/             # 可选
+├── preview.png                  # Optional, 270×270
+├── template-hooks/              # Optional
 │   ├── before-create.sh
 │   └── after-create.sh
-└── ...工程文件或 *.template
+└── files/
+    ├── README.md.template
+    └── app/
 ```
 
-模板包最多 5000 个条目；单文件不超过 16 MiB；总解压体积不超过 128 MiB。ZIP 路径穿越会被拒绝。
+The importer validates ZIP paths and limits, then stores the template in the app's private template directory. The package must not contain absolute paths, Windows drive-letter paths, or paths escaping the destination through `..`.
 
-## 2. template.json
+## 2. Manifest
 
-完整结构由 [project-template.schema.json](project-template.schema.json) 描述。最小示例：
+A minimal example:
 
 ```json
 {
   "schemaVersion": 1,
-  "id": "example.android-basic",
-  "name": "Basic Android",
-  "version": "1.0.0",
-  "projectType": "ANDROID",
-  "category": { "id": "starter", "name": "Starter", "sortOrder": 0 },
+  "id": "sample-project",
+  "name": "Sample Project",
+  "description": "A portable project template",
+  "projectType": "GENERAL",
+  "category": "General",
+  "sortOrder": 100,
   "previewImage": "preview.png",
-  "variables": []
-}
-```
-
-- `id` 只能包含小写字母、数字以及 `.`、`_`、`-` 分隔符。
-- `builtin.` 是系统内置模板保留前缀，用户模板不能使用。
-- `projectType` 支持 `ANDROID`、`FLUTTER`、`GENERAL`。
-- `category` 是模板选择页的第二级分组，`sortOrder` 越小越靠前。
-- JSON 采用严格解析；未知字段会被拒绝，避免拼写错误被静默忽略。
-
-## 3. 项目名称与路径
-
-项目名称和创建路径不属于动态字段，由工坊对所有模板统一提供：
-
-- 项目名称必填。
-- 路径可留空；内部空间默认创建到 `/workspace/<项目名称>`。
-- 模板可使用系统派生变量 `projectName`、`appName` 和 `projectPath`；`appName` 若由动态字段提供则优先使用用户输入。
-- 模板可以将 `projectName` 声明为 `prompt: false` 的固定变量，并通过 `validationRegex` 约束项目名称；工坊会在统一的项目名称输入框显示 `description` 提示并阻止无效提交。例如 Flutter 模板可要求名称匹配 `^[a-z][a-z0-9_]*$`。
-- 工坊不会静默改写用户输入的项目名称；名称不符合模板规则时必须由用户修改。
-- `packageName`、`packagePath` 只有在模板清单中声明时才生成和校验；非 Android 模板不依赖 Java 包名。
-
-## 4. 动态变量
-
-`variables` 支持 `TEXT`、`MULTILINE`、`NUMBER`、`BOOLEAN`、`SELECT`、`SECRET`，还可以声明 `label`、`description`、`placeholder`、`required`、`defaultValue`、`validationRegex` 和 `options`。
-
-- `prompt: true`：创建工程时渲染为动态表单。
-- `prompt: false`：不显示；隐藏必填变量必须提供 `defaultValue`，系统派生变量除外。
-- 变量名必须匹配 `^[A-Za-z][A-Za-z0-9_]*$`，且不能重复。
-- `SELECT` 必须提供至少一个不重复的选项；可选 `SELECT` 允许留空。
-
-## 5. 文件和路径替换
-
-文本内容和相对路径都可使用 `{{variableName}}`，例如 `src/{{moduleName}}/config.json.template`。生成时会替换变量并去掉末尾的 `.template`。
-
-任意需要替换的文本文件都建议添加 `.template` 后缀；常见源码和配置扩展名也会自动按文本处理。Android/Kotlin 包目录使用 `TAIXU_PACKAGE_PATH`，创建时会替换为包名对应的目录层级。不要使用以下划线开头的占位目录，否则可能被 Android AAPT 忽略。
-
-生成结束前若仍存在 `{{unknownVariable}}`，创建会失败。所有输出路径都会进行规范化和越界检查。
-
-## 6. 预览图
-
-模板通过单一的 `previewImage` 字段声明预览图，不再区分手机、平板或横竖屏。支持 PNG、JPEG、WebP、GIF，必须使用包内相对路径。
-
-硬限制：预览图比例统一为 **1:1**，像素尺寸必须为 **270×270 px**，单图不超过 4 MiB。建议将 Logo、标题和关键内容放在中央安全区，避免紧贴边缘。
-
-## 7. 随身构造脚本
-
-```json
-{
-  "hooks": {
-    "beforeCreate": "template-hooks/before-create.sh",
-    "afterCreate": "template-hooks/after-create.sh"
-  }
-}
-```
-
-- 脚本必须位于 `template-hooks/` 内，单个脚本不超过 1 MiB。
-- 导入、查看和导出模板不会执行脚本；创建工程时必须由用户明确授权。
-- 脚本在 Linux 沙箱的新工程目录中运行，单阶段最长 60 秒。
-- `beforeCreate` 在复制模板文件前执行，`afterCreate` 在物化完成后执行。
-- 工程路径通过 `TAIXU_PROJECT_DIR` 提供。
-- 变量通过 `TAIXU_VAR_<大写变量名>` 提供，例如 `packageName` 对应 `TAIXU_VAR_PACKAGENAME`。
-- 任一脚本非零退出会终止创建并显示错误输出。
-
-## 8. 生成结果校验
-
-模板可以自行声明生成后必须满足的条件，不依赖模板 ID 或应用内硬编码：
-
-```json
-{
+  "variables": [
+    {
+      "name": "greeting",
+      "type": "TEXT",
+      "label": "Greeting",
+      "defaultValue": "Hello",
+      "prompt": true
+    }
+  ],
   "validation": {
-    "requiredFiles": ["app/src/main/java/TAIXU_PACKAGE_PATH/MainHook.kt"],
-    "forbiddenFiles": ["app/src/main/java/TAIXU_PACKAGE_PATH/LegacyHook.kt"],
-    "contentRules": [
-      {
-        "path": "app/src/main/assets/xposed_init",
-        "equals": "{{packageName}}.MainHook"
-      }
-    ]
+    "requiredFiles": ["README.md"]
   }
 }
 ```
 
-- `requiredFiles`：必须存在的文件。
-- `forbiddenFiles`：不得生成的文件或目录。
-- `contentRules`：支持 `equals`、`contains`、`excludes` 文本规则。
-- 路径和期望内容都支持模板变量及 `TAIXU_PACKAGE_PATH`。
-- 校验在 `afterCreate` 脚本完成后执行，因此脚本可以参与最终工程构造。
+Important fields:
 
-## 9. 导入、导出与分享
+| Field | Constraint |
+|---|---|
+| `schemaVersion` | Must be `1`. |
+| `id` | Lowercase letters and digits, optionally separated by dots, underscores, or hyphens. The `builtin.` prefix is reserved. |
+| `projectType` | `ANDROID`, `FLUTTER`, or `GENERAL`. |
+| `category` | Group shown in the template picker. Lower `sortOrder` values appear first. |
+| `previewImage` | Optional single 1:1 preview image, 270×270 pixels. |
+| `variables` | Declares dynamic form fields and template variables. |
+| `hooks` | Optional pre- and post-generation scripts. |
+| `validation` | Optional rules for checking generated output. |
 
-导入时会校验清单、变量、分类、预览图、脚本路径及 ZIP 安全限制。用户模板安装在应用私有模板目录，不会覆盖内置模板。
+The manifest is parsed strictly; unknown fields are rejected. Use the JSON Schema in the repository for machine-readable validation.
 
-模板管理页支持导入用户 ZIP、导出用户或内置模板，以及删除用户模板；内置模板不可删除。以内置模板为样例制作新模板时，必须修改 `id` 并移除保留的 `builtin.` 前缀。
+## 3. Dynamic variables
 
-应用内置模板会从 `project-template/src/main/assets/templates/<项目类型>/<模板目录>/template.json` 自动发现；新增标准目录不需要修改 Kotlin 注册表。
+Supported prompt types include `TEXT`, `MULTILINE`, `NUMBER`, `BOOLEAN`, `SELECT`, and `SECRET`.
+
+- Variable names must match `^[A-Za-z][A-Za-z0-9_]*$` and must be unique.
+- Hidden required variables need default values, except for system-derived variables.
+- `SELECT` fields must have unique options. Optional fields may be left blank.
+- Workshop supplies the project name and creation path; do not represent them as ordinary dynamic fields.
+- System variables include `projectName`, `appName`, and `projectPath`. If `appName` is declared as a dynamic field, user input takes precedence.
+- Java package-name validation is enabled only when the template declares `packageName` or `packagePath`.
+- A template may declare `projectName` as a fixed variable with `prompt: false` and use `validationRegex` to constrain the shared project-name field. On failure, the UI shows the variable's `description` and blocks creation rather than silently rewriting the input.
+
+## 4. File content and path substitution
+
+Use `{{variableName}}` in both text files and relative paths. During generation, variables are substituted and the trailing `.template` suffix is removed. Common text formats such as Java, Kotlin, Dart, JSON, YAML, TOML, Shell, Python, JavaScript, and C/C++ are recognized.
+
+The special variable `TAIXU_PACKAGE_PATH` expands to the directory hierarchy corresponding to a package name. Avoid placeholder directories starting with underscores because Android AAPT may ignore them. Generated paths are normalized and escaping paths are rejected. If an undeclared placeholder such as `{{unknownVariable}}` remains in a file, creation fails.
+
+## 5. Preview image
+
+A template declares one preview image; there are no separate variants for phone/tablet or portrait/landscape. The image must be square (1:1) and exactly 270×270 pixels. PNG, JPEG, WebP, and GIF are supported; the file must not exceed 4 MiB.
+
+Keep the logo, title, and key content within the central safe area and leave about 8% padding around the edges so cards remain legible at different sizes.
+
+## 6. Generation hooks
+
+Hooks do not run during import, preview, or export. When a project is created, TaiXu displays the script contents and runs them only after the user explicitly grants permission.
+
+- Hooks must be inside `template-hooks/`, with each file at most 1 MiB.
+- They run in the new project's Linux sandbox; each stage has a 60-second limit.
+- `beforeCreate` runs before template files are copied; `afterCreate` runs after materialization.
+- The project path is provided as `TAIXU_PROJECT_DIR`.
+- Variables are passed as `TAIXU_VAR_<UPPERCASE_VARIABLE_NAME>`.
+- A nonzero exit aborts creation and returns error output to the UI.
+
+## 7. Output validation
+
+Templates may declare:
+
+- `requiredFiles`: files that must exist.
+- `forbiddenFiles`: files that must not exist.
+- `contentRules`: content checks using `equals`, `contains`, and `excludes`.
+
+Paths and content may use template variables. Validation runs after `afterCreate` completes. Rules belong to the template itself and remain consistent after renaming, export, and re-import.
+
+## 8. Import and export
+
+In the Android app, open **Workshop → More → Template Manager → Import ZIP**. After import, the template appears under the matching project type and category; no app-code or registry changes are required. The template manager can also export templates. User templates may be deleted; built-in templates are protected.
+
+## 9. Example without an Android package name
+
+A `GENERAL` template does not depend on an Android package name. In `README.md.template`, writing `# {{projectName}}\n{{greeting}}` is sufficient; the shared creation screen supplies the project name and path.
+
+## 10. Pre-release checklist
+
+- [ ] The manifest passes the v1 JSON Schema and contains no unknown fields.
+- [ ] The ID does not use `builtin.`; variable names and category IDs are valid and unique.
+- [ ] Project name and path are not declared as dynamic fields.
+- [ ] All placeholders are declared and generated paths cannot escape the destination.
+- [ ] The preview meets the 1:1, 270×270, format, and size requirements.
+- [ ] Hooks are in the designated directory, contain no secrets, and finish within 60 seconds.
+- [ ] Import, form entry, creation, export, and re-import work in a fresh directory.
+- [ ] GENERAL templates are not incorrectly prompted for a Java package name.
