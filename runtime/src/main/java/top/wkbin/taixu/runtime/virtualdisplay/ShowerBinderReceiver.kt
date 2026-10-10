@@ -29,7 +29,7 @@ class ShowerBinderReceiver : BroadcastReceiver() {
         try {
             handleBinderHandoff(intent)
         } catch (t: Throwable) {
-            ShowerLog.w(TAG, "处理 Binder 交接广播失败，已忽略", t)
+            ShowerLog.w(TAG, "Failed to handle Binder handoff broadcast; ignored", t)
         }
     }
 
@@ -48,7 +48,7 @@ class ShowerBinderReceiver : BroadcastReceiver() {
             // getSentFromUid 在公开 SDK 里被标成 @hide，直接写 intent.sentFromUid 编译不过。
             val sentFromUid = readSentFromUid(intent)
             if (sentFromUid != null && sentFromUid != UID_UNKNOWN && sentFromUid !in PRIVILEGED_SENDER_UIDS) {
-                ShowerLog.w(TAG, "拒绝来源不明的 Binder 广播：sentFromUid=$sentFromUid")
+                ShowerLog.w(TAG, "Rejected Binder broadcast from unknown source: sentFromUid=$sentFromUid")
                 return
             }
         }
