@@ -76,7 +76,7 @@ import top.wkbin.taixu.core.model.CcSwitchDaemonStatus
  * - Claude Code / OpenClaw / Hermes / Codex 矩阵管理
  * - 一键热切换各 Agent 的 Provider（支持从太墟本地模型库同步）
  * - 版本查看与一键升降级
- * - 实时安装与编译构建日志监视（支持一键复制全量报错）
+ * - 实时安装与编译构建日志监视（支持Copy全量报错）
  * - Token 记账与反向代理状态监控
  * - 原生 PTY 终端拉起与系统外部浏览器 Web 控制台访问
  */
@@ -93,8 +93,8 @@ fun CcSwitchScreen(
     Scaffold(
         topBar = {
             RuntimeTopBar(
-                title = "智能体中枢 (CC-Switch)",
-                statusText = if (state.isDaemonRunning) "中枢运行中 · 19870" else "中枢未启动",
+                title = "Agent Hub (CC-Switch)",
+                statusText = if (state.isDaemonRunning) "Hub running · 19870" else "Hub not started",
                 onBack = onBack,
                 actions = {
                     RuntimeIconButton(
@@ -137,7 +137,7 @@ fun CcSwitchScreen(
                             ) {
                                 RuntimeIcon(name = RuntimeIconName.Terminal, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("查看并复制完整报错日志", style = MaterialTheme.typography.labelSmall)
+                                Text("View and copy full error log", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -176,7 +176,7 @@ fun CcSwitchScreen(
                 TokenUsageCard(daemon = daemon)
             }
 
-            // 3. 本地环境检查矩阵
+            // 3. Local environment check矩阵
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -184,13 +184,13 @@ fun CcSwitchScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "本地环境检查",
+                        text = "Local environment check",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = if (state.isDaemonRunning) "由 CC-Switch 纳管各 CLI 与 Agent 运行环境" else "启动中枢后自动检查环境与版本",
+                        text = if (state.isDaemonRunning) "CC-Switch manages CLI tools and Agent runtimes" else "Start the hub to check environments and versions",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -206,7 +206,7 @@ fun CcSwitchScreen(
                         ) {
                             RuntimeIcon(name = RuntimeIconName.Terminal, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("安装日志", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                            Text("Installation log", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                         }
                     }
                     if (state.isDaemonRunning) {
@@ -218,11 +218,11 @@ fun CcSwitchScreen(
                             if (state.isCheckingEnvironment) {
                                 RuntimeCircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 1.5.dp)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("检测中...", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                                Text("Checking...", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                             } else {
                                 RuntimeIcon(name = RuntimeIconName.Refresh, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("刷新检测", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                                Text("Refresh checks", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                             }
                         }
                     }
@@ -288,7 +288,7 @@ fun CcSwitchScreen(
             onDismiss = { viewModel.dismissInstallLogs() },
             onClear = { viewModel.clearInstallLogs() },
             onCopy = { logsText ->
-                copyText(context, logsText, "已复制完整安装日志 (${state.installLogs.size} 行)")
+                copyText(context, logsText, "已复制完整Installation log (${state.installLogs.size} 行)")
             },
         )
     }
@@ -327,7 +327,7 @@ private fun DaemonServiceCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (state.isDaemonRunning) "CC-Switch 运行中" else "CC-Switch 未启动",
+                    text = if (state.isDaemonRunning) "CC-Switch is running" else "CC-Switch is not running",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -337,7 +337,7 @@ private fun DaemonServiceCard(
             }
             Spacer(modifier = Modifier.width(8.dp))
             StatusBadge(
-                text = "端口 ${state.servicePort}",
+                text = "Port ${state.servicePort}",
                 color = if (state.isDaemonRunning) Color(0xFF4CAF50) else MaterialTheme.colorScheme.outline,
             )
         }
@@ -345,9 +345,9 @@ private fun DaemonServiceCard(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = if (state.isDaemonRunning) {
-                "CC-Switch 正在监听本地端口与沙箱环境，负责反向代理、流式协议转换与各 CLI 多模型统一切源。"
+                "CC-Switch is listening on the local port and sandbox, providing reverse proxying, streaming protocol conversion, and unified model-provider switching for CLI tools."
             } else {
-                "中枢尚未运行。启动后将自动对沙箱环境进行实时检测，获取已安装 CLI、最新版本及模型源状态。"
+                "The hub is not running. Once started, it will inspect the sandbox and report installed CLI tools, latest versions, and model-provider status."
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -356,7 +356,7 @@ private fun DaemonServiceCard(
         if (state.isDaemonRunning) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "本地代理地址: http://127.0.0.1:${state.servicePort}${state.deviceLanIp?.let { " · 局域网: http://$it:${state.servicePort}" } ?: ""}",
+                text = "Local proxy: http://127.0.0.1:${state.servicePort}${state.deviceLanIp?.let { " · LAN: http://$it:${state.servicePort}" } ?: ""}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -372,7 +372,7 @@ private fun DaemonServiceCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Web 控制台访问凭据 (HTTP Basic 认证)",
+                    text = "Web console credentials (HTTP Basic authentication)",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -381,17 +381,17 @@ private fun DaemonServiceCard(
                     RuntimeTextButton(
                         onClick = {
                             val creds = "${state.webUsername} / ${state.webPassword}"
-                            copyText(context, creds, "已复制控制台账号密码: $creds")
+                            copyText(context, creds, "Copied console username and password: $creds")
                         },
                         contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
                     ) {
-                        Text("一键复制", style = MaterialTheme.typography.labelSmall)
+                        Text("Copy", style = MaterialTheme.typography.labelSmall)
                     }
                     RuntimeTextButton(
                         onClick = { onResetPassword("admin123") },
                         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
                     ) {
-                        Text("重置密码", style = MaterialTheme.typography.labelSmall)
+                        Text("Reset password", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -402,12 +402,12 @@ private fun DaemonServiceCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "账号：${state.webUsername}",
+                    text = "Username: ${state.webUsername}",
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "密码：${state.webPassword}",
+                    text = "Password: ${state.webPassword}",
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -489,7 +489,7 @@ private fun DaemonServiceCard(
                     RuntimeIcon(name = RuntimeIconName.Play, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                 }
-                Text("启动中枢服务 (端口 ${state.servicePort})")
+                Text("启动中枢服务 (Port ${state.servicePort})")
             }
         }
     }
@@ -722,7 +722,7 @@ private fun AgentCard(
                 Text(
                     text = when {
                         !isDaemonRunning -> "--"
-                        agent.isChecking -> "检测中..."
+                        agent.isChecking -> "Checking..."
                         agent.installed -> agent.currentVersion ?: "已安装"
                         else -> "未安装"
                     },
