@@ -174,7 +174,7 @@ class WorkflowViewModel(
             _viewingRunId.value = result.executionId
             _historySnapshot.value = null
             if (!Settings.canDrawOverlays(appContext)) {
-                _error.value = "未授予悬浮窗权限，工作流进度仅在应用内显示。可在系统设置中开启「显示在其他应用上层」。"
+                _error.value = "Overlay permission is not granted, so workflow progress will only appear in the app. Enable “Display over other apps” in system settings."
             }
         }
     }
@@ -214,13 +214,13 @@ class WorkflowViewModel(
         openEditor(
             WorkflowDefinition(
                 id = "workflow_$suffix",
-                name = "新工作流",
-                description = "在画布中添加并连接节点",
-                category = "自定义",
+                name = "New workflow",
+                description = "Add and connect nodes on the canvas",
+                category = "Custom",
                 trigger = WorkflowTrigger.Manual(),
                 nodes = listOf(
-                    WorkflowNode("start", WorkflowNodeType.TRIGGER, "手动触发", canvasX = 80f, canvasY = 160f),
-                    WorkflowNode("done", WorkflowNodeType.TERMINAL_OUTPUT, "完成", canvasX = 420f, canvasY = 160f),
+                    WorkflowNode("start", WorkflowNodeType.TRIGGER, "Manual trigger", canvasX = 80f, canvasY = 160f),
+                    WorkflowNode("done", WorkflowNodeType.TERMINAL_OUTPUT, "Done", canvasX = 420f, canvasY = 160f),
                 ),
                 edges = listOf(WorkflowEdge("edge_start_done", "start", "output", "done")),
             ),
@@ -234,7 +234,7 @@ class WorkflowViewModel(
             openEditor(
                 definition.copy(
                     id = "workflow_$suffix",
-                    name = "${definition.name} 副本",
+                    name = "${definition.name} copy",
                     isBuiltin = false,
                     trigger = WorkflowTrigger.Manual(),
                     createdAt = 0L,
@@ -263,7 +263,7 @@ class WorkflowViewModel(
     }
 
     fun beginConnection(nodeId: String) {
-        _editorState.value = _editorState.value?.copy(connectionSourceId = nodeId, selectedNodeId = nodeId, message = "请选择目标节点")
+        _editorState.value = _editorState.value?.copy(connectionSourceId = nodeId, selectedNodeId = nodeId, message = "Select a destination node")
     }
 
     fun cancelConnection() {
@@ -370,10 +370,10 @@ class WorkflowViewModel(
             runCatching { repository.upsert(history.current.copy(updatedAt = System.currentTimeMillis())) }
                 .onSuccess {
                     history.markSaved()
-                    publishEditor(history, selectedNodeId = _editorState.value?.selectedNodeId, message = "已保存")
+                    publishEditor(history, selectedNodeId = _editorState.value?.selectedNodeId, message = "Saved")
                 }
                 .onFailure { error ->
-                    _editorState.value = _editorState.value?.copy(isSaving = false, message = error.message ?: "保存失败")
+                    _editorState.value = _editorState.value?.copy(isSaving = false, message = error.message ?: "Save failed")
                 }
         }
     }
@@ -391,7 +391,7 @@ class WorkflowViewModel(
                 publishEditor(history, selectedNodeId)
             }
             .onFailure { error ->
-                _editorState.value = _editorState.value?.copy(message = error.message ?: "编辑失败")
+                _editorState.value = _editorState.value?.copy(message = error.message ?: "Edit failed")
             }
     }
 
@@ -417,15 +417,15 @@ class WorkflowViewModel(
 }
 
 private fun WorkflowNodeType.defaultTitle(): String = when (this) {
-    WorkflowNodeType.TRIGGER -> "触发器"
-    WorkflowNodeType.BASH_COMMAND -> "执行命令"
-    WorkflowNodeType.PROCESS_SERVICE -> "启动服务"
-    WorkflowNodeType.AGENT_INFERENCE -> "智能体推理"
-    WorkflowNodeType.SUBAGENT_DELEGATE -> "委派子智能体"
-    WorkflowNodeType.TAIXU_BUILD -> "太墟构建"
-    WorkflowNodeType.CONDITION_BRANCH -> "条件分支"
-    WorkflowNodeType.HUMAN_APPROVAL -> "人工审批"
-    WorkflowNodeType.HOST_ACTION -> "宿主动作"
+    WorkflowNodeType.TRIGGER -> "Trigger"
+    WorkflowNodeType.BASH_COMMAND -> "Run command"
+    WorkflowNodeType.PROCESS_SERVICE -> "Start service"
+    WorkflowNodeType.AGENT_INFERENCE -> "Agent inference"
+    WorkflowNodeType.SUBAGENT_DELEGATE -> "Delegate to subagent"
+    WorkflowNodeType.TAIXU_BUILD -> "TaiXu build"
+    WorkflowNodeType.CONDITION_BRANCH -> "Conditional branch"
+    WorkflowNodeType.HUMAN_APPROVAL -> "Human approval"
+    WorkflowNodeType.HOST_ACTION -> "Host action"
     WorkflowNodeType.DELAY -> "延时等待"
     WorkflowNodeType.SET_VARIABLE -> "设置变量"
     WorkflowNodeType.TERMINAL_OUTPUT -> "输出结果"
@@ -437,7 +437,7 @@ private fun WorkflowNodeType.defaultConfig(): Map<String, String> = when (this) 
     )
     WorkflowNodeType.SUBAGENT_DELEGATE -> mapOf(
         "taskName" to "工作流子任务",
-        "prompt" to "请完成以下任务并返回结果：\n\${previous.output}",
+        "prompt" to "请Done以下任务并返回结果：\n\${previous.output}",
         "role" to "",
         "writePaths" to "",
     )
