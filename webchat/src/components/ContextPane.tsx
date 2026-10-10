@@ -72,7 +72,7 @@ export function ContextPane({
             <button className="quiet-button" type="button" title="Create file" onClick={() => onWorkspaceCreate("file")}>
               <Icon name="file" size={14} />
             </button>
-            <button className="quiet-button" type="button" title="Create file夹" onClick={() => onWorkspaceCreate("dir")}>
+            <button className="quiet-button" type="button" title="Create folder" onClick={() => onWorkspaceCreate("dir")}>
               <Icon name="folder" size={14} />
             </button>
             {workspaceFilePath && (
