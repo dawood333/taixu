@@ -100,13 +100,13 @@ object ContextWindowPolicy {
      * parts of each tool family instead of applying one blind head/tail truncation.
      */
     fun compactToolOutput(toolName: String?, args: JsonObject?, output: String, success: Boolean): String {
-        val statusLabel = if (success) "成功" else "失败"
-        val header = "【历史执行结果·状态:$statusLabel】"
+        val statusLabel = if (success) "Succeeded" else "Failed"
+        val header = "[Historical execution result · Status: $statusLabel]"
         val name = toolName?.trim()?.lowercase().orEmpty()
         val body = when (name) {
             "read" -> compactRead(args, output)
-            "write", "edit" -> output.take(160) + "…[文件操作结果已压缩]"
-            "process" -> compactList(output, 4, 2, "列表")
+            "write", "edit" -> output.take(160) + "…[file operation output compacted]"
+            "process" -> compactList(output, 4, 2, "items")
             "base", "download" -> compactCommand(output)
             else -> compactGeneric(output)
         }
@@ -115,11 +115,11 @@ object ContextWindowPolicy {
 
     private fun compactRead(args: JsonObject?, output: String): String {
         val path = runCatching { args?.get("path")?.jsonPrimitive?.contentOrNull }.getOrNull()
-        val pathHint = path?.let { "（文件: $it）" }.orEmpty()
+        val pathHint = path?.let { "(file: $it)" }.orEmpty()
         val lines = output.lines()
         return if (lines.size > 12) {
             lines.take(6).joinToString("\n") +
-                "\n... [历史 read 输出已压缩，省略 ${lines.size - 10} 行]$pathHint ...\n" +
+                "\n... [historical read output compacted; ${lines.size - 10} lines omitted]$pathHint ...\n" +
                 lines.takeLast(4).joinToString("\n")
         } else {
             output.take(600)
@@ -130,7 +130,7 @@ object ContextWindowPolicy {
         val lines = output.lines()
         return if (lines.size > 10) {
             lines.take(4).joinToString("\n") +
-                "\n... [历史命令输出已压缩，省略 ${lines.size - 8} 行] ...\n" +
+                "\n... [historical command output compacted; ${lines.size - 8} lines omitted] ...\n" +
                 lines.takeLast(4).joinToString("\n")
         } else {
             output.take(500)
@@ -141,7 +141,7 @@ object ContextWindowPolicy {
         val lines = output.lines()
         return if (lines.size > head + tail + 2) {
             lines.take(head).joinToString("\n") +
-                "\n... [$label 已压缩，省略 ${lines.size - head - tail} 项] ...\n" +
+                "\n... [$label compacted; ${lines.size - head - tail} items omitted] ...\n" +
                 lines.takeLast(tail).joinToString("\n")
         } else {
             output.take(300)
@@ -152,10 +152,10 @@ object ContextWindowPolicy {
         val lines = output.lines()
         return if (lines.size > 6) {
             lines.take(3).joinToString("\n") +
-                "\n... [历史工具输出已压缩，已略去 ${lines.size - 5} 行日志] ...\n" +
+                "\n... [historical tool output compacted; ${lines.size - 5} log lines omitted] ...\n" +
                 lines.takeLast(2).joinToString("\n")
         } else {
-            output.take(180) + "... [已自动压缩]"
+            output.take(180) + "... [automatically compacted]"
         }
     }
 
@@ -800,7 +800,7 @@ object ContextWindowPolicy {
         output: String,
         success: Boolean,
     ): String {
-        val status = if (success) "成功" else "失败"
+        val status = if (success) "Succeeded" else "Failed"
         val path = runCatching { args?.get("path")?.jsonPrimitive?.contentOrNull }.getOrNull()
             ?: runCatching { args?.get("command")?.jsonPrimitive?.contentOrNull }.getOrNull()
         val hint = buildString {
@@ -938,7 +938,7 @@ object ContextWindowPolicy {
             }
             val command = args?.get("command")?.jsonPrimitive?.contentOrNull
                 ?: args?.get("path")?.jsonPrimitive?.contentOrNull
-            "$name:${if (result.success) "成功" else "失败"} " +
+            "$name:${if (result.success) "Succeeded" else "Failed"} " +
                 command.orEmpty().take(480) + " " + output.replace('\n', ' ').take(720)
         }
         val lastAssistant = messages.filterIsInstance<AssistantText>().lastOrNull()?.text
