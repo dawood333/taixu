@@ -16,7 +16,7 @@ object ApkArtifactVerifier {
 
     fun verify(apk: File): ApkArtifactVerification {
         if (!apk.isFile || apk.length() <= 0L) {
-            return ApkArtifactVerification(false, emptySet(), emptyList(), "APK 文件不存在或为空")
+            return ApkArtifactVerification(false, emptySet(), emptyList(), "APK file does not exist or is empty")
         }
         return runCatching {
             ZipFile(apk).use { zip ->
@@ -34,19 +34,19 @@ object ApkArtifactVerifier {
                         isValid = false,
                         nativeAbis = abis,
                         rejectedEntries = rejected.take(20),
-                        message = "APK 包含非 ARM64 原生库：${abis.filterNot { it in allowedAbis }.joinToString()}。TaiXu 只允许 arm64-v8a。",
+                        message = "APK contains non-ARM64 native libraries: ${abis.filterNot { it in allowedAbis }.joinToString()}. TaiXu supports arm64-v8a only.",
                     )
                 } else {
                     ApkArtifactVerification(
                         isValid = true,
                         nativeAbis = abis,
                         rejectedEntries = emptyList(),
-                        message = if (abis.isEmpty()) "APK 不含原生库，ABI 检查通过" else "APK ABI 检查通过：arm64-v8a",
+                        message = if (abis.isEmpty()) "APK contains no native libraries; ABI check passed" else "APK ABI check passed: arm64-v8a",
                     )
                 }
             }
         }.getOrElse { error ->
-            ApkArtifactVerification(false, emptySet(), emptyList(), "APK ZIP 校验失败：${error.message ?: error.javaClass.simpleName}")
+            ApkArtifactVerification(false, emptySet(), emptyList(), "APK ZIP validation failed: ${error.message ?: error.javaClass.simpleName}")
         }
     }
 }
