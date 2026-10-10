@@ -228,29 +228,29 @@ fun AboutCommunityScreen(
                     SettingsRow(
                         icon = RuntimeIconName.Github,
                         title = "Open-source project on GitHub",
-                        subtitle = "https://github.com/wkbin/taixu · 欢迎 Star 支持",
+                        subtitle = "https://github.com/wkbin/taixu · Star the project on GitHub",
                         onClick = { openBrowser(context, "https://github.com/wkbin/taixu") },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Qq,
-                        title = "官方 QQ 交流群",
-                        subtitle = "群号: 964382207 · 点击一键加群 / Copy群号",
+                        title = "Official QQ Community Group",
+                        subtitle = "Group ID: 964382207 · Tap to join or copy the ID",
                         value = "964382207",
                         onClick = { joinQqGroup(context, "964382207") },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Sponsor,
-                        title = "赞助支持",
-                        subtitle = "赞助太墟 · 助力开源持续开发",
+                        title = "Support the Project",
+                        subtitle = "Sponsor TaiXu and support continued open-source development",
                         onClick = onOpenSponsor,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Info,
-                        title = "关于太墟 · TaiXu",
-                        subtitle = "Android 原生 Linux PRoot 沙箱与 AI 结对中枢",
+                        title = "About TaiXu",
+                        subtitle = "Native Android Linux PRoot sandbox and AI coding companion",
                         onClick = { showAboutDialog = true },
                     )
                 }
@@ -271,15 +271,15 @@ private fun AboutAppDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RuntimeIcon(name = RuntimeIconName.Package, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("太墟 · TaiXu", fontWeight = FontWeight.Bold)
+                Text("TaiXu", fontWeight = FontWeight.Bold)
             }
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Android 原生 Linux PRoot 沙箱与 AI 结对编程中枢", style = MaterialTheme.typography.bodyMedium)
-                Text("版本: v$appVersion (Material 3 Expressive)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                Text("架构: aarch64 · chroot-less user-space virtualization", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("协议: Apache-2.0 License", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Native Android Linux PRoot sandbox and AI pair-programming hub", style = MaterialTheme.typography.bodyMedium)
+                Text("Version: v$appVersion (Material 3 Expressive)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Text("Architecture: aarch64 · chroot-less user-space virtualization", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("License: Apache-2.0", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(4.dp))
                 OutlinedButton(
                     onClick = onOpenReleaseNotes,
@@ -288,7 +288,7 @@ private fun AboutAppDialog(
                 ) {
                     RuntimeIcon(RuntimeIconName.Document, Modifier.size(16.dp), MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(8.dp))
-                    Text("本版更新日志")
+                    Text("Release notes for this version")
                 }
                 OutlinedButton(
                     onClick = { joinQqGroup(context, "964382207") },
@@ -297,7 +297,7 @@ private fun AboutAppDialog(
                 ) {
                     RuntimeIcon(RuntimeIconName.Chat, Modifier.size(16.dp), MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(8.dp))
-                    Text("加入 QQ 交流群 (964382207)")
+                    Text("Join the QQ community group (964382207)")
                 }
             }
         },
@@ -321,7 +321,7 @@ private fun UpdateInfoDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RuntimeIcon(RuntimeIconName.Refresh, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("发现新版本 v${info.latestVersion}", fontWeight = FontWeight.Bold)
+                Text("New version available: v${info.latestVersion}", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -334,7 +334,7 @@ private fun UpdateInfoDialog(
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
-                        text = "当前版本: v${info.currentVersion}  ➔  最新版本: v${info.latestVersion}",
+                        text = "Current version: v${info.currentVersion}  ➔  Latest version: v${info.latestVersion}",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -343,7 +343,7 @@ private fun UpdateInfoDialog(
 
                 if (info.releaseNotes.isNotBlank()) {
                     Text(
-                        text = "更新日志：",
+                        text = "Release notes:",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     )
                     Surface(
@@ -360,7 +360,7 @@ private fun UpdateInfoDialog(
 
                 if (isDownloading) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("正在下载更新安装包...", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                        Text("Downloading update package...", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                         if (downloadProgress != null) {
                             LinearProgressIndicator(
                                 progress = { downloadProgress },
@@ -381,17 +381,17 @@ private fun UpdateInfoDialog(
                     onClick = onDownload,
                     enabled = !isDownloading,
                 ) {
-                    Text(if (isDownloading) "正在下载…" else "应用内立即更新")
+                    Text(if (isDownloading) "Downloading…" else "Update now in app")
                 }
             } else {
                 Button(onClick = onOpenBrowser) {
-                    Text("前往 GitHub 下载")
+                    Text("Download from GitHub")
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss, enabled = !isDownloading) {
-                Text("稍后再说")
+                Text("Maybe later")
             }
         },
     )
@@ -407,9 +407,9 @@ private fun joinQqGroup(context: Context, groupId: String = "964382207") {
     }.onFailure {
         // 剪贴板兜底
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-        val clip = ClipData.newPlainText("太墟官方交流群", groupId)
+        val clip = ClipData.newPlainText("Official TaiXu QQ group", groupId)
         clipboard?.setPrimaryClip(clip)
-        Toast.makeText(context, "已Copy QQ 群号：$groupId，可Open QQ 搜索加入", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "Copied QQ group ID: $groupId. Open QQ and search for it to join.", Toast.LENGTH_LONG).show()
     }
 }
 
@@ -423,7 +423,7 @@ private fun openBrowser(context: Context, url: String) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         val clip = ClipData.newPlainText("URL", url)
         clipboard?.setPrimaryClip(clip)
-        Toast.makeText(context, "已Copy链接：$url", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Link copied: $url", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -440,7 +440,7 @@ private fun VersionReleaseNotesDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RuntimeIcon(RuntimeIconName.Document, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("太墟 v$version 更新说明", fontWeight = FontWeight.Bold)
+                Text("TaiXu v$version release notes", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -471,7 +471,7 @@ private fun VersionReleaseNotesDialog(
                         )
                     }
                 } else {
-                    Text("暂无当前版本的更新日志", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("No release notes are available for the current version", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         },
@@ -479,7 +479,7 @@ private fun VersionReleaseNotesDialog(
             TextButton(onClick = onDismiss) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onOpenHistory) { Text("查看全部历史") }
+            TextButton(onClick = onOpenHistory) { Text("View all history") }
         },
     )
 }
