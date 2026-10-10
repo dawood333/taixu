@@ -35,7 +35,7 @@ class LxcImagesClient(
         applyLayer: suspend (File, String) -> Unit,
     ): String = withContext(Dispatchers.IO) {
         val lxcPath = lxcPathFor(distribution.id)
-            ?: error("lxc-images 暂不支持发行版 ${distribution.id}")
+            ?: error("lxc-images does not support distribution ${distribution.id} yet")
         cacheDir.mkdirs()
         var lastFailure: Throwable? = null
         for (base in MIRROR_BASES) {
@@ -47,10 +47,10 @@ class LxcImagesClient(
                 return@withContext "lxc-5.9.0-${distribution.id}-$buildDir"
             } catch (failure: Throwable) {
                 lastFailure = failure
-                logger.w("lxc-images 镜像源 $base 不可用（${distribution.id}）", failure)
+                logger.w("lxc-images mirror $base is unavailable (${distribution.id})", failure)
             }
         }
-        throw lastFailure ?: IllegalStateException("没有可用的 lxc-images 镜像源")
+        throw lastFailure ?: IllegalStateException("No usable lxc-images mirror found")
     }
 
     /** 抓取目录列表并解析出最新一次构建的时间戳目录（形如 20260820_05:24）。 */
@@ -63,7 +63,7 @@ class LxcImagesClient(
             .distinct()
             .sorted()
             .toList()
-        check(builds.isNotEmpty()) { "lxc-images 目录解析失败：$url" }
+        check(builds.isNotEmpty()) { "Failed to parse lxc-images directory: $url" }
         return builds.last()
     }
 
@@ -77,8 +77,8 @@ class LxcImagesClient(
             ?.split(Regex("\\s+"))
             ?.firstOrNull()
             ?.lowercase()
-            ?: error("SHA256SUMS 中找不到 rootfs.tar.xz 条目：$url")
-        check(expected.matches(Regex("[0-9a-f]{64}"))) { "lxc-images SHA256SUMS 摘要格式非法：$expected" }
+            ?: error("No rootfs.tar.xz entry found in SHA256SUMS: $url")
+        check(expected.matches(Regex("[0-9a-f]{64}"))) { "Invalid lxc-images SHA256SUMS digest: $expected" }
         return expected
     }
 
@@ -105,7 +105,7 @@ class LxcImagesClient(
         http.newCall(request).execute().use { response ->
             val append = response.code == 206
             if (response.code != 206 && response.code != 200) {
-                check(false) { "下载 lxc-images rootfs 失败 HTTP ${response.code}" }
+                check(false) { "Failed to download lxc-images RootFS (HTTP ${response.code})" }
             }
             val md = MessageDigest.getInstance("SHA-256")
             if (append && existing > 0) {
@@ -130,9 +130,9 @@ class LxcImagesClient(
                 }
             }
             val actual = md.digest().joinToString("") { "%02x".format(it) }
-            check(actual == expectedSha) { "lxc-images rootfs 摘要校验失败：期望 $expectedSha，实际 $actual" }
+            check(actual == expectedSha) { "lxc-images RootFS checksum mismatch: expected $expectedSha, got $actual" }
         }
-        check(partial.renameTo(target)) { "无法提交 lxc-images rootfs 缓存" }
+        check(partial.renameTo(target)) { "Unable to commit lxc-images RootFS cache" }
         return target
     }
 
@@ -152,7 +152,7 @@ class LxcImagesClient(
     private fun fetchText(url: String, client: OkHttpClient): String {
         val request = Request.Builder().url(url).header("User-Agent", USER_AGENT).build()
         client.newCall(request).execute().use { response ->
-            check(response.isSuccessful) { "lxc-images 元数据请求失败 HTTP ${response.code}: $url" }
+            check(response.isSuccessful) { "lxc-images metadata request failed (HTTP ${response.code}): $url" }
             return response.body.string()
         }
     }
