@@ -75,7 +75,7 @@ class EnvironmentRepairer(
                     logs = listOf("Error: Linux sandbox is not initialized or is in an error state; automatic repair cannot run"),
                     isCompleted = false,
                     isFailed = true,
-                    errorMessage = "Linux sandbox is not ready，请先初始化沙箱",
+                    errorMessage = "Linux sandbox is not ready. Initialize it first.",
                 ),
             )
             return@flow
@@ -203,14 +203,14 @@ class EnvironmentRepairer(
                         rm -rf /tmp/node_setup
                         echo "Node.js v22 update complete: ${'$'}(node -v 2>/dev/null)"
                     else
-                        echo "预编译包拉取受限，尝试通过系统包管理器就绪基础 Node..."
+                        echo "Downloading the prebuilt package is restricted; trying to install Node.js using the system package manager..."
                         DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs npm || true
                     fi
                 fi
                 which npm >/dev/null 2>&1 && npm config set registry https://registry.npmmirror.com || true
                 mkdir -p ${'$'}HOME/.pip
                 printf '[global]\nindex-url = https://pypi.tuna.tsinghua.edu.cn/simple\n' > ${'$'}HOME/.pip/pip.conf 2>/dev/null || true
-                echo "运行时就绪状态: Node ${'$'}(node -v 2>/dev/null || echo '未就绪'), NPM ${'$'}(npm -v 2>/dev/null || echo '未就绪')"
+                echo "Runtime status: Node ${'$'}(node -v 2>/dev/null || echo 'not ready'), npm ${'$'}(npm -v 2>/dev/null || echo 'not ready')"
                 if [ -d /opt/android-sdk ] || [ -d /opt/taixu/toolchains/android ]; then
                     if [ ! -f /etc/profile.d/taixu-android.sh ]; then
                         mkdir -p /etc/profile.d
@@ -240,12 +240,12 @@ EOF
             executeCommand(setupNodeAndMirrors, logs, timeoutMs = 240_000L)
 
             // 触发重新体检
-            addLog("自愈修复已全部执行完成，正在刷新环境体检报告...")
+            addLog("Automatic repairs completed. Refreshing the environment diagnostic report...")
             environmentDoctor.check()
 
             emit(
                 RepairProgress(
-                    stepTitle = "环境自愈与加速配置完成！",
+                    stepTitle = "Environment repair and acceleration completed!",
                     stepIndex = 5,
                     totalSteps = totalSteps,
                     progress = 1.0f,
@@ -255,32 +255,32 @@ EOF
                 ),
             )
         } catch (cancellation: CancellationException) {
-            addLog("修复流程被用户取消")
+            addLog("Repair was cancelled by the user")
             emit(
                 RepairProgress(
-                    stepTitle = "修复已取消",
+                    stepTitle = "Repair cancelled",
                     stepIndex = 0,
                     totalSteps = totalSteps,
                     progress = 0.0f,
                     logs = logs.toList(),
                     isCompleted = false,
                     isFailed = true,
-                    errorMessage = "修复任务已被手动取消",
+                    errorMessage = "Repair task was cancelled manually",
                 ),
             )
             throw cancellation
         } catch (throwable: Throwable) {
-            addLog("修复异常: ${throwable.message}")
+            addLog("Repair error: ${throwable.message}")
             emit(
                 RepairProgress(
-                    stepTitle = "自愈修复失败",
+                    stepTitle = "Automatic repair failed",
                     stepIndex = 0,
                     totalSteps = totalSteps,
                     progress = 0.0f,
                     logs = logs.toList(),
                     isCompleted = false,
                     isFailed = true,
-                    errorMessage = throwable.message ?: "环境自愈修复发生未知异常",
+                    errorMessage = throwable.message ?: "An unknown error occurred during automatic repair",
                 ),
             )
         }
@@ -297,7 +297,7 @@ EOF
             CommandResult(
                 exitCode = 1,
                 stdout = "",
-                stderr = it.message ?: "执行命令出错",
+                stderr = it.message ?: "Command execution failed",
                 durationMs = 0L,
             )
         }
