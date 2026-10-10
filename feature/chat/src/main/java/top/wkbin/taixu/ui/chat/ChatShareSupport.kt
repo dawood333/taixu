@@ -43,11 +43,11 @@ data class ShareQuickActionsState(
 /** 把分享文本包装成对应指令的完整 prompt（--- 围栏隔离原文，避免与指令混淆）。 */
 fun wrapSharePrompt(action: ShareQuickAction, text: String): String = when (action) {
     ShareQuickAction.SUMMARIZE ->
-        "请总结以下分享内容：先用三句话概括要点，再列出关键细节与结论。\n\n---\n$text\n---"
+        "Summarize the following shared content: first provide a three-sentence overview, then list the key details and conclusions.\n\n---\n$text\n---"
     ShareQuickAction.TRANSLATE_ZH ->
-        "请将以下内容翻译成中文：保留原有格式，代码、命令与专有名词不译，术语首次出现时附原文。\n\n---\n$text\n---"
+        "Translate the following content into English. Preserve the original formatting; do not translate code, commands, or proper nouns, and include the original term the first time a technical term appears.\n\n---\n$text\n---"
     ShareQuickAction.SAVE_TO_SANDBOX ->
-        "请把以下内容原样保存到沙箱的 /workspace/shared/ 目录：文件名用内容主题的简短英文 slug 加 .md 后缀，目录不存在则先创建；保存后告知完整路径与文件大小，不要改动内容。\n\n---\n$text\n---"
+        "Save the following content unchanged in the sandbox's /workspace/shared/ directory. Use a short English slug based on the topic as the filename, with a .md extension. Create the directory if needed. After saving, report the full path and file size. Do not modify the content.\n\n---\n$text\n---"
 }
 
 /** 输入框上方的分享快捷指令行：预填后出现，点 chip 才发送。 */
