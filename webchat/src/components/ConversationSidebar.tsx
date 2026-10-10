@@ -88,7 +88,7 @@ export function ConversationSidebar({
               <button
                 className="conversation-delete-button"
                 type="button"
-                aria-label={`删除“${conversation.title || "New conversation"}”`}
+                aria-label={`Delete “${conversation.title || "New conversation"}”`}
                 title="Delete conversation"
                 onClick={() => void onDelete(conversation)}
               >
