@@ -188,7 +188,7 @@ class HarnessLoop(
     /** 当前执行状态（供 UI / 后台通知显示进度）。运行结束或出错时置空。 */
     override val status: StateFlow<String?> get() = stateMirrors.status
 
-    /** 推理模型思考中（reasoning 正在流式上屏）。开始思考置 true，本回合结束时置 false。 */
+    /** 推理模型Thinking（reasoning 正在流式上屏）。开始思考置 true，本回合结束时置 false。 */
     override val thinkingLive: StateFlow<Boolean> get() = stateMirrors.thinkingLive
 
     private val _pendingMessages = MutableStateFlow<List<PendingMessage>>(emptyList())
@@ -263,10 +263,10 @@ class HarnessLoop(
         val now = now()
         for (expired in swept) {
             val output = if (expired.toolName == AskUserQuestions.TOOL_NAME) {
-                "用户未在规定时间内回答提问（提问已超时），本次等待已结束。"
+                "The user did not answer within the allowed time (the question timed out); this wait has ended."
             } else {
                 val ttlMinutes = ApprovalPolicyEngine.APPROVAL_TTL_MS / 60_000L
-                resumePolicy.invalidationResultMessage("该审批已过期（超过 $ttlMinutes 分钟未处理）")
+                resumePolicy.invalidationResultMessage("This approval expired (not handled within $ttlMinutes minutes).")
             }
             val result = ToolResult(
                 id = newId(),
@@ -299,12 +299,12 @@ class HarnessLoop(
 
         val activeOp = operationCoordinator.active(sessId)
         if (activeOp != null && activeOp.status == OperationStatus.WAITING_APPROVAL.id) {
-            operationCoordinator.finish(sessId, "aborted", details = "审批或提问已过期")
+            operationCoordinator.finish(sessId, "aborted", details = "Approval or question request expired")
         }
 
         agentTaskStateMachine.activeForSession(sessId)?.let { activeTask ->
             if (activeTask.status == AgentTaskStatus.WAITING_APPROVAL) {
-                agentTaskStateMachine.markFailed(activeTask.id, "审批或提问已过期")
+                agentTaskStateMachine.markFailed(activeTask.id, "Approval or question request expired")
             }
         }
 
@@ -329,7 +329,7 @@ class HarnessLoop(
         sessionDao.upsert(
             HarnessSessionEntity(
                 id = id,
-                title = title.ifBlank { "新会话" },
+                title = title.ifBlank { "New conversation" },
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
                 modelId = defaultModel?.id,
@@ -378,7 +378,7 @@ class HarnessLoop(
         if (!isCurrentLoad(id, generation)) return
         if (hasPendingApprovals) {
             stateMirrors.setRunState(id, SessionRunState.WAITING_APPROVAL)
-            stateMirrors.setStatus(id, "等待用户批准")
+            stateMirrors.setStatus(id, "Waiting for user approval")
             scheduleApprovalTimeout(id)
         } else {
             val settled = turnCoordinator.withSessionMutex(id) {
@@ -427,9 +427,9 @@ class HarnessLoop(
         // user, but are never silently executed again.
         agentTaskStateMachine.exhaustedRecoverable().forEach { task ->
             val detail = when {
-                task.sessionId.isBlank() -> "旧任务未绑定会话，需手动重新发起"
-                !task.autoResume -> "任务未授权进程重启后自动继续"
-                else -> "已达到进程恢复尝试上限（${task.attemptCount}/${task.maxAttempts}）"
+                task.sessionId.isBlank() -> "The previous task is not linked to a session; restart it manually"
+                !task.autoResume -> "The task is not authorized to resume automatically after a process restart"
+                else -> "Process recovery attempt limit reached (${task.attemptCount}/${task.maxAttempts})"
             }
             agentTaskStateMachine.markSuspended(task.id, detail)
             // 此分支是"自动续跑"的终点：挂起后任务不再产生任何事件，若不落盘则日志里毫无痕迹，
@@ -438,7 +438,7 @@ class HarnessLoop(
             logger.logAgent(
                 task.sessionId,
                 "DurableTaskSuspended",
-                "taskId=${task.id}, reason=$detail, 不再自动恢复（可在任务列表手动重新发起）",
+                "taskId=${task.id}, reason=$detail, automatic recovery disabled (restart manually from the task list)",
             )
         }
 
@@ -446,10 +446,10 @@ class HarnessLoop(
         for ((sessionId, tasks) in recoverableBySession) {
             val task = tasks.first()
             tasks.drop(1).forEach { duplicate ->
-                agentTaskStateMachine.markSuspended(duplicate.id, "同一会话存在更早的活动任务，已暂停以保持顺序")
+                agentTaskStateMachine.markSuspended(duplicate.id, "An earlier task is active in the same session; paused to preserve ordering")
             }
             if (sessions.none { it.id == sessionId }) {
-                agentTaskStateMachine.markSuspended(task.id, "关联会话不存在，无法恢复")
+                agentTaskStateMachine.markSuspended(task.id, "Cannot recover because the associated session does not exist")
                 continue
             }
             if (approvalRepository.pendingNow(sessionId).isNotEmpty()) {
@@ -463,14 +463,14 @@ class HarnessLoop(
                 // A recoverable task with no operation therefore has no trustworthy outcome.
                 // Fail closed: never replay a potentially side-effecting prompt and never invent
                 // a successful result that was not durably recorded.
-                val detail = "运行结果未知；关联操作已结束，为防止副作用重放，任务已终止"
+                val detail = "Run result is unknown; the associated operation has ended. The task was terminated to prevent replaying side effects."
                 agentTaskStateMachine.markFailed(task.id, detail)
                 agentEventLogger.log(sessionId, "DurableTaskRecovered", "taskId=${task.id}, outcome=unknown")
                 recovered++
                 continue
             }
 
-            if (!agentTaskStateMachine.markRecovering(task.id, "应用进程重启，正在从持久化检查点恢复")) continue
+            if (!agentTaskStateMachine.markRecovering(task.id, "App process restarted; recovering from the persisted checkpoint")) continue
             turnCoordinator.withSessionMutex(sessionId) {
                 if (isSessionBusy(sessionId) || tombstonedSessions.contains(sessionId)) return@withSessionMutex
                 launchSessionJobLocked(
@@ -525,19 +525,19 @@ class HarnessLoop(
             RecoveryOutcome.Clean -> false
             RecoveryOutcome.WaitingApproval -> {
                 stateMirrors.setRunState(id, SessionRunState.WAITING_APPROVAL)
-                stateMirrors.setStatus(id, "等待用户批准")
+                stateMirrors.setStatus(id, "Waiting for user approval")
                 true
             }
             is RecoveryOutcome.ToolInterrupted -> {
                 val restored = messageProjector.loadHistory(id)
                 messageProjector.replaceAll(id, restored)
                 stateMirrors.setRunState(id, SessionRunState.IDLE)
-                stateMirrors.setStatus(id, "上次工具结果未知，继续前需核验实际状态")
+                stateMirrors.setStatus(id, "The previous tool result is unknown; verify the actual state before continuing")
                 true
             }
             is RecoveryOutcome.Suspended -> {
                 stateMirrors.setRunState(id, SessionRunState.IDLE)
-                stateMirrors.setStatus(id, "上次运行已暂停（${recovery.reason}），发送消息即可重新开始")
+                stateMirrors.setStatus(id, "The previous run was paused (${recovery.reason}). Send a message to resume.")
                 true
             }
         }
@@ -578,7 +578,7 @@ class HarnessLoop(
             if (nextSession != null) {
                 loadSession(nextSession.id)
             } else {
-                newSession("新会话")
+                newSession("New conversation")
             }
         }
     }
@@ -622,7 +622,7 @@ class HarnessLoop(
             catch (cancellation: CancellationException) { throw cancellation }
             catch (failure: Exception) {
                 logger.e("Session input admission failed for $sessId", failure)
-                stateMirrors.setError(sessId, "消息接收失败，请重试")
+                stateMirrors.setError(sessId, "Failed to receive message. Try again.")
             }
         }
     }
@@ -680,7 +680,7 @@ class HarnessLoop(
                 }
                 branchSummarizer.summarizeAbandonedBranch(sessId, oldLeafId, leafId, model = model)
             }.onFailure { throwable ->
-                logger.w("分支摘要生成失败（不影响分支切换）：${throwable.message}")
+                logger.w("Failed to generate branch summary (branch switching is unaffected): ${throwable.message}")
             }
         }
         val history = messageProjector.loadHistory(sessId)
@@ -733,7 +733,7 @@ class HarnessLoop(
                     agentEventLogger.log(
                         sessId,
                         "ToolReplay",
-                        "重放中断的只读工具 ${action.call.rawToolName ?: action.call.tool.name.lowercase()}",
+                        "Replaying interrupted read-only tool ${action.call.rawToolName ?: action.call.tool.name.lowercase()}",
                     )
                     try {
                         toolExecutor.execute(action.call, sessId, workspace)
@@ -745,7 +745,7 @@ class HarnessLoop(
                             createdAt = now(),
                             toolCallId = action.call.id,
                             success = false,
-                            output = "重放中断的只读工具失败：${friendly(throwable)}",
+                            output = "Failed to replay interrupted read-only tool: ${friendly(throwable)}",
                         )
                     }
                 }
@@ -758,7 +758,7 @@ class HarnessLoop(
     override fun cancel(targetSessionId: String?) {
         val sessId = targetSessionId?.ifBlank { null } ?: sessionTracker.currentSessionId.value
         if (sessId.isBlank()) return
-        stateMirrors.setStatus(sessId, "正在停止…")
+        stateMirrors.setStatus(sessId, "Stopping…")
         loopScope.launch {
             val job = turnCoordinator.withSessionMutex(sessId) {
                 cancellingSessions += sessId
@@ -766,7 +766,7 @@ class HarnessLoop(
                 val queuedTaskIds = promptQueueManager.list(sessId, PromptQueue.NEXT_RUN)
                     .mapNotNull { it.second.taskId }
                 PromptQueue.entries.forEach { promptQueueManager.clear(sessId, it) }
-                queuedTaskIds.forEach { agentTaskStateMachine.markCancelled(it, "会话运行已停止") }
+                queuedTaskIds.forEach { agentTaskStateMachine.markCancelled(it, "Session run stopped") }
                 sessionJobs[sessId]?.also { it.cancel() }
             }
             job?.cancelAndJoin()
@@ -792,7 +792,7 @@ class HarnessLoop(
                     .getOrDefault(true)
                 if (stillWaiting) {
                     stateMirrors.setRunState(sessId, SessionRunState.WAITING_APPROVAL)
-                    stateMirrors.setStatus(sessId, "等待用户批准")
+                    stateMirrors.setStatus(sessId, "Waiting for user approval")
                     scheduleApprovalTimeout(sessId)
                 } else {
                     stateMirrors.setRunState(sessId, SessionRunState.IDLE)
@@ -811,7 +811,7 @@ class HarnessLoop(
             val taskId = promptQueueManager.list(sessId, PromptQueue.NEXT_RUN)
                 .getOrNull(index)?.second?.taskId
             promptQueueManager.cancel(sessId, PromptQueue.NEXT_RUN, index)
-            taskId?.let { agentTaskStateMachine.markCancelled(it, "已从等待队列移除") }
+            taskId?.let { agentTaskStateMachine.markCancelled(it, "Removed from the waiting queue") }
             refreshPendingProjection(sessId)
         }
     }
@@ -826,7 +826,7 @@ class HarnessLoop(
                 null
             }
             promptQueueManager.cancel(sessId, queue, index)
-            taskId?.let { agentTaskStateMachine.markCancelled(it, "已从等待队列移除") }
+            taskId?.let { agentTaskStateMachine.markCancelled(it, "Removed from the waiting queue") }
             refreshPendingProjection(sessId)
         }
     }
@@ -839,7 +839,7 @@ class HarnessLoop(
             val queuedTaskIds = promptQueueManager.list(sessId, PromptQueue.NEXT_RUN)
                 .mapNotNull { it.second.taskId }
             promptQueueManager.clear(sessId, PromptQueue.NEXT_RUN)
-            queuedTaskIds.forEach { agentTaskStateMachine.markCancelled(it, "等待队列已清空") }
+            queuedTaskIds.forEach { agentTaskStateMachine.markCancelled(it, "Waiting queue cleared") }
             refreshPendingProjection(sessId)
         }
     }
@@ -1010,7 +1010,7 @@ class HarnessLoop(
                 createdAt = now,
                 toolCallId = request.toolCallId,
                 success = false,
-                output = "用户已停止本次运行，待审批工具未执行。",
+                output = "The user stopped this run; tools awaiting approval were not executed.",
             )
             val active = operationCoordinator.active(sessId)
             if (active != null && (request.operationId == null || request.operationId == active.id)) {
@@ -1068,7 +1068,7 @@ class HarnessLoop(
                             AssistantText(
                                 id = newId(),
                                 createdAt = now(),
-                                text = "❌ 执行失败：${result.message}",
+                                text = "❌ Execution failed: ${result.message}",
                             ),
                         )
                     }
@@ -1093,7 +1093,7 @@ class HarnessLoop(
                         AssistantText(
                             id = newId(),
                             createdAt = now(),
-                            text = "⏹ 已停止本次运行。",
+                            text = "⏹ This run was stopped.",
                         ),
                     )
                 }
@@ -1101,7 +1101,7 @@ class HarnessLoop(
             logger.logAgent(
                 sessId,
                 "Cancelled",
-                if (userInitiated) "本次运行被用户主动停止" else "本次运行被系统取消（非用户停止）",
+                if (userInitiated) "This run was stopped by the user" else "This run was cancelled by the system (not stopped by the user)",
             )
             logger.i("Harness loop cancelled for session $sessId")
             stateMirrors.setRunState(sessId, SessionRunState.IDLE)
@@ -1111,7 +1111,7 @@ class HarnessLoop(
             scheduleApprovalTimeout(sessId)
         } catch (throwable: Throwable) {
             logger.e("Harness loop failed for session $sessId", throwable)
-            val msg = throwable.message ?: "执行失败"
+            val msg = throwable.message ?: "Execution failed"
             stateMirrors.setError(sessId, msg)
             taskId?.let { agentTaskStateMachine.markFailed(it, msg) }
             runCatching { operationCoordinator.finish(sessId, "failed", details = msg) }
@@ -1121,7 +1121,7 @@ class HarnessLoop(
                 AssistantText(
                     id = newId(),
                     createdAt = now(),
-                    text = "❌ 执行异常：$msg",
+                    text = "❌ Execution error: $msg",
                 ),
             )
         } finally {
@@ -1145,7 +1145,7 @@ class HarnessLoop(
         val userMessage = UserMessage(id = newId(), createdAt = now(), text = userText, imageUrls = imageUrls)
         rewindController.beginTurn(sessId, userText, userMessage.id)
         val operationId = operationCoordinator.acceptRun(sessId, userMessage, taskId = taskId.takeIf { claimTask })
-        taskId?.takeUnless { claimTask }?.let { agentTaskStateMachine.checkpoint(it, operationId, 0, 0, "任务已受理") }
+        taskId?.takeUnless { claimTask }?.let { agentTaskStateMachine.checkpoint(it, operationId, 0, 0, "Task accepted") }
         messageProjector.publishPersisted(sessId, userMessage)
         return operationId
     }
@@ -1178,7 +1178,7 @@ class HarnessLoop(
             // 的形态瞬间 failed，用户侧只表现为"发送消息总是中断"。只留指标没有原因，
             // 这类投诉永远无法定位。此处记录的是唯一的可行动线索。
             if (result is RunResult.Failed) {
-                logger.logAgent(sessId, "RunFailure", "运行终止（failed）：${result.message}")
+                logger.logAgent(sessId, "RunFailure", "Run terminated (failed): ${result.message}")
             }
             return result
         } catch (cancellation: CancellationException) {
@@ -1192,7 +1192,7 @@ class HarnessLoop(
             logger.logAgent(
                 sessId,
                 "RunFailure",
-                "运行异常终止（error）：${throwable::class.simpleName}: ${throwable.message}",
+                "Run terminated unexpectedly (error): ${throwable::class.simpleName}: ${throwable.message}",
                 throwable,
             )
             throw throwable
@@ -1233,20 +1233,20 @@ class HarnessLoop(
                     operationId = activeOperationId,
                     round = round,
                     maxRounds = budget.totalBudget,
-                    detail = "第 ${round + 1} 轮 · 思考中",
+                    detail = "Round ${round + 1} · Thinking",
                 )
             }
             metrics.roundStarted()
             metrics.steeringInjected(drainSteeringMessages(sessId))
-            stateMirrors.setStatus(sessId, "思考中")
+            stateMirrors.setStatus(sessId, "Thinking")
             val latestBinding = sessionDao.findById(sessId) ?: sessionEntity
             val model = try {
                 providerClient.resolveConfigured(latestBinding?.modelId, latestBinding?.modelVariant)
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (throwable: Throwable) {
-                agentEventLogger.log(sessId, "ModelResolveError", "无法获取模型配置", throwable)
-                return RunResult.Failed("无法获取模型配置：${friendly(throwable)}")
+                agentEventLogger.log(sessId, "ModelResolveError", "Unable to load model configuration", throwable)
+                return RunResult.Failed("Unable to load model configuration：${friendly(throwable)}")
             }
             agentEventLogger.log(sessId, "ModelRequest", "Round=$round, Model=${model.name}, Provider=${model.provider}")
             val effectiveModel = providerRunner.resolveEffectiveModel(sessId, model)
@@ -1364,12 +1364,12 @@ class HarnessLoop(
                     AssistantText(
                         id = newId(),
                         createdAt = now(),
-                        text = "连续 $consecutiveFailures 轮工具调用均失败，已主动停止以避免陷入死循环。" +
-                            "请检查：命令是否正确、工作区路径是否存在、依赖是否已安装，或简化任务后重试。",
+                        text = "All tool calls failed for $consecutiveFailures consecutive rounds. Stopped to prevent an infinite loop." +
+                            "Check whether the command is correct, the workspace path exists, and dependencies are installed; or simplify the task and try again.",
                         totalMs = now() - startedAt,
                     ),
                 )
-                return RunResult.Failed("连续 $consecutiveFailures 轮工具调用均失败，已主动停止")
+                return RunResult.Failed("Stopped after all tool calls failed for $consecutiveFailures consecutive rounds")
             }
 
             when (turn) {
@@ -1401,10 +1401,10 @@ class HarnessLoop(
         budget: RoundBudget,
     ): RunResult {
         val detail = if (budget.maxContinuations > 0) {
-            "已用尽全部工具轮次预算（每段 ${budget.roundsPerSegment} 轮 × ${budget.maxContinuations + 1} 段，" +
-                "共 ${budget.totalBudget} 轮）"
+            "All tool-round budget used (${budget.roundsPerSegment} rounds per segment × ${budget.maxContinuations + 1} segments," +
+                "${budget.totalBudget} rounds total)"
         } else {
-            "已达到最大工具轮数（${budget.roundsPerSegment}）"
+            "Maximum tool rounds reached (${budget.roundsPerSegment})"
         }
         agentEventLogger.log(sessId, "RoundBudgetExhausted", detail)
         messageProjector.append(
@@ -1412,11 +1412,11 @@ class HarnessLoop(
             AssistantText(
                 id = newId(),
                 createdAt = now(),
-                text = "$detail，请简化任务、调高轮次预算或分步进行。",
+                text = "$detail. Simplify the task, increase the round budget, or split the work into smaller steps.",
                 totalMs = now() - startedAt,
             ),
         )
-        return RunResult.Failed("$detail，任务尚未确认完成")
+        return RunResult.Failed("$detail; task completion has not been confirmed")
     }
 
     /**
@@ -1427,12 +1427,12 @@ class HarnessLoop(
     private suspend fun injectBudgetCheckpoint(sessId: String, budget: RoundBudget, attempt: Int) {
         val rounds = budget.roundsPerSegment
         val prompt = buildString {
-            append("[自动续跑 $attempt/${budget.maxContinuations}] 本段 $rounds 轮工具预算已用尽，任务尚未收尾。\n\n")
-            append("继续之前请先收束一次：\n")
-            append("1. 用几句话说明已完成什么、当前进展、还剩哪些没做；\n")
-            append("2. 若任务还要跨段执行，把上述进度写入工作区的 PROGRESS.md，确保中断后可以接着干；\n")
-            append("3. 如果任务其实已经完成，直接给出最终结论，不要再调用工具。\n\n")
-            append("收束之后你会获得新的 $rounds 轮预算，可以直接继续，无需等待用户确认。")
+            append("[Automatic continuation $attempt/${budget.maxContinuations}] This segment has used its $rounds tool rounds, but the task is not finished.\n\n")
+            append("Before continuing, summarize progress:\n")
+            append("1. Briefly state what is complete, the current progress, and what remains;\n")
+            append("2. If the task will continue across segments, write this progress to PROGRESS.md in the workspace so work can resume after interruption;\n")
+            append("3. If the task is already complete, provide the final conclusion without calling more tools.\n\n")
+            append("After summarizing, you will receive a new budget of $rounds rounds and can continue without waiting for user confirmation.")
         }
         promptQueueManager.enqueue(sessId, PromptQueue.STEER, PendingMessage(text = prompt))
         agentEventLogger.log(
@@ -1440,7 +1440,7 @@ class HarnessLoop(
             "RoundBudgetContinued",
             "attempt=$attempt/${budget.maxContinuations}, roundsPerSegment=$rounds",
         )
-        stateMirrors.setStatus(sessId, "轮次预算用尽，自动续跑 $attempt/${budget.maxContinuations}…")
+        stateMirrors.setStatus(sessId, "Round budget exhausted; automatic continuation $attempt/${budget.maxContinuations}…")
     }
 
     private suspend fun drainSteeringMessages(sessId: String): Int {
@@ -1520,7 +1520,7 @@ class HarnessLoop(
                             )
                         }
                         val args = json.parseToJsonElement(request.argumentsJson) as? JsonObject
-                            ?: error("审批参数不是 JSON 对象")
+                            ?: error("Approval parameters are not a JSON object")
                         val tool = HarnessApiMapper.toolByName(request.toolName)
                         // 被批准的通常是 write/base/mcp 等变更类工具：必须与 ToolRoundDispatcher
                         // 走同一把（按工作区分片的）变更互斥锁，否则用户批准的写入会与并发
@@ -1585,11 +1585,11 @@ class HarnessLoop(
                                 createdAt = now(),
                                 toolCallId = request.toolCallId,
                                 success = false,
-                                output = "批准操作执行失败：${friendly(throwable)}",
+                                output = "批准操作Execution failed：${friendly(throwable)}",
                             ),
                         )
                     }
-                    RunResult.Failed(throwable.message ?: "审批操作执行失败：${throwable::class.simpleName}")
+                    RunResult.Failed(throwable.message ?: "审批操作Execution failed：${throwable::class.simpleName}")
                 }
             }
         }
@@ -1674,7 +1674,7 @@ class HarnessLoop(
                     if (!resultPersisted) {
                         approvalRepository.mark(request.id, AgentApprovalRequestEntity.STATUS_FAILED)
                     }
-                    RunResult.Failed(throwable.message ?: "提交回答失败：${throwable::class.simpleName}")
+                    RunResult.Failed(throwable.message ?: "Failed to submit answer: ${throwable::class.simpleName}")
                 }
             }
         }
@@ -1701,12 +1701,12 @@ class HarnessLoop(
         internal fun stormHintFor(consecutiveFailures: Int): String? {
             if (consecutiveFailures < STORM_HINT_THRESHOLD) return null
             return buildString {
-                append("[自动提示] 已连续 $consecutiveFailures 轮所有工具调用都失败，当前方法大概率走不通。\n")
-                append("请停下来先反思再动手：\n")
-                append("1. 对比这几次失败的错误输出，找出共同原因（路径不存在？权限不足？环境/依赖未就绪？参数格式？）；\n")
-                append("2. 换一种更稳妥的方法，或先用 read/base 把前置条件查清楚再重试；\n")
-                append("3. 如果确属环境限制无法自行解决，直接向用户说明障碍与已尝试的步骤，不要硬耗。\n")
-                append("不要再以同类方式消耗剩余轮次。")
+                append("[Automatic guidance] All tool calls have failed for $consecutiveFailures consecutive rounds; the current approach is unlikely to work.\n")
+                append("Stop and reassess before continuing:\n")
+                append("1. Compare the error output from recent failures and identify a common cause (missing path, insufficient permissions, unavailable environment/dependencies, or invalid parameters);\n")
+                append("2. Try a more reliable approach, or use read/base to verify prerequisites before retrying;\n")
+                append("3. If an environment limitation cannot be resolved autonomously, explain the obstacle and what has been tried to the user instead of continuing pointlessly.\n")
+                append("Do not spend the remaining rounds repeating the same approach.")
             }
         }
         val KNOWN_TOOL_NAMES: Set<String> = HarnessToolRoundRunner.KNOWN_TOOL_NAMES
