@@ -46,7 +46,7 @@ data class FtpServerConfig(
     val readOnly: Boolean = false,
 ) {
     init {
-        require(port in 1024..65535) { "FTP 端口必须在 1024..65535 之间" }
+        require(port in 1024..65535) { "FTP port must be between 1024 and 65535" }
     }
 }
 
@@ -70,7 +70,7 @@ class AndroidFtpServer(
         if (!running.compareAndSet(false, true)) return
         val server = bindServerSocketWithRetry(config.port)
         serverSocket = server
-        onLog("FTP 服务已在端口 ${config.port} 启动")
+        onLog("FTP server started on port ${config.port}")
 
         scope.launch {
             try {
@@ -91,7 +91,7 @@ class AndroidFtpServer(
                         } catch (c: CancellationException) {
                             throw c
                         } catch (t: Throwable) {
-                            onLog("客户端异常: ${t.message}")
+                            onLog("Client error: ${t.message}")
                         } finally {
                             activeSessions.remove(session)
                             session.close()
@@ -132,11 +132,11 @@ class AndroidFtpServer(
                 }
             }
         }
-        val msg = lastException?.message ?: "端口 $port 绑定失败"
+        val msg = lastException?.message ?: "Failed to bind port $port"
         if (msg.contains("EADDRINUSE", ignoreCase = true) || msg.contains("already in use", ignoreCase = true)) {
-            throw BindException("FTP 端口 $port 正在被占用或尚未完全释放，请稍后再试或更换端口。($msg)")
+            throw BindException("FTP port $port is occupied or has not been released yet. Try again later or choose another port. ($msg)")
         } else {
-            throw (lastException ?: BindException("FTP 端口 $port 启动失败：$msg"))
+            throw (lastException ?: BindException("Failed to start FTP on port $port: $msg"))
         }
     }
 
@@ -150,7 +150,7 @@ class AndroidFtpServer(
         }
         activeSessions.clear()
         scope.cancel()
-        onLog("FTP 服务已停止")
+        onLog("FTP server stopped")
     }
 
     companion object {
@@ -165,7 +165,7 @@ internal class FtpSession(
     private val onLog: (String) -> Unit,
     private val onClose: (FtpSession) -> Unit,
 ) {
-    private val clientIp: String = socket.inetAddress?.hostAddress ?: "未知"
+    private val clientIp: String = socket.inetAddress?.hostAddress ?: "Unknown"
     private val reader = BufferedReader(InputStreamReader(socket.getInputStream(), Charsets.UTF_8))
     private val writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream(), Charsets.UTF_8))
 
@@ -181,7 +181,7 @@ internal class FtpSession(
 
     suspend fun handle() = withContext(Dispatchers.IO) {
         sendResponse(220, "TaiXu Linux FTP Server ready.")
-        onLog("[$clientIp] 客户端已连接")
+        onLog("[$clientIp] Client connected")
 
         while (!closed.get()) {
             val line = try {
@@ -282,7 +282,7 @@ internal class FtpSession(
         if (config.anonymousEnabled && (user.equals("anonymous", ignoreCase = true) || user.equals("ftp", ignoreCase = true))) {
             authenticated = true
             sendResponse(230, "Anonymous access granted.")
-            onLog("[$clientIp] 匿名登录成功")
+            onLog("[$clientIp] Anonymous login succeeded")
             return
         }
 
@@ -297,11 +297,11 @@ internal class FtpSession(
         if (userMatches && passwordMatches) {
             authenticated = true
             sendResponse(230, "User logged in, proceed.")
-            onLog("[$clientIp] 用户 $user 认证成功")
+            onLog("[$clientIp] User $user authenticated successfully")
         } else {
             authenticated = false
             sendResponse(530, "Login incorrect.")
-            onLog("[$clientIp] 用户 $user 密码错误")
+            onLog("[$clientIp] Incorrect password for user $user")
         }
     }
 
@@ -460,7 +460,7 @@ internal class FtpSession(
                 // 数据连接必须来自与控制连接相同的来源 IP，否则拒绝。
                 val peer = accepted.inetAddress?.hostAddress
                 if (peer == null || !peer.equals(clientIp, ignoreCase = true)) {
-                    onLog("[${clientIp}] 数据连接来源异常（$peer），已拒绝")
+                    onLog("[${clientIp}] Unexpected data connection source ($peer); rejected")
                     runCatching { accepted.close() }
                     closePassiveServer()
                     null
@@ -672,7 +672,7 @@ internal class FtpSession(
         val offset = restOffset
         restOffset = 0L
         sendResponse(150, "Opening BINARY mode data connection for ${file.name} (${file.length()} bytes).")
-        onLog("[$clientIp] 开始下载: $targetVirtual (偏移: $offset)")
+        onLog("[$clientIp] Download started: $targetVirtual (offset: $offset)")
 
         try {
             dataSocket.use { ds ->
@@ -688,7 +688,7 @@ internal class FtpSession(
                 }
             }
             sendResponse(226, "Transfer complete.")
-            onLog("[$clientIp] 下载完成: $targetVirtual")
+            onLog("[$clientIp] Download completed: $targetVirtual")
         } catch (e: Throwable) {
             sendResponse(426, "Data connection failed: ${e.message}")
         }
@@ -718,7 +718,7 @@ internal class FtpSession(
         }
 
         sendResponse(150, "Opening BINARY mode data connection for ${file.name}.")
-        onLog("[$clientIp] 开始上传: $targetVirtual")
+        onLog("[$clientIp] Upload started: $targetVirtual")
 
         try {
             file.parentFile?.mkdirs()
@@ -734,7 +734,7 @@ internal class FtpSession(
                 }
             }
             sendResponse(226, "Transfer complete.")
-            onLog("[$clientIp] 上传完成: $targetVirtual (${file.length()} bytes)")
+            onLog("[$clientIp] Upload completed: $targetVirtual (${file.length()} bytes)")
         } catch (e: Throwable) {
             sendResponse(426, "Upload failed: ${e.message}")
         }
@@ -751,7 +751,7 @@ internal class FtpSession(
         if (file != null && file.exists() && file.isFile) {
             if (file.delete()) {
                 sendResponse(250, "File deleted successfully.")
-                onLog("[$clientIp] 删除文件: $targetVirtual")
+                onLog("[$clientIp] Deleted file: $targetVirtual")
             } else {
                 sendResponse(550, "Could not delete file.")
             }
@@ -770,7 +770,7 @@ internal class FtpSession(
         val file = resolveFile(targetVirtual)
         if (file != null && !file.exists() && file.mkdirs()) {
             sendResponse(257, "\"$targetVirtual\" directory created.")
-            onLog("[$clientIp] 创建目录: $targetVirtual")
+            onLog("[$clientIp] Created directory: $targetVirtual")
         } else {
             sendResponse(550, "Failed to create directory.")
         }
@@ -791,7 +791,7 @@ internal class FtpSession(
         if (file != null && file.exists() && file.isDirectory) {
             if (file.delete()) {
                 sendResponse(250, "Directory removed.")
-                onLog("[$clientIp] 删除目录: $targetVirtual")
+                onLog("[$clientIp] Deleted directory: $targetVirtual")
             } else {
                 sendResponse(550, "Directory not empty or cannot be deleted.")
             }
@@ -833,7 +833,7 @@ internal class FtpSession(
         val target = resolveFile(targetVirtual)
         if (target != null && !target.exists() && from.renameTo(target)) {
             sendResponse(250, "Rename successful.")
-            onLog("[$clientIp] 重命名: ${from.name} -> $targetVirtual")
+            onLog("[$clientIp] Renamed: ${from.name} -> $targetVirtual")
         } else {
             sendResponse(550, "Rename failed.")
         }
