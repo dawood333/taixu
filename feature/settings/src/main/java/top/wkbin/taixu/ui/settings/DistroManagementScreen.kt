@@ -436,7 +436,7 @@ private fun DistroItemCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 按钮 1: 设为Primary (当前为Primary或仅有 1 个系统时置灰禁用)
+                // 按钮 1: Set as primary (当前为Primary或仅有 1 个系统时置灰禁用)
                 OutlinedButton(
                     onClick = onSwitchActive,
                     enabled = !isActive && canOperateMulti && !isRestoring && !isDeleting,
@@ -445,7 +445,7 @@ private fun DistroItemCard(
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(
-                        text = "设为Primary",
+                        text = "Set as primary",
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
                     )
@@ -472,7 +472,7 @@ private fun DistroItemCard(
                     }
                 }
 
-                // 按钮 3: Delete distribution (仅有 1 个系统时置灰禁用，执行中显示正在删除...并锁死)
+                // 按钮 3: Delete distribution (仅有 1 个系统时置灰禁用，执行中显示Deleting…并锁死)
                 OutlinedButton(
                     onClick = onUninstall,
                     enabled = canOperateMulti && !isRestoring && !isDeleting,
@@ -496,7 +496,7 @@ private fun DistroItemCard(
                             color = MaterialTheme.colorScheme.error,
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "正在删除...", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                        Text(text = "Deleting…", style = MaterialTheme.typography.labelSmall, maxLines = 1)
                     } else {
                         Text(
                             text = "Delete distribution",
@@ -507,10 +507,10 @@ private fun DistroItemCard(
                 }
             }
 
-            // 单系统时「设为Primary」按钮会置灰，补充解释避免用户困惑
+            // 单系统时「Set as primary」按钮会置灰，补充解释避免用户困惑
             if (!isActive && !canOperateMulti) {
                 Text(
-                    text = "当前仅有一套系统，无需切换Primary",
+                    text = "Only one system is installed; there is no need to switch the primary system",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -541,7 +541,7 @@ private fun InstallDistroDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (isInstalling) "正在安装 Linux 沙箱..." else "安装新 Linux 发行版",
+                text = if (isInstalling) "Installing Linux sandbox…" else "Install a new Linux distribution",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             )
         },
@@ -563,17 +563,17 @@ private fun InstallDistroDialog(
                             modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
                         )
                         Text(
-                            text = progressText ?: "正在下载并配置 RootFS...",
+                            text = progressText ?: "Downloading and configuring RootFS…",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 } else {
                     if (availableDistros.isEmpty()) {
-                        Text(text = "所有预置 Linux 发行版均已安装完毕！")
+                        Text(text = "All preconfigured Linux distributions have been installed!")
                     } else {
                         Text(
-                            text = "选择要下载并安装的 Linux 系统：",
+                            text = "Choose a Linux distribution to download and install:",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -614,7 +614,7 @@ private fun InstallDistroDialog(
 
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "下载线路与镜像加速：",
+                            text = "Download source and mirror acceleration:",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -631,7 +631,7 @@ private fun InstallDistroDialog(
                                     ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                                 } else ButtonDefaults.outlinedButtonColors(),
                             ) {
-                                Text("自动加速", style = MaterialTheme.typography.labelSmall)
+                                Text("Automatic acceleration", style = MaterialTheme.typography.labelSmall)
                             }
                             OutlinedButton(
                                 onClick = { selectedRoute = RegistryRoute.CHINA_ACCELERATED },
@@ -641,7 +641,7 @@ private fun InstallDistroDialog(
                                     ButtonDefaults.outlinedButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                                 } else ButtonDefaults.outlinedButtonColors(),
                             ) {
-                                Text("国内镜像", style = MaterialTheme.typography.labelSmall)
+                                Text("Regional mirrors", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -662,7 +662,7 @@ private fun InstallDistroDialog(
                     onClick = { onConfirmInstall(selectedSpec, selectedRoute) },
                     shape = RoundedCornerShape(8.dp),
                 ) {
-                    Text(text = "开始安装")
+                    Text(text = "Start installation")
                 }
             }
         },
