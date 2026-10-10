@@ -17,8 +17,8 @@ internal object JsonArgs {
     /** 读取必填字符串参数：缺失/空白/超长均抛出带参数名的 [IllegalArgumentException]。 */
     fun requireString(args: JsonObject, key: String): String {
         val value = args[key]?.jsonPrimitive?.content
-        require(!value.isNullOrBlank()) { "缺少参数：$key" }
-        require(value.length <= MAX_ARG_LENGTH) { "参数 $key 过长（${value.length} 字符，上限 $MAX_ARG_LENGTH）" }
+        require(!value.isNullOrBlank()) { "Missing parameter: $key" }
+        require(value.length <= MAX_ARG_LENGTH) { "Parameter $key is too long (${value.length} characters; limit $MAX_ARG_LENGTH)" }
         return value
     }
 
@@ -29,15 +29,15 @@ internal object JsonArgs {
     /** 读取可选整数参数并做范围校验；缺省返回 [default]。 */
     fun optionalLong(args: JsonObject, key: String, default: Long, min: Long, max: Long): Long {
         val raw = args[key]?.jsonPrimitive?.content?.trim() ?: return default
-        val value = raw.toLongOrNull() ?: throw IllegalArgumentException("参数 $key 必须是整数")
-        require(value in min..max) { "参数 $key 必须在 $min-$max 之间" }
+        val value = raw.toLongOrNull() ?: throw IllegalArgumentException("Parameter $key must be an integer")
+        require(value in min..max) { "Parameter $key must be between $min and $max" }
         return value
     }
 
     /** 读取必填整数参数（不做范围约束）。 */
     fun requireInt(args: JsonObject, key: String): Int {
         val raw = args[key]?.jsonPrimitive?.content?.trim()
-        require(!raw.isNullOrBlank()) { "缺少参数：$key" }
-        return raw.toIntOrNull() ?: throw IllegalArgumentException("参数 $key 必须是整数")
+        require(!raw.isNullOrBlank()) { "Missing parameter: $key" }
+        return raw.toIntOrNull() ?: throw IllegalArgumentException("Parameter $key must be an integer")
     }
 }
