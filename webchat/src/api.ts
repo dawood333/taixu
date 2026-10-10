@@ -44,7 +44,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   if (!response.ok) {
     const record = isRecord(payload) ? payload : null;
     const message = record?.error ?? record?.message ?? payload;
-    throw new Error(String(message || `请求失败 (${response.status})`));
+    throw new Error(String(message || `Request failed (${response.status})`));
   }
   return payload as T;
 }
@@ -65,7 +65,7 @@ export function authorizationHeader(): Record<string, string> {
   return authToken ? { Authorization: `Bearer ${authToken}` } : {};
 }
 
-/** 二进制上传工作区文件（body 为原始字节，大小上限由服务端把守）。 */
+/** Upload a workspace file as binary (raw bytes in the body; size limit enforced by the server). */
 export async function uploadWorkspaceFile(targetPath: string, file: File): Promise<void> {
   const url = `${API_ROOT}/workspaces/upload?path=${encodeURIComponent(targetPath)}`;
   const response = await fetch(url, {
@@ -76,7 +76,7 @@ export async function uploadWorkspaceFile(targetPath: string, file: File): Promi
   });
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `上传失败 (${response.status})`);
+    throw new Error(text || `Upload failed (${response.status})`);
   }
 }
 
