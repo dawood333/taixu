@@ -1009,7 +1009,7 @@ private fun WorkflowMetadataCard(state: WorkflowEditorUiState, onApply: (String,
                 RuntimeOutlinedButton(onClick = { onApply(name, description, category) }, modifier = Modifier.align(Alignment.End)) { Text("Apply information") }
             } else {
                 Text(
-                    text = "${name} · [${category}] - ${description.ifBlank { "暂无Description" }}",
+                    text = "${name} · [${category}] - ${description.ifBlank { "No description" }}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -1267,7 +1267,7 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["role"].orEmpty(),
                         onValueChange = { configMap["role"] = it },
-                        label = { Text("子Agent role (optional)") },
+                        label = { Text("Subagent role (optional)") },
                         placeholder = { Text("e.g. Test-fixing assistant") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -1337,7 +1337,7 @@ private fun NodeInspectorCard(
                     OutlinedTextField(
                         value = configMap["prompt"].orEmpty(),
                         onValueChange = { configMap["prompt"] = it },
-                        label = { Text("审批确认Description（必填）") },
+                        label = { Text("Approval prompt (required)") },
                         placeholder = { Text("e.g. Confirm pushing the fix to the remote repository?") },
                         minLines = 2,
                         maxLines = 4,
@@ -1370,7 +1370,7 @@ private fun NodeInspectorCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = if (showAdvancedJson) "Collapse高级配置 (JSON)" else "Expand advanced configuration (JSON)",
+                    text = if (showAdvancedJson) "Collapse advanced configuration (JSON)" else "Expand advanced configuration (JSON)",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
@@ -1707,7 +1707,7 @@ private fun NodeConnectionsCard(
                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.14f),
                     ) {
                         Text(
-                            text = "一键Disconnect全部",
+                            text = "Disconnect all",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
