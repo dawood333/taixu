@@ -130,7 +130,7 @@ val MIGRATION_40_41 = object : Migration(40, 41) {
         db.execSQL("ALTER TABLE agent_tasks ADD COLUMN statusDetail TEXT")
         // Legacy RUNNING rows intentionally stay RUNNING here. Their empty sessionId makes the
         // recovery pass classify them as exhausted and move them to SUSPENDED with an explanation.
-        db.execSQL("UPDATE agent_tasks SET status = 'SUSPENDED', statusDetail = '旧任务未绑定会话，需手动重新发起' WHERE status IN ('IDLE', 'SUSPENDED')")
+        db.execSQL("UPDATE agent_tasks SET status = 'SUSPENDED', statusDetail = 'Legacy task is not linked to a session; please start it again manually' WHERE status IN ('IDLE', 'SUSPENDED')")
         db.execSQL("UPDATE agent_tasks SET status = 'FAILED' WHERE status = 'ERROR'")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_agent_tasks_sessionId ON agent_tasks(sessionId)")
         db.execSQL("CREATE INDEX IF NOT EXISTS index_agent_tasks_nextRunAt ON agent_tasks(nextRunAt)")
