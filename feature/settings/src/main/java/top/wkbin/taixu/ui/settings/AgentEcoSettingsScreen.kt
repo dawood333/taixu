@@ -45,7 +45,7 @@ fun AgentEcoSettingsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { RuntimeTopBar("智能体与模型", onBack) },
+        topBar = { RuntimeTopBar("Agents & Models", onBack) },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -54,7 +54,7 @@ fun AgentEcoSettingsScreen(
         ) {
             item {
                 Text(
-                    text = "模型档案与提供商",
+                    text = "Model Profiles & Providers",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -62,31 +62,31 @@ fun AgentEcoSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Model,
-                        title = "模型档案管理",
-                        subtitle = "配置 OpenAI / DeepSeek / Claude / 本地大模型密钥与端点",
-                        value = if (models.isEmpty()) "未配置" else "${models.size} 个模型",
+                        title = "Manage model profiles",
+                        subtitle = "Configure API keys and endpoints for OpenAI, DeepSeek, Claude, and local LLMs",
+                        value = if (models.isEmpty()) "Not configured" else "${models.size} models",
                         onClick = onOpenModelProfiles,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Cpu,
-                        title = "本地 LLM",
-                        subtitle = "导入或下载 GGUF，在 ARM64 设备端通过 llama.cpp 离线推理",
+                        title = "Local LLM",
+                        subtitle = "Import or download GGUF models for offline inference with llama.cpp on ARM64 devices",
                         onClick = onOpenLocalLlm,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Chat,
-                        title = "快捷短语与常用指令",
-                        subtitle = "自定义智枢空白页快捷开始卡片与高频提示词模板",
-                        value = "${phrases.count { it.isEnabled }} 条已启用",
+                        title = "Quick phrases & commands",
+                        subtitle = "Customize quick-start cards and frequently used prompt templates on the Agent Hub home screen",
+                        value = "${phrases.count { it.isEnabled }} enabled",
                         onClick = onOpenQuickPhrases,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Speed,
-                        title = "数据统计与用量分析",
-                        subtitle = "Token 消耗、活跃度热力图、模型与话题排行",
+                        title = "Usage analytics",
+                        subtitle = "Token usage, activity heatmap, model rankings, and topic rankings",
                         onClick = onOpenStats,
                     )
                 }
@@ -94,7 +94,7 @@ fun AgentEcoSettingsScreen(
 
             item {
                 Text(
-                    text = "虚拟屏",
+                    text = "Virtual screen",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -106,7 +106,7 @@ fun AgentEcoSettingsScreen(
 
             item {
                 Text(
-                    text = "工具与插件生态",
+                    text = "Tools & Plugins",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -114,21 +114,21 @@ fun AgentEcoSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Wrench,
-                        title = "插件与底层工具中心",
-                        subtitle = "安装 llama.cpp、QEMU 与底层开发环境",
+                        title = "Plugin & System Tool Center",
+                        subtitle = "Install llama.cpp, QEMU, and low-level development tools",
                         onClick = onOpenToolCenter,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Sparkles,
-                        title = "智能体中枢 (CC-Switch)",
-                        subtitle = "统一管理 Claude Code、OpenClaw、Hermes 版本与模型多源热切",
+                        title = "Agent Hub (CC-Switch)",
+                        subtitle = "Manage Claude Code, OpenClaw, and Hermes versions and switch between model providers",
                         onClick = onOpenCcSwitch,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    SettingsRow(icon = RuntimeIconName.Bot, title = "Agent 执行与上下文", subtitle = "思考流、上下文压缩、工具调用限制与系统提示词", onClick = onOpenAgentSettings)
+                    SettingsRow(icon = RuntimeIconName.Bot, title = "Agent Execution & Context", subtitle = "Reasoning stream, context compaction, tool-call limits, and system prompts", onClick = onOpenAgentSettings)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    SettingsRow(icon = RuntimeIconName.Bot, title = "子智能体角色", subtitle = "自动委派策略与可用的子智能体角色", onClick = onOpenSubagentSettings)
+                    SettingsRow(icon = RuntimeIconName.Bot, title = "Subagent Roles", subtitle = "自动委派策略与可用的Subagent Roles", onClick = onOpenSubagentSettings)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(icon = RuntimeIconName.Sparkles, title = "Skills 与插件", subtitle = "管理 Skill 提示词、脚本包与运行时插件", value = "${skills.count { it.isEnabled }} 个技能", onClick = onOpenSkillSettings)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
