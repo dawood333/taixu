@@ -262,7 +262,7 @@ fun WebChatBridgeDialog(
                                         onClick = {
                                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                             clipboard.setPrimaryClip(ClipData.newPlainText("PIN", status.pinCode))
-                                            Toast.makeText(context, "已Copy配对码", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Pairing code copied", Toast.LENGTH_SHORT).show()
                                         }
                                     ) { Text("Copy") }
                                 }
@@ -273,14 +273,14 @@ fun WebChatBridgeDialog(
                                 onClick = {
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     clipboard.setPrimaryClip(ClipData.newPlainText("TaiXu Agent direct URL", directUrl))
-                                    Toast.makeText(context, "已Copy免密直达链接，在电脑浏览器打开即可！", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Password-free direct link copied. Open it in a computer browser.", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                                 shape = RoundedCornerShape(10.dp),
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                     RuntimeIcon(RuntimeIconName.Copy, Modifier.size(16.dp))
-                                    Text("一键Copy免密直达链接 (免输PIN)")
+                                    Text("Copy direct link (no PIN required)")
                                 }
                             }
 
