@@ -18,10 +18,10 @@ need "$PAYLOAD/checksums/SHA256SUMS"
 need "$QEMU_ARCHIVE"
 need "$ROOTFS_ARCHIVE"
 
-progress 5 "[VERIFY] 校验 QEMU user-mode 与最小 RootFS"
+progress 5 "[VERIFY] Verify QEMU user mode and minimal RootFS"
 (cd "$PAYLOAD" && sha256sum -c checksums/SHA256SUMS)
 
-progress 20 "[EXTRACT] 解包 ARM64 qemu-x86_64 user-mode"
+progress 20 "[EXTRACT] Extract ARM64 qemu-x86_64 user mode"
 rm -rf /tmp/taixu-qemu-user
 mkdir -p /tmp/taixu-qemu-user
 if command -v dpkg-deb >/dev/null 2>&1; then
@@ -42,15 +42,15 @@ cp "$QEMU_SOURCE" "$COMPAT_ROOT/qemu-x86_64"
 chmod 755 "$COMPAT_ROOT/qemu-x86_64"
 rm -rf /tmp/taixu-qemu-user
 
-progress 55 "[EXTRACT] 解压最小 x86_64 Ubuntu Base RootFS"
+progress 55 "[EXTRACT] Extract the minimal x86_64 Ubuntu Base RootFS"
 tar -xzf "$ROOTFS_ARCHIVE" -C "$COMPAT_ROOT/rootfs"
 is_x86_64_elf "$COMPAT_ROOT/rootfs/bin/sh" || { echo "rootfs/bin/sh is not an x86_64 ELF" >&2; exit 4; }
 
-progress 80 "[COMMAND] 创建 qemu-x86_64 命令入口"
+progress 80 "[COMMAND] Create the qemu-x86_64 command entry point"
 printf '%s\n' '#!/bin/sh' 'exec /opt/taixu/compat/x86_64/qemu-x86_64 "$@"' > "$TOOL_DIR/bin/qemu-x86_64"
 chmod 755 "$TOOL_DIR/bin/qemu-x86_64"
 ln -sfn "$TOOL_DIR/bin/qemu-x86_64" /opt/taixu/bin/qemu-x86_64
 
-progress 95 "[VERIFY] 验证 QEMU user-mode 兼容插件"
+progress 95 "[VERIFY] Verify the QEMU user-mode compatibility plugin"
 /bin/sh "$PAYLOAD/scripts/verify-qemu-x86-64-compat.sh"
-progress 100 "[VERIFY] QEMU user-mode 兼容插件已就绪"
+progress 100 "[VERIFY] QEMU user-mode compatibility plugin is ready"
