@@ -27,16 +27,16 @@ class AgentContextExecutor(
         return when (action) {
             "save" -> {
                 val key = args["key"]?.jsonPrimitive?.contentOrNull?.trim()
-                    ?: return false to "memory save 必须提供 key 参数"
+                    ?: return false to "memory save requires a key parameter"
                 val value = args["value"]?.jsonPrimitive?.contentOrNull?.trim()
-                    ?: return false to "memory save 必须提供 value 参数"
-                if (key.length > MAX_MEMORY_KEY_CHARS) return false to "memory key 不能超过 $MAX_MEMORY_KEY_CHARS 字符"
-                if (value.length > MAX_MEMORY_VALUE_CHARS) return false to "memory value 不能超过 $MAX_MEMORY_VALUE_CHARS 字符"
+                    ?: return false to "memory save requires a value parameter"
+                if (key.length > MAX_MEMORY_KEY_CHARS) return false to "memory key cannot exceed $MAX_MEMORY_KEY_CHARS characters"
+                if (value.length > MAX_MEMORY_VALUE_CHARS) return false to "memory value cannot exceed $MAX_MEMORY_VALUE_CHARS characters"
                 val kind = args["kind"]?.jsonPrimitive?.contentOrNull?.lowercase() ?: "fact"
                 val scope = args["scope"]?.jsonPrimitive?.contentOrNull?.lowercase()
                     ?: if (workspace.isNotBlank()) "project" else "global"
                 val ownerId = memoryOwner(scope, sessionId, workspace)
-                    ?: return false to "scope 仅支持 global/project/session，且 project/session 必须有对应上下文"
+                    ?: return false to "scope supports only global/project/session; project/session also require the corresponding context"
                 val subjectKey = args["subjectKey"]?.jsonPrimitive?.contentOrNull?.trim()
                     ?.takeIf { it.isNotBlank() } ?: key
                 val volatility = args["volatility"]?.jsonPrimitive?.contentOrNull?.lowercase()
@@ -49,13 +49,13 @@ class AgentContextExecutor(
                 val existing = agentContextDao.getMemoryBySubjectKey(subjectKey, scope, ownerId)
                     ?: agentContextDao.getMemoryByKey(key, scope, ownerId)
                 if (existing == null && agentContextDao.countMemories(scope, ownerId) >= MAX_MEMORIES_PER_OWNER) {
-                    return false to "[$scope] 记忆已达到上限 $MAX_MEMORIES_PER_OWNER 条，请删除旧记忆后再保存"
+                    return false to "[$scope] memory limit ($MAX_MEMORIES_PER_OWNER) reached. Delete old memories before saving more."
                 }
                 if (pinned) {
                     val pinnedBudget = MAX_PINNED_CHARS - agentContextDao.getPinnedMemories(projectOwner(workspace), sessionId)
                         .filter { it.id != existing?.id }.sumOf { it.value.length }
                     if (value.length > pinnedBudget) {
-                        return false to "pinned 记忆总字符已接近上限（~$MAX_PINNED_CHARS），请精简内容或改为非 pinned"
+                        return false to "Total pinned memory is near the character limit (~$MAX_PINNED_CHARS). Shorten it or unpin some entries"
                     }
                 }
                 val id = existing?.id ?: UUID.randomUUID().toString()
@@ -79,17 +79,17 @@ class AgentContextExecutor(
                     )
                 )
                 val conflictNote = if (existing != null && subjectKey != key && existing.key != subjectKey) {
-                    " 同主题($subjectKey)去重并升级为 revision=${existing.revision + if (valueChanged) 1 else 0}"
+                    " Deduplicated same-topic entry ($subjectKey) and advanced to revision=${existing.revision + if (valueChanged) 1 else 0}"
                 } else ""
                 val savedMessage = if (existing != null) {
                     val revNote = if (valueChanged) {
-                        "，升级为 revision=${existing.revision + 1}"
+                        ", advanced to revision=${existing.revision + 1}"
                     } else {
-                        "（内容未变化，revision=${existing.revision}）"
+                        "(content unchanged, revision=${existing.revision})"
                     }
-                    "已更新既有长期记忆[$revNote，原值被覆盖][$scope/$kind] $key = $value$conflictNote"
+                    "Updated existing long-term memory [$revNote; previous value overwritten][$scope/$kind] $key = $value$conflictNote"
                 } else {
-                    "已成功存储长期记忆 [$scope/$kind] $key = $value"
+                    "Stored long-term memory successfully [$scope/$kind] $key = $value"
                 }
                 true to savedMessage
             }
@@ -102,18 +102,18 @@ class AgentContextExecutor(
                     key != null -> {
                         val scope = args["scope"]?.jsonPrimitive?.contentOrNull?.lowercase() ?: "global"
                         val ownerId = memoryOwner(scope, sessionId, workspace)
-                            ?: return false to "scope 仅支持 global/project/session"
+                            ?: return false to "scope supports only global/project/session"
                         agentContextDao.getMemoryByKey(key, scope, ownerId)
                     }
-                    else -> return false to "memory verify 需提供 id 或 key"
-                } ?: return false to "未找到要核验的记忆"
+                    else -> return false to "memory verify requires an id or key"
+                } ?: return false to "Memory to verify not found"
                 agentContextDao.touchMemory(target.id, System.currentTimeMillis())
-                true to "已刷新记忆 ${target.key} 的新鲜度（lastVerifiedAt 续期）"
+                true to "Refreshed freshness for memory ${target.key} (extended lastVerifiedAt)"
             }
             "query", "search" -> {
                 val query = args["query"]?.jsonPrimitive?.contentOrNull?.trim()
                     ?: args["key"]?.jsonPrimitive?.contentOrNull?.trim()
-                    ?: return false to "memory query 必须提供 query 或 key"
+                    ?: return false to "memory query requires a query or key"
                 val includeExpired = (args["include_expired"]?.jsonPrimitive?.contentOrNull?.lowercase()) == "true"
                 val results = agentContextDao.searchMemories(
                     query = query.take(MAX_MEMORY_QUERY_CHARS),
@@ -121,10 +121,10 @@ class AgentContextExecutor(
                     sessionId = sessionId,
                 ).filter { includeExpired || isFresh(it, System.currentTimeMillis()) }
                 if (results.isEmpty()) {
-                    true to "未查询到与 '$query' 相关的记忆"
+                    true to "No memories found for '$query'"
                 } else {
                     val formatted = results.joinToString("\n") { it.render(lineBreak = true) }
-                    true to "查询到以下记忆：\n$formatted"
+                    true to "Memories found:\n$formatted"
                 }
             }
             "list" -> {
@@ -141,10 +141,10 @@ class AgentContextExecutor(
                     else emptyList(),
                 ).distinctBy { it.id }
                 if (results.isEmpty()) {
-                    true to "当前暂无长期记忆"
+                    true to "No long-term memories yet"
                 } else {
                     val formatted = results.joinToString("\n") { it.render() }
-                    true to "已保存的记忆列表：\n$formatted"
+                    true to "Saved memories:\n$formatted"
                 }
             }
             "delete" -> {
@@ -152,27 +152,27 @@ class AgentContextExecutor(
                 val id = args["id"]?.jsonPrimitive?.contentOrNull?.trim()
                 if (id != null) {
                     val memory = agentContextDao.getMemoryById(id)
-                        ?: return false to "未找到记忆 id=$id"
+                        ?: return false to "Memory not found: id=$id"
                     val visible = when (memory.scope) {
                         "global" -> memory.ownerId.isEmpty()
                         "project" -> memory.ownerId == projectOwner(workspace) && memory.ownerId.isNotBlank()
                         "session" -> memory.ownerId == sessionId && sessionId.isNotBlank()
                         else -> false
                     }
-                    if (!visible) return false to "无权删除不属于当前项目或会话的记忆"
+                    if (!visible) return false to "Cannot delete a memory that does not belong to the current project or session"
                     agentContextDao.deleteMemoryById(id)
-                    true to "已删除记忆 id=$id"
+                    true to "Deleted memory id=$id"
                 } else if (key != null) {
                     val scope = args["scope"]?.jsonPrimitive?.contentOrNull?.lowercase() ?: "global"
                     val ownerId = memoryOwner(scope, sessionId, workspace)
-                        ?: return false to "scope 仅支持 global/project/session，且 project/session 必须有对应上下文"
+                        ?: return false to "scope supports only global/project/session; project/session also require the corresponding context"
                     agentContextDao.deleteMemoryByKey(key, scope, ownerId)
-                    true to "已删除记忆 [$scope] key=$key"
+                    true to "Deleted memory [$scope] key=$key"
                 } else {
-                    false to "memory delete 需提供 id 或 key"
+                    false to "memory delete requires an id or key"
                 }
             }
-            else -> false to "未知的 memory 动作: $action"
+            else -> false to "Unknown memory action: $action"
         }
     }
 
@@ -194,7 +194,7 @@ class AgentContextExecutor(
     private fun AgentMemoryEntity.render(lineBreak: Boolean = false): String {
         val suffix = buildString {
             if (pinned) append(" pinned")
-            if (expiresAt != null && !isFresh(this@render, System.currentTimeMillis())) append(" 已过期")
+            if (expiresAt != null && !isFresh(this@render, System.currentTimeMillis())) append(" expired")
             append(" v${revision}")
         }
         val separator = if (lineBreak) "\n        " else " "
@@ -219,7 +219,7 @@ class AgentContextExecutor(
         return when (action) {
             "replace_active", "set_active", "create" -> {
                 val goal = args["goal"]?.jsonPrimitive?.contentOrNull?.trim()
-                    ?: return false to "plan replace_active 必须提供 goal 目标描述"
+                    ?: return false to "plan replace_active requires a goal description"
                 val stepsElement = args["steps"]
                 val stepsJson = stepsElement?.toString() ?: "[]"
                 agentContextDao.savePlan(
@@ -231,19 +231,19 @@ class AgentContextExecutor(
                         updatedAt = System.currentTimeMillis(),
                     )
                 )
-                true to "已成功创建/更新任务执行规划：\n目标：$goal\n步骤：$stepsJson\n\n提示：请按规划推进执行。每个步骤完成时调用 plan(action=\"advance\", ...) 更新步骤状态；遇到阻碍时调用 replace_active 调整方案；全部完成时调用 clear_active。"
+                true to "Created/updated the task execution plan:\nGoal: $goal\nSteps: $stepsJson\n\nContinue according to the plan. After each step, call plan(action=\"advance\", ...) to update its status; use replace_active to revise the plan if blocked; call clear_active when all steps are complete."
             }
             "get_active", "get" -> {
                 val plan = agentContextDao.getActivePlan(sessionId)
                 if (plan == null) {
-                    true to "当前会话暂无活跃任务计划"
+                    true to "No active task plan in this session"
                 } else {
-                    true to "当前活跃任务计划：\n目标：${plan.goal}\n步骤：${plan.stepsJson}\n状态：${plan.status}"
+                    true to "Active task plan:\nGoal: ${plan.goal}\nSteps: ${plan.stepsJson}\nStatus: ${plan.status}"
                 }
             }
             "advance", "update_steps" -> {
                 val plan = agentContextDao.getActivePlan(sessionId)
-                    ?: return false to "当前会话没有可推进的活跃计划，请先用 replace_active 创建"
+                    ?: return false to "There is no active plan to advance in this session. Create one with replace_active first."
                 val stepsElement = args["steps"]
                 val newStepsJson = stepsElement?.toString() ?: plan.stepsJson
                 // status 是计划生命周期枚举（active/completed/cancelled），不是自然语言进度描述。
@@ -260,13 +260,13 @@ class AgentContextExecutor(
                         updatedAt = System.currentTimeMillis(),
                     )
                 )
-                true to "【规划进度已同步更新】\n状态：$newStatus\n当前步骤：$newStepsJson\n请继续推进后续任务。"
+                true to "[Plan progress synchronized]\nStatus: $newStatus\nCurrent steps: $newStepsJson\nContinue with the remaining tasks."
             }
             "clear_active", "clear" -> {
                 agentContextDao.deletePlanBySession(sessionId)
-                true to "已清空当前会话的任务规划"
+                true to "Cleared the task plan for this session"
             }
-            else -> false to "未知的 plan 动作: $action"
+            else -> false to "Unknown plan action: $action"
         }
     }
 
@@ -275,9 +275,9 @@ class AgentContextExecutor(
         return when (action) {
             "save", "set" -> {
                 val key = args["key"]?.jsonPrimitive?.contentOrNull?.trim()
-                    ?: return false to "scratchpad save 必须提供 key"
+                    ?: return false to "scratchpad save requires a key"
                 val value = args["value"]?.jsonPrimitive?.contentOrNull?.trim()
-                    ?: return false to "scratchpad save 必须提供 value"
+                    ?: return false to "scratchpad save requires a value"
                 agentContextDao.saveScratchpad(
                     AgentScratchpadEntity(
                         sessionId = sessionId,
@@ -286,38 +286,38 @@ class AgentContextExecutor(
                         updatedAt = System.currentTimeMillis(),
                     )
                 )
-                true to "已记录工作草稿 [$key] = $value"
+                true to "Saved scratchpad entry [$key] = $value"
             }
             "get" -> {
                 val key = args["key"]?.jsonPrimitive?.contentOrNull?.trim()
-                    ?: return false to "scratchpad get 必须提供 key"
+                    ?: return false to "scratchpad get requires a key"
                 val item = agentContextDao.getScratchpad(sessionId, key)
                 if (item == null) {
-                    true to "草稿 [$key] 不存在"
+                    true to "Scratchpad entry [$key] does not exist"
                 } else {
-                    true to "草稿 [$key]：${item.value}"
+                    true to "Scratchpad [$key]: ${item.value}"
                 }
             }
             "list" -> {
                 val list = agentContextDao.listScratchpads(sessionId)
                 if (list.isEmpty()) {
-                    true to "当前无工作草稿记录"
+                    true to "No scratchpad entries yet"
                 } else {
                     val formatted = list.joinToString("\n") { "- [${it.key}]: ${it.value}" }
-                    true to "当前工作草稿：\n$formatted"
+                    true to "Current scratchpad:\n$formatted"
                 }
             }
             "delete" -> {
                 val key = args["key"]?.jsonPrimitive?.contentOrNull?.trim()
-                    ?: return false to "scratchpad delete 必须提供 key"
+                    ?: return false to "scratchpad delete requires a key"
                 agentContextDao.deleteScratchpad(sessionId, key)
-                true to "已删除草稿 [$key]"
+                true to "Deleted scratchpad entry [$key]"
             }
             "clear" -> {
                 agentContextDao.clearScratchpads(sessionId)
-                true to "已清空当前任务的所有工作草稿"
+                true to "Cleared all scratchpad entries for this task"
             }
-            else -> false to "未知的 scratchpad 动作: $action"
+            else -> false to "Unknown scratchpad action: $action"
         }
     }
 }
