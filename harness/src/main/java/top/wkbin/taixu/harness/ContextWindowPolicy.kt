@@ -208,7 +208,7 @@ object ContextWindowPolicy {
             changed = true
             message.copy(
                 output = compactToolOutput(name, args, message.output, message.success) +
-                    "\n[老轮次工具输出已压缩；全文在会话记录中，需要细节时调用 history_read(message_id=\"${message.id}\") 回读]",
+                    "\n[Older-turn tool output compacted; full text remains in session history. Use history_read(message_id=\"${message.id}\") for details]",
             )
         }
         return if (changed) transformed else messages
