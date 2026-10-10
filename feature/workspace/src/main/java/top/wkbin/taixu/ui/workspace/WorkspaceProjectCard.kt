@@ -78,7 +78,7 @@ internal fun ProjectCard(
 
     RuntimeCard(
         modifier = Modifier.fillMaxWidth(),
-        // 减法：常态无边框，仅构建中保留主色描边作为状态提示
+        // 减法：常态无边框，仅Build中保留主色描边作为状态提示
         borderColor = if (isBuilding) MaterialTheme.colorScheme.primary else Color.Transparent,
         onClick = onOpenExplorer,
     ) {
@@ -156,7 +156,7 @@ internal fun ProjectCard(
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text("运行工作流") },
+                            text = { Text("Run workflow") },
                             leadingIcon = {
                                 RuntimeIcon(RuntimeIconName.Hub, Modifier.size(17.dp))
                             },
@@ -202,7 +202,7 @@ internal fun ProjectCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End,
             ) {
-                // 只有可编译运行工程（Android / Flutter）显示"运行到手机"按钮；逆向/通用工程走终端
+                // 只有可编译运行工程（Android / Flutter）显示"Run on device"按钮；逆向/通用工程走终端
                 if (project.projectType == ProjectType.ANDROID ||
                     project.projectType == ProjectType.FLUTTER
                 ) {
