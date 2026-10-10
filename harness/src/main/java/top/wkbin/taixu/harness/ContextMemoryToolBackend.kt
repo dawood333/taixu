@@ -40,7 +40,7 @@ class ContextMemoryToolBackend(
         val query = JsonArgs.requireString(args, "query")
         val limit = JsonArgs.optionalLong(args, "limit", 8L, 1L, 20L).toInt()
         val matches = messageStore?.searchIndexed(sessionId, query, limit).orEmpty()
-        if (matches.isEmpty()) return true to "未找到匹配历史：$query"
+        if (matches.isEmpty()) return true to "No matching history found: $query"
         return true to matches.map { (message, index) ->
             "[index=$index] id=${message.id} time=${message.createdAt} ${historyLabel(message)}"
         }.joinToString("\n")
@@ -49,9 +49,9 @@ class ContextMemoryToolBackend(
     private suspend fun executeHistoryRead(args: JsonObject, sessionId: String): Pair<Boolean, String> {
         val messageId = args["message_id"]?.jsonPrimitive?.content?.trim()?.takeIf { it.isNotBlank() }
         val index = args["index"]?.jsonPrimitive?.content?.trim()?.toIntOrNull()
-        require(messageId != null || index != null) { "history.read 需要 message_id 或 index" }
+        require(messageId != null || index != null) { "history.read requires message_id or index" }
         val messages = messageStore?.readWithRelated(sessionId, messageId, index).orEmpty()
-        if (messages.isEmpty()) return false to "未找到指定历史消息"
+        if (messages.isEmpty()) return false to "Specified history message not found"
         return true to messages.joinToString("\n\n") { message ->
             "id=${message.id}\n${historyLabel(message, full = true)}"
         }.take(MAX_HISTORY_READ_OUTPUT)
@@ -67,10 +67,10 @@ class ContextMemoryToolBackend(
         // compress 只会在用户明确要求时由模型调用，属于显式会话操作。
         // 不受「命令输出压缩」或「自动上下文压缩」开关约束：前者仅控制 RTK 命令输出，
         // 后者仅控制 ApiContextAssembler 的自动折叠策略。
-        val manager = compactionManager ?: return false to "未初始化压缩管理器"
+        val manager = compactionManager ?: return false to "Compaction manager is not initialized"
         val mode = JsonArgs.optionalString(args, "mode").orEmpty().trim().lowercase()
         val anchor = JsonArgs.optionalString(args, "anchor").orEmpty()
-        if (sessionId.isBlank()) return false to "当前没有活动会话，无法压缩"
+        if (sessionId.isBlank()) return false to "There is no active session to compact"
 
         val context = manager.project(sessionId)
         val keepFromIndex = when (val resolved = CompactionManager.resolveCompressAnchor(
@@ -108,24 +108,24 @@ class ContextMemoryToolBackend(
         )
         val foldedCount = context.messages.size - compacted.messages.size
         return true to buildString {
-            append("已按 ")
+            append("Compacted in ")
             append(if (mode == "before") "before" else "after")
-            append(" 模式压缩：折叠 $foldedCount 条消息为结构化摘要")
-            append("（保留后 ${compacted.messages.size} 条）。")
-            append("被折叠的原文仍在会话记录中，需要细节时可用 history_read(message_id) 按需回读。")
+            append(" mode: folded $foldedCount messages into a structured summary")
+            append(" (retained the last ${compacted.messages.size}).")
+            append("The original messages remain in session history. Use history_read(message_id) to retrieve details when needed.")
         }
     }
 
     private fun historyLabel(message: HarnessMessage, full: Boolean = false): String = when (message) {
-        is CapabilityEvent -> "能力事件 ${message.name}: ${message.details}"
-        is SkillSuggestion -> "技能建议 ${message.skillName}: ${message.description}"
-        is ModelSwitchEvent -> "切换模型 ${message.fromLabel} → ${message.toLabel}"
-        is UserMessage -> "用户：${message.text.take(if (full) MAX_HISTORY_READ_OUTPUT else 240)}"
-        is AssistantText -> "助手：${message.text.take(if (full) MAX_HISTORY_READ_OUTPUT else 240)}" +
+        is CapabilityEvent -> "Capability event ${message.name}: ${message.details}"
+        is SkillSuggestion -> "Skill suggestion ${message.skillName}: ${message.description}"
+        is ModelSwitchEvent -> "Model switched ${message.fromLabel} → ${message.toLabel}"
+        is UserMessage -> "User: ${message.text.take(if (full) MAX_HISTORY_READ_OUTPUT else 240)}"
+        is AssistantText -> "Assistant: ${message.text.take(if (full) MAX_HISTORY_READ_OUTPUT else 240)}" +
             if (full && !message.reasoning.isNullOrBlank()) "\nreasoning:\n${message.reasoning.take(MAX_HISTORY_READ_OUTPUT)}" else ""
-        is ToolCall -> "工具调用 ${message.rawToolName ?: message.tool}: ${message.args}" +
+        is ToolCall -> "Tool call ${message.rawToolName ?: message.tool}: ${message.args}" +
             if (full) "\nreasoning:\n${message.reasoning.orEmpty().take(MAX_HISTORY_READ_OUTPUT)}" else ""
-        is ToolResult -> "工具结果：${message.output.take(if (full) MAX_HISTORY_READ_OUTPUT else 240)}"
+        is ToolResult -> "Tool result: ${message.output.take(if (full) MAX_HISTORY_READ_OUTPUT else 240)}"
     }
 
     companion object {
