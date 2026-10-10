@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="harness_prompt_tool_call_disabled">## 工具禁用说明\n当前会话已禁用工具调用：请直接回答用户问题，不要尝试调用任何工具（read / write / edit / base 等均不可用）。</string>
-    <string name="harness_prompt_subagent_none">## 子智能体委派\n当前没有启用的子智能体角色，不要调用 invoke_subagent。</string>
-    <string name="harness_prompt_subagent_lane_system">你是隔离 Lane 中运行的子智能体。聚焦指派任务，不得派发更多子智能体。\n收尾要求：停止调用工具的那一轮必须直接输出完整结论正文（空回复或只说“已完成”都视为未完成）。任务被阻塞时（需要用户审批、写入被拦截、依赖缺失），必须明确写出“未完成”以及剩余待办，严禁把“已交由主智能体处理”之类的说明当成完成结论。</string>
-    <string name="harness_prompt_subagent_trigger_manual">仅当用户明确要求并行处理、分头检查或使用子智能体时调用 invoke_subagent；否则由主智能体直接完成。</string>
-    <string name="harness_prompt_privilege_unavailable">## Android 宿主权限\n权限状态暂不可读取；不要调用 host exec，可先调用 host(status)。</string>
-    <string name="harness_prompt_privilege_proot">## Android 宿主权限\n当前实际生效模式为 PRoot/普通应用权限。host exec 不可用；系统设置、pm、input 等宿主操作不要用 base 冒充执行，可提示用户先到设置授权 Shizuku 或 Root。抓取日志（logcat）直接使用无线 ADB（host logcat 或 logcat-grabber），无需 Shizuku/Root。</string>
-    <string name="harness_prompt_privilege_render_failed">## Android 宿主权限\n特权能力章节加载失败，实际可用性未知：先调用 host(status) 实测；返回错误则告知用户到设置页重新授权 Shizuku 或 Root。不要用 base 执行宿主命令。</string>
+    <string name="harness_prompt_tool_call_disabled">## Tool use disabled\nTool calls are disabled for this session. Answer the user directly; do not attempt to call any tools (read / write / edit / base, etc. are unavailable).</string>
+    <string name="harness_prompt_subagent_none">## Subagent delegation\nNo subagent roles are enabled. Do not call invoke_subagent.</string>
+    <string name="harness_prompt_subagent_lane_system">You are a subagent running in an isolated lane. Focus on the assigned task and do not delegate to additional subagents.\nCompletion requirement: the final tool-use round must be followed by a complete, substantive final answer (an empty response or merely saying “done” counts as incomplete). If blocked (user approval required, writes blocked, or dependencies missing), explicitly state “incomplete” and list remaining work. Never treat statements such as “handed off to the main agent” as a completion result.</string>
+    <string name="harness_prompt_subagent_trigger_manual">Call invoke_subagent only when the user explicitly requests parallel work, separate reviews, or subagents. Otherwise, complete the task directly as the main agent.</string>
+    <string name="harness_prompt_privilege_unavailable">## Android host permissions\nPermission status is temporarily unavailable. Do not call host exec; you may first call host(status).</string>
+    <string name="harness_prompt_privilege_proot">## Android host permissions\nThe effective mode is PRoot / regular app permissions. host exec is unavailable. Do not pretend to perform host operations such as system settings, pm, or input using base; tell the user to grant Shizuku or Root in Settings first. For logs, use wireless ADB (host logcat or logcat-grabber) directly; Shizuku/Root is not required.</string>
+    <string name="harness_prompt_privilege_render_failed">## Android host permissions\nThe privileged-capabilities section failed to load, so actual availability is unknown. First test with host(status); if it returns an error, tell the user to re-authorize Shizuku or Root in Settings. Do not use base to run host commands.</string>
 </resources>
