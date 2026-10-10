@@ -13,9 +13,9 @@ interface ConversationSidebarProps {
 }
 
 const STATUS_LABELS: Record<ConnectionStatus, string> = {
-  online: "已连接太墟",
-  offline: "连接中断，正在重试",
-  connecting: "正在连接实时消息",
+  online: "Connected to TaiXu",
+  offline: "Connection lost; retrying",
+  connecting: "Connecting to live updates",
 };
 
 export function ConversationSidebar({
@@ -40,13 +40,13 @@ export function ConversationSidebar({
           <Icon name="search" size={17} />
           <input
             type="search"
-            aria-label="搜索智枢会话"
-            placeholder="搜索会话"
+            aria-label="Search Agent Hub conversations"
+            placeholder="Search conversations"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
           {search && (
-            <button className="search-clear" type="button" aria-label="清除搜索" onClick={() => setSearch("")}>
+            <button className="search-clear" type="button" aria-label="Clear search" onClick={() => setSearch("")}>
               <Icon name="x" size={14} />
             </button>
           )}
@@ -54,8 +54,8 @@ export function ConversationSidebar({
         <button
           className="sidebar-round-button primary"
           type="button"
-          aria-label="新建智枢任务"
-          title="新建智枢任务"
+          aria-label="New Agent Hub task"
+          title="New Agent Hub task"
           onClick={() => onCreate({ mode: "normal" })}
         >
           <Icon name="plus" size={18} />
@@ -65,14 +65,14 @@ export function ConversationSidebar({
       <div className="conversation-list" aria-live="polite">
         <div className="conversation-section-header">
           <Icon name="agent" size={14} />
-          <span>智枢会话</span>
+          <span>Agent Hub conversations</span>
           <small>{visible.length}</small>
         </div>
         {!visible.length && (
           <div className="list-empty">
             <Icon name={query ? "search" : "agent"} size={24} />
-            <strong>{query ? "没有找到相关会话" : "还没有会话"}</strong>
-            <span>{query ? "换个关键词试试" : "点击右上角开始任务"}</span>
+            <strong>{query ? "No matching conversations found" : "No conversations yet"}</strong>
+            <span>{query ? "Try another keyword" : "Click the top-right button to start a task"}</span>
           </div>
         )}
         {visible.map((conversation) => {
@@ -81,15 +81,15 @@ export function ConversationSidebar({
             <div className={`conversation-item-row${active ? " active" : ""}`} key={conversationKey(conversation)}>
               <button className="conversation-item" type="button" onClick={() => onSelect(conversation)}>
                 <span className="conversation-item-heading">
-                  <strong>{conversation.title || "新会话"}</strong>
+                  <strong>{conversation.title || "New conversation"}</strong>
                   <time>{relativeDate(conversation.updatedAt)}</time>
                 </span>
               </button>
               <button
                 className="conversation-delete-button"
                 type="button"
-                aria-label={`删除“${conversation.title || "新会话"}”`}
-                title="删除会话"
+                aria-label={`删除“${conversation.title || "New conversation"}”`}
+                title="Delete conversation"
                 onClick={() => void onDelete(conversation)}
               >
                 <Icon name="trash" size={14} />
