@@ -93,15 +93,15 @@ class LocalLlmViewModel(
 
     fun download(url: String, sha256: String? = null) {
         if (url.isBlank()) {
-            showMessage("请先输入 GGUF 的 HTTPS 下载地址", isError = true)
+            showMessage("Enter the GGUF HTTPS download URL first", isError = true)
             return
         }
-        startTransfer("正在下载模型") { localLlmManager.download(url, sha256) }
+        startTransfer("Downloading model") { localLlmManager.download(url, sha256) }
     }
 
     fun downloadPreset(preset: MobileModelPreset) {
         if (!isDeviceSuitable(preset)) {
-            showMessage("设备总内存低于该模型建议值，不建议在本机运行 ${preset.name}", isError = true)
+            showMessage("The device has less RAM than recommended for ${preset.name}; running it locally is not recommended", isError = true)
             return
         }
         download(preset.url, preset.sha256)
@@ -129,18 +129,18 @@ class LocalLlmViewModel(
         }
         val displayName = metadata?.first ?: uri.lastPathSegment?.substringAfterLast('/') ?: "model.gguf"
         val size = metadata?.second
-        startTransfer("正在导入模型") {
-            val input = resolver.openInputStream(uri) ?: error("无法读取所选文件")
+        startTransfer("Importing model") {
+            val input = resolver.openInputStream(uri) ?: error("Unable to read the selected file")
             localLlmManager.import(displayName, input, size)
         }
     }
 
     fun importPath(path: String) {
         if (path.isBlank()) {
-            showMessage("请输入 GGUF 文件路径", isError = true)
+            showMessage("Enter the GGUF file path", isError = true)
             return
         }
-        startTransfer("正在导入模型") { localLlmManager.importPath(path) }
+        startTransfer("Importing model") { localLlmManager.importPath(path) }
     }
 
     fun cancelTransfer() {
@@ -157,10 +157,10 @@ class LocalLlmViewModel(
                 localLlmManager.start(fileName)
                 activateLocalProfile(fileName)
             }.onSuccess {
-                showMessage("模型服务已启动，并已设为当前对话模型", isError = false)
+                showMessage("Model service started and set as the current conversation model", isError = false)
             }.onFailure { throwable ->
                 if (throwable !is CancellationException) {
-                    showMessage(throwable.message ?: "模型启动失败", isError = true)
+                    showMessage(throwable.message ?: "Failed to start model", isError = true)
                 }
             }
         }
@@ -169,20 +169,20 @@ class LocalLlmViewModel(
     fun stop() {
         viewModelScope.launch {
             runCatching { localLlmManager.stop() }
-                .onFailure { showMessage(it.message ?: "停止服务失败", isError = true) }
+                .onFailure { showMessage(it.message ?: "Failed to stop service", isError = true) }
         }
     }
 
     fun delete(fileName: String) {
         viewModelScope.launch {
             runCatching { localLlmManager.delete(fileName) }
-                .onFailure { showMessage(it.message ?: "删除模型失败", isError = true) }
+                .onFailure { showMessage(it.message ?: "Failed to delete model", isError = true) }
         }
     }
 
     fun installEngine() {
         toolManager.startInstall(LocalLlmManager.TOOL_ID)
-        showMessage("已提交 llama.cpp 推理引擎安装任务，可在工具中心查看进度", isError = false)
+        showMessage("llama.cpp engine installation started. Check progress in the Tool Center.", isError = false)
     }
 
     fun consumeMessage() {
@@ -195,7 +195,7 @@ class LocalLlmViewModel(
         source: () -> Flow<LocalModelTransfer>,
     ) {
         if (transferJob?.isActive == true) {
-            showMessage("已有模型传输任务正在进行", isError = true)
+            showMessage("A model transfer is already in progress", isError = true)
             return
         }
         transferJob = viewModelScope.launch {
@@ -211,17 +211,17 @@ class LocalLlmViewModel(
                             copiedBytes = event.copiedBytes,
                             totalBytes = event.totalBytes,
                         )
-                        LocalModelTransfer.Verifying -> _transfer.value.copy(running = true, label = "正在校验 GGUF")
+                        LocalModelTransfer.Verifying -> _transfer.value.copy(running = true, label = "Verifying GGUF")
                         is LocalModelTransfer.Completed -> LocalModelTransferUiState()
                     }
                     if (event is LocalModelTransfer.Completed) {
-                        showMessage("模型已就绪：${event.model.fileName}", isError = false)
+                        showMessage("Model ready: ${event.model.fileName}", isError = false)
                     }
                 }
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (throwable: Throwable) {
-                showMessage(throwable.message ?: "模型传输失败", isError = true)
+                showMessage(throwable.message ?: "Model transfer failed", isError = true)
             } finally {
                 _transfer.value = LocalModelTransferUiState()
                 transferJob = null
@@ -237,8 +237,8 @@ class LocalLlmViewModel(
         aiModelRepository.upsert(
             AiModelEntity(
                 id = profileId,
-                name = "本地 LLM · $fileName",
-                provider = "llama.cpp 沙箱离线模型",
+                name = "Local LLM · $fileName",
+                provider = "llama.cpp sandbox offline model",
                 model = fileName,
                 baseUrl = LocalLlmManager.BASE_URL,
                 secretRef = existing?.secretRef.orEmpty(),
@@ -268,7 +268,7 @@ class LocalLlmViewModel(
             MobileModelPreset(
                 id = "qwen25-05b-instruct-q4km",
                 name = "Qwen2.5 0.5B Instruct",
-                purpose = "低内存首选 · 中英日常对话",
+                purpose = "Low-memory choice · everyday multilingual chat",
                 parameterCount = "0.5B",
                 quantization = "Q4_K_M",
                 downloadBytes = 491L * MIB,
@@ -279,7 +279,7 @@ class LocalLlmViewModel(
             MobileModelPreset(
                 id = "qwen25-coder-05b-instruct-q4km",
                 name = "Qwen2.5 Coder 0.5B",
-                purpose = "轻量代码补全与简单解释",
+                purpose = "Lightweight code completion and simple explanations",
                 parameterCount = "0.5B",
                 quantization = "Q4_K_M",
                 downloadBytes = 491L * MIB,
