@@ -982,7 +982,7 @@ internal fun ThinkingBlock(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = "正在Translate reasoning offline内容...",
+                            text = "Translating reasoning into Chinese offline...",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 11.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1029,7 +1029,7 @@ internal fun ThinkingBlock(
                     text = if (isDownloading && downloadingStatus != null) {
                         "The offline translation model is downloading in the background (${downloadingStatus.stepName}, ${downloadingStatus.detailText}).\n\nOffline translation will be available automatically when the download completes. Visit Agent Settings to view progress."
                     } else {
-                        "本地英语-中文翻译模型（约 60MB）尚未下载。请前往「Agent 设置」完成语种模型下载后方可Translate reasoning offline流内容。"
+                        "The local English-to-Chinese translation model (about 60 MB) has not been downloaded. Open Agent Settings and download it to translate reasoning streams offline."
                     },
                     style = MaterialTheme.typography.bodyMedium,
                 )
