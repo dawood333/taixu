@@ -71,14 +71,14 @@ class ApprovalPolicyEngine(
                 required = true,
                 riskLevel = if (critical) "critical" else "high",
                 reason = when (action) {
-                    "settings_put" -> "操作将修改真实 Android 系统设置。"
-                    "package_disable", "package_enable", "app_freeze", "app_unfreeze" -> "操作将改变真实 Android 应用的启用状态。"
-                    "app_grant_permission" -> "操作将为真实 Android 应用授予权限。"
-                    "package_uninstall_user" -> "操作将为指定 Android 用户卸载应用；系统应用通常可用 install-existing 恢复，但其数据可能丢失。"
-                    "screen_capture" -> "操作会把真实 Android 屏幕内容写入指定文件。"
+                    "settings_put" -> "This operation will modify actual Android system settings."
+                    "package_disable", "package_enable", "app_freeze", "app_unfreeze" -> "This operation will change the enabled state of an actual Android app."
+                    "app_grant_permission" -> "This operation will grant permissions to an actual Android app."
+                    "package_uninstall_user" -> "This operation will uninstall the app for the specified Android user. System apps can usually be restored with install-existing, but their data may be lost."
+                    "screen_capture" -> "This operation will write actual Android screen content to the specified file."
                     "screen_click", "screen_swipe", "screen_input_text", "screen_key", "app_launch" ->
-                        "操作将操控真实 Android 屏幕或启动应用。"
-                    else -> "命令将通过 Shizuku 或 Root 修改真实 Android 宿主，可能改变系统设置、停用或卸载应用。"
+                        "This operation will control the actual Android screen or launch an app."
+                    else -> "This command will modify the actual Android host through Shizuku or Root and may change system settings or disable/uninstall apps."
                 },
                 summary = summarize(tool, args),
             )
@@ -116,7 +116,7 @@ class ApprovalPolicyEngine(
         if (mode == ApprovalMode.REQUEST) {
             // REQUEST 模式统一要求审批；注解升级只调整风险等级——声明了破坏性的
             // MCP 工具升到 high，从而也不可被「本会话内记住」一揽子豁免。
-            val base = ApprovalDecision(true, "normal", "当前权限模式要求所有会改变状态或产生外部副作用的工具操作先获得批准。", summary)
+            val base = ApprovalDecision(true, "normal", "The current permission mode requires approval for all tool operations that change state or cause external side effects.", summary)
             return if (tool == HarnessTool.MCP) AnnotationEscalation.escalate(base, annotations) else base
         }
 
@@ -126,7 +126,7 @@ class ApprovalPolicyEngine(
                 if (workspace.isNotBlank() && isWithinWorkspace(path, workspace)) {
                     ApprovalDecision(false)
                 } else {
-                    ApprovalDecision(true, "high", "写入目标不在当前工作区内，可能影响工作区之外的文件。", summary)
+                    ApprovalDecision(true, "high", "The write target is outside the current workspace and may affect files outside it.", summary)
                 }
             }
             HarnessTool.BASE -> {
@@ -140,15 +140,15 @@ class ApprovalPolicyEngine(
                     if (isRoutineCommand(command)) ApprovalDecision(false)
                     else ApprovalDecision(true, if (isDestructiveCommand(command)) "critical" else "high", reasonForCommand(command), summary)
                 }
-                "stop" -> ApprovalDecision(true, "high", "停止操作会终止一个由 TaiXu 托管的后台进程。", summary)
+                "stop" -> ApprovalDecision(true, "high", "This stop operation will terminate a background process managed by TaiXu.", summary)
                 else -> ApprovalDecision(false)
             }
-            HarnessTool.DOWNLOAD -> ApprovalDecision(true, "high", "下载会访问外部网络并写入工作区文件。", summary)
-            HarnessTool.BUILD_SCRIPT -> ApprovalDecision(true, "normal", "操作将修改构建脚本或项目挂载关系。", summary)
-            HarnessTool.HOST -> error("HOST 已在审批策略入口处理")
+            HarnessTool.DOWNLOAD -> ApprovalDecision(true, "high", "This download accesses the external network and writes files into the workspace.", summary)
+            HarnessTool.BUILD_SCRIPT -> ApprovalDecision(true, "normal", "This operation will modify build scripts or project mount mappings.", summary)
+            HarnessTool.HOST -> error("HOST has already been handled by the approval-policy entry point")
             HarnessTool.MCP -> AnnotationEscalation.escalate(
                 when (mcpBrowserRisk(effectiveMcpToolName(tool, args, rawToolName))) {
-                    "medium" -> ApprovalDecision(true, "medium", "浏览器操作会改变页面状态或新开会话。", summary)
+                    "medium" -> ApprovalDecision(true, "medium", "This browser operation will change page state or open a new session.", summary)
                     "high" -> ApprovalDecision(true, "high", "浏览器操作将修改页面内容或写入本地存储。", summary)
                     "critical" -> ApprovalDecision(true, "critical", "浏览器操作涉及代码执行或读取敏感数据（Cookie/页面源码）。", summary)
                     else -> ApprovalDecision(true, "high", "MCP 工具可能访问外部服务或产生工作区之外的副作用。", summary)
