@@ -297,7 +297,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // 顶部 Hero 与快速导入入口
+        // 顶部 Hero 与快速Import入口
         item {
             Column(
                 Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
@@ -314,7 +314,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
                     RuntimeIconButton(
                         onClick = { showImportDialog = true },
                         modifier = Modifier.size(36.dp),
-                        contentDescription = "从 JSON 导入配置",
+                        contentDescription = "Import configuration from JSON",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Download,
@@ -351,7 +351,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
                     ProviderBadge(providerIdOrName = selectedProvider.id, size = 32.dp)
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
-                            text = "服务商预设",
+                            text = "Provider presets",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -368,7 +368,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("切换", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
+                                Text("Switch", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold))
                                 RuntimeIcon(RuntimeIconName.ChevronDown, Modifier.size(14.dp))
                             }
                         }
@@ -409,7 +409,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "接口地址 (Base URL)",
+                        text = "API endpoint (Base URL)",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -454,13 +454,13 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "API Key 凭据",
+                            text = "API key credentials",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         if (apiKey.isNotBlank()) {
                             Text(
-                                text = "已填写",
+                                text = "Configured",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -504,7 +504,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "选择模型 (Model ID)",
+                        text = "Select model (Model ID)",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -513,7 +513,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
                         value = model,
                         onValueChange = viewModel::setModelId,
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("例如：gpt-4o / deepseek-chat", style = MaterialTheme.typography.bodySmall) },
+                        placeholder = { Text("e.g. gpt-4o / deepseek-chat", style = MaterialTheme.typography.bodySmall) },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         shape = compactFieldShape,
                         colors = compactFieldColors,
@@ -522,7 +522,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
 
                     if (candidateModels.isNotEmpty()) {
                         Text(
-                            text = "候选模型标签（点击一键填入）：",
+                            text = "Suggested model IDs (tap to fill):",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -610,7 +610,7 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
         }
     }
 
-    // JSON 导入对话框
+    // JSON Import对话框
     if (showImportDialog) {
         OnboardingModelImportDialog(
             onDismiss = { showImportDialog = false },
@@ -618,11 +618,11 @@ private fun ModelSetupPage(viewModel: OnboardingViewModel, modifier: Modifier) {
                 val result = viewModel.importProfileFromJson(jsonStr)
                 result.fold(
                     onSuccess = { profile ->
-                        Toast.makeText(context, "成功载入模型配置「${profile.name.ifBlank { profile.model }}」", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Loaded model profile “${profile.name.ifBlank { profile.model }}” successfully", Toast.LENGTH_SHORT).show()
                         showImportDialog = false
                     },
                     onFailure = { err ->
-                        Toast.makeText(context, "解析失败: ${err.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Parsing failed: ${err.message}", Toast.LENGTH_LONG).show()
                     },
                 )
             },
@@ -691,7 +691,7 @@ private fun SetupDropdown(
 }
 
 /**
- * 引导页专属 JSON 模型导入弹窗
+ * 引导页专属 JSON 模型Import弹窗
  */
 @Composable
 private fun OnboardingModelImportDialog(
@@ -714,10 +714,10 @@ private fun OnboardingModelImportDialog(
                 if (!fileContent.isNullOrBlank()) {
                     jsonText = fileContent
                     selectedTab = 0
-                    Toast.makeText(context, "已载入文件内容", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "File content loaded", Toast.LENGTH_SHORT).show()
                 }
             }.onFailure {
-                Toast.makeText(context, "读取文件失败: ${it.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Failed to read file: ${it.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -727,7 +727,7 @@ private fun OnboardingModelImportDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RuntimeIcon(RuntimeIconName.Download, Modifier.size(20.dp), MaterialTheme.colorScheme.primary)
-                Text("导入模型配置", fontWeight = FontWeight.Bold)
+                Text("Import model profile", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -744,7 +744,7 @@ private fun OnboardingModelImportDialog(
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("剪贴板粘贴") },
+                        text = { Text("Paste from clipboard") },
                     )
                     Tab(
                         selected = selectedTab == 1,
@@ -752,7 +752,7 @@ private fun OnboardingModelImportDialog(
                             selectedTab = 1
                             filePickerLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
                         },
-                        text = { Text("选择本地文件") },
+                        text = { Text("Choose local file") },
                     )
                 }
 
@@ -761,7 +761,7 @@ private fun OnboardingModelImportDialog(
                         value = jsonText,
                         onValueChange = { jsonText = it },
                         modifier = Modifier.fillMaxWidth().height(160.dp),
-                        placeholder = { Text("粘贴导出的 JSON 模型配置（单个或 bundle 均支持）") },
+                        placeholder = { Text("Paste an exported JSON model profile (single profiles and bundles are supported)") },
                         textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                         shape = RoundedCornerShape(10.dp),
                     )
@@ -773,13 +773,13 @@ private fun OnboardingModelImportDialog(
                             if (clipText.isNotBlank()) {
                                 jsonText = clipText
                             } else {
-                                Toast.makeText(context, "剪贴板为空", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth().height(36.dp),
                         shape = RoundedCornerShape(8.dp),
                     ) {
-                        Text("一键粘贴剪贴板内容")
+                        Text("Paste clipboard content")
                     }
                 } else {
                     Column(
@@ -794,7 +794,7 @@ private fun OnboardingModelImportDialog(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 RuntimeIcon(RuntimeIconName.File, Modifier.size(16.dp))
-                                Text("选择本地 JSON 文件")
+                                Text("Choose local JSON file")
                             }
                         }
                         if (jsonText.isNotBlank()) {
@@ -818,7 +818,7 @@ private fun OnboardingModelImportDialog(
         },
         dismissButton = {
             RuntimeTextButton(onClick = onDismiss) {
-                Text("取消")
+                Text("Cancel")
             }
         },
     )
