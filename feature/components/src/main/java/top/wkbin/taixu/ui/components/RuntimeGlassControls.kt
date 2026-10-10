@@ -996,7 +996,7 @@ fun RuntimeSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "搜索...",
+    placeholder: String = "Search...",
     leadingIcon: (@Composable () -> Unit)? = null,
     onSearch: ((String) -> Unit)? = null,
     onClear: (() -> Unit)? = null,
@@ -1315,9 +1315,9 @@ fun RuntimeLiquidButton(
  * 太墟 · iOS 规范底部抽屉标准顶栏 (RuntimeSheetHeader)。
  *
  * 遵循 iOS UISheetPresentationController 顶栏规范：
- * - 左侧：取消/关闭动作文本；
+ * - 左侧：Cancel/关闭动作文本；
  * - 中央：标题文本（加粗 Headline 居中）；
- * - 右侧：完成/确认动作高光文本；
+ * - 右侧：Done/确认动作高光文本；
  * - 下边缘：极细微高光反光分割线。
  */
 @Composable
@@ -1326,8 +1326,8 @@ fun RuntimeSheetHeader(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     onConfirm: (() -> Unit)? = null,
-    confirmText: String = "完成",
-    dismissText: String = "取消",
+    confirmText: String = "Done",
+    dismissText: String = "Cancel",
 ) {
     val isDark = MaterialTheme.colorScheme.onSurface.luminance() > 0.5f
 
@@ -1339,7 +1339,7 @@ fun RuntimeSheetHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            // 左侧取消
+            // 左侧Cancel
             Text(
                 text = dismissText,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
@@ -1360,7 +1360,7 @@ fun RuntimeSheetHeader(
                 color = MaterialTheme.colorScheme.onSurface,
             )
 
-            // 右侧确认/完成
+            // 右侧确认/Done
             if (onConfirm != null) {
                 Text(
                     text = confirmText,
