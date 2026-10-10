@@ -33,7 +33,7 @@ data class FtpSettingsUiState(
     val sshPasswordConfigured: Boolean = false,
 ) {
     val connectionHost: String
-        get() = SshServiceManager.localIpv4Address() ?: "<设备局域网IP>"
+        get() = SshServiceManager.localIpv4Address() ?: "<device LAN IP>"
 
     val connectionUrl: String
         get() = if (anonymousEnabled) {
@@ -109,21 +109,21 @@ class FtpSettingsViewModel(
         manager.setEnabled(enabled)
     }
 
-    fun savePort(value: String) = runOperation(successMessage = "FTP 端口已保存") {
-        val port = value.trim().toIntOrNull() ?: error("请输入有效的 FTP 端口")
+    fun savePort(value: String) = runOperation(successMessage = "FTP port saved") {
+        val port = value.trim().toIntOrNull() ?: error("Enter a valid FTP port")
         manager.setPort(port)
     }
 
-    fun saveUsername(value: String) = runOperation(successMessage = "FTP 用户名已保存") {
+    fun saveUsername(value: String) = runOperation(successMessage = "FTP username saved") {
         val username = value.trim().ifBlank { "root" }
         manager.setUsername(username)
     }
 
-    fun savePassword(value: String) = runOperation(successMessage = "FTP 登录密码已保存") {
+    fun savePassword(value: String) = runOperation(successMessage = "FTP password saved") {
         manager.setPassword(value.trim())
     }
 
-    fun clearPassword() = runOperation(successMessage = "FTP 登录密码已清除") {
+    fun clearPassword() = runOperation(successMessage = "FTP password cleared") {
         manager.clearPassword()
     }
 
@@ -196,7 +196,7 @@ class FtpSettingsViewModel(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (throwable: Throwable) {
-                _message.value = throwable.message ?: "FTP 操作失败"
+                _message.value = throwable.message ?: "FTP operation failed"
                 _messageIsError.value = true
             } finally {
                 if (showProgress) _operating.value = false
