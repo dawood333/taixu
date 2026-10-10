@@ -78,7 +78,7 @@ import top.wkbin.taixu.ui.components.RuntimeTopBar
 import java.util.Locale
 
 /**
- * 模型档案管理全屏独立页面
+ * Model Profiles管理全屏独立页面
  */
 @Composable
 fun ModelProfilesScreen(
@@ -101,13 +101,13 @@ fun ModelProfilesScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "模型档案",
+                title = "Model Profiles",
                 onBack = onBack,
                 actions = {
                     // 📥 导入按钮
                     RuntimeIconButton(
                         onClick = { showImportDialog = true },
-                        contentDescription = "导入模型配置",
+                        contentDescription = "Import model configuration",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Download,
@@ -119,12 +119,12 @@ fun ModelProfilesScreen(
                     RuntimeIconButton(
                         onClick = {
                             if (models.isEmpty()) {
-                                Toast.makeText(context, "暂无模型档案可导出", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "暂无Model Profiles可导出", Toast.LENGTH_SHORT).show()
                             } else {
                                 showExportAllDialog = true
                             }
                         },
-                        contentDescription = "导出全部模型配置",
+                        contentDescription = "Export all model configurations",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.OpenInNew,
@@ -162,11 +162,11 @@ fun ModelProfilesScreen(
                     importing = false
                     result.fold(
                         onSuccess = { count ->
-                            Toast.makeText(context, "成功导入 $count 个模型档案", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "成功导入 $count 个Model Profiles", Toast.LENGTH_SHORT).show()
                             showImportDialog = false
                         },
                         onFailure = { _ ->
-                            Toast.makeText(context, "导入失败：JSON 无法解析或配置无效，请检查后重试", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Import failed: the JSON could not be parsed or the configuration is invalid. Check it and try again.", Toast.LENGTH_LONG).show()
                         }
                     )
                 }
@@ -177,8 +177,8 @@ fun ModelProfilesScreen(
     // 批量导出弹窗
     if (showExportAllDialog) {
         ModelExportDialog(
-            title = "批量导出模型档案",
-            subtitle = "准备导出 ${models.size} 个模型档案配置",
+            title = "批量导出Model Profiles",
+            subtitle = "准备导出 ${models.size} 个Model Profiles配置",
             onDismiss = { showExportAllDialog = false },
             onGenerateJson = { includeKeys ->
                 viewModel.exportAllProfilesJson(includeKeys)
@@ -189,8 +189,8 @@ fun ModelProfilesScreen(
     // 单项导出弹窗
     singleExportModel?.let { targetModel ->
         ModelExportDialog(
-            title = "导出模型档案配置",
-            subtitle = "模型: ${targetModel.name} (${targetModel.provider})",
+            title = "导出Model Profiles配置",
+            subtitle = "Model: ${targetModel.name} (${targetModel.provider})",
             defaultFileName = "taixu_model_${targetModel.name.replace(" ", "_")}.json",
             onDismiss = { singleExportModel = null },
             onGenerateJson = { includeKeys ->
@@ -199,17 +199,17 @@ fun ModelProfilesScreen(
         )
     }
 
-    // 删除确认弹窗
+    // Delete确认弹窗
     modelPendingDelete?.let { target ->
         RuntimeAlertDialog(
             onDismissRequest = { modelPendingDelete = null },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RuntimeIcon(RuntimeIconName.Alert, Modifier.size(20.dp), MaterialTheme.colorScheme.error)
-                    Text("删除模型档案", fontWeight = FontWeight.Bold)
+                    Text("DeleteModel Profiles", fontWeight = FontWeight.Bold)
                 }
             },
-            text = { Text("确定要删除模型档案「${target.name}」吗？此操作将同时清理该模型保存的 API Key。") },
+            text = { Text("确定要DeleteModel Profiles「${target.name}」吗？此操作将同时清理该模型保存的 API Key。") },
             confirmButton = {
                 RuntimeButton(
                     onClick = {
@@ -217,12 +217,12 @@ fun ModelProfilesScreen(
                         modelPendingDelete = null
                     },
                 ) {
-                    Text("确认删除")
+                    Text("Confirm delete")
                 }
             },
             dismissButton = {
                 RuntimeTextButton(onClick = { modelPendingDelete = null }) {
-                    Text("取消")
+                    Text("Cancel")
                 }
             },
         )
@@ -253,7 +253,7 @@ private fun ModelProfilesContent(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     RuntimeIcon(RuntimeIconName.Plus, Modifier.size(16.dp), MaterialTheme.colorScheme.onPrimary)
-                    Text("新增模型档案", fontWeight = FontWeight.Bold)
+                    Text("新增Model Profiles", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -266,9 +266,9 @@ private fun ModelProfilesContent(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     IconTile(RuntimeIconName.Model, color = MaterialTheme.colorScheme.primary, size = 42.dp)
-                    Text("暂无模型档案", style = MaterialTheme.typography.titleMedium)
+                    Text("暂无Model Profiles", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "点击上方新增或从右上角导入 OpenAI / DeepSeek / Claude / 本地模型配置",
+                        "Tap Add above or import OpenAI, DeepSeek, Claude, or local model configuration from the top-right menu",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -342,7 +342,7 @@ private fun ModelProfileCard(
                     shape = RoundedCornerShape(6.dp),
                 ) {
                     Text(
-                        text = "当前激活",
+                        text = "Active",
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -353,18 +353,18 @@ private fun ModelProfileCard(
                     onClick = onActivate,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                 ) {
-                    Text("设为激活", style = MaterialTheme.typography.labelMedium)
+                    Text("Set active", style = MaterialTheme.typography.labelMedium)
                 }
             }
 
-            // 更多操作下拉菜单
+            // More actions下拉菜单
             Box {
                 RuntimeIconButton(
                     onClick = { menuExpanded = true },
                     modifier = Modifier
                         .minimumInteractiveComponentSize()
                         .size(32.dp),
-                    contentDescription = "更多操作",
+                    contentDescription = "More actions",
                 ) {
                     RuntimeIcon(
                         name = RuntimeIconName.More,
@@ -381,7 +381,7 @@ private fun ModelProfileCard(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 RuntimeIcon(RuntimeIconName.Edit, Modifier.size(16.dp))
-                                Text("编辑档案")
+                                Text("Edit档案")
                             }
                         },
                         onClick = {
@@ -406,7 +406,7 @@ private fun ModelProfileCard(
                             text = {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     RuntimeIcon(RuntimeIconName.Check, Modifier.size(16.dp))
-                                    Text("设为激活")
+                                    Text("Set active")
                                 }
                             },
                             onClick = {
@@ -420,7 +420,7 @@ private fun ModelProfileCard(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 RuntimeIcon(RuntimeIconName.Trash, Modifier.size(16.dp), MaterialTheme.colorScheme.error)
-                                Text("删除档案", color = MaterialTheme.colorScheme.error)
+                                Text("Delete档案", color = MaterialTheme.colorScheme.error)
                             }
                         },
                         onClick = {
