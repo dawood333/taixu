@@ -17,7 +17,7 @@
 <p align="center">
   <a href="https://github.com/wkbin/taixu/releases">Releases</a> ·
   <a href="https://github.com/wkbin/taixu/issues">Issues</a> ·
-  <a href="README.md">简体中文</a> · <strong>English</strong>
+  <a href="README_ZH.md">简体中文</a> · <strong>English</strong>
 </p>
 
 ---
