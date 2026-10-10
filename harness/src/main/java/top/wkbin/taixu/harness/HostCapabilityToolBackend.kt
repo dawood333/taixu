@@ -242,11 +242,11 @@ class HostCapabilityToolBackend(
                     requireHostIdentifier(args, "package", PACKAGE_NAME)
                 } else ""
                 if (action in APP_DATABASE_GUARDED_ACTIONS) {
-                    (androidAppManager ?: return false to "未初始化应用管理器").requireInitialized(packageName)
+                    (androidAppManager ?: return false to "App manager is not initialized").requireInitialized(packageName)
                 }
                 val info = manager.getPrivilegeInfo()
                 require(info.mode != ExecutionMode.PROOT && info.modeActive) {
-                    "权限不足：冻结、启用、卸载或授权应用前，请先在设置中授权并切换到 Shizuku 或 Root 模式。"
+                    "Insufficient permissions. Before freezing, enabling, uninstalling, or granting permissions to apps, authorize TaiXu in Settings and switch to Shizuku or Root mode."
                 }
 
                 // Shizuku 生效时优先 Binder 直调：免 shell 转义、异常结构化。
@@ -270,20 +270,20 @@ class HostCapabilityToolBackend(
                             if (action in APP_DATABASE_GUARDED_ACTIONS) androidAppManager?.synchronize()
                             return true to buildString {
                                 append("mode shizuku-api · exit 0")
-                                append("\n[Android Binder] $action $packageName 成功")
+                                append("\n[Android Binder] $action $packageName succeeded")
                                 if (action == "app_grant_permission") {
-                                    append(" 权限=").append(requireHostIdentifier(args, "permission", ANDROID_PERMISSION))
+                                    append(" permission=").append(requireHostIdentifier(args, "permission", ANDROID_PERMISSION))
                                 }
                             }
                         }
                         is BinderOutcome.Failed ->
-                            return false to "宿主侧拒绝该操作：${binderOutcome.message}（模式=${info.mode.shortLabel}）。请核对包名/权限名后重试。"
+                            return false to "Host rejected the operation: ${binderOutcome.message} (mode=${info.mode.shortLabel}). Check the package and permission names and try again."
                         else -> Unit
                     }
                 }
 
                 val command = HostShellCommandBuilder.build(action, args)
-                require(command.length <= MAX_COMMAND_LENGTH) { "命令过长（${command.length} 字符，上限 $MAX_COMMAND_LENGTH）" }
+                require(command.length <= MAX_COMMAND_LENGTH) { "Command is too long (${command.length} characters; limit $MAX_COMMAND_LENGTH)" }
                 val hostOperationId = operationId?.takeIf { it.isNotBlank() } ?: "host-${UUID.randomUUID()}"
                 val cancelHandle = currentCoroutineContext()[Job]?.invokeOnCompletion(onCancelling = true) { cause ->
                     if (cause is CancellationException) manager.cancelShellCommand(hostOperationId)
@@ -315,8 +315,8 @@ class HostCapabilityToolBackend(
     }
 
     private suspend fun executeCachedApps(args: JsonObject): Pair<Boolean, String> {
-        val repository = androidAppRepository ?: return false to "未初始化应用数据库"
-        if (repository.count() == 0) return false to "应用数据库尚未初始化；请先到设置 → 应用管理完成初始化和同步。"
+        val repository = androidAppRepository ?: return false to "App database is not initialized"
+        if (repository.count() == 0) return false to "App database is not initialized. Go to Settings → App Management to initialize and sync first."
         val query = args["query"]?.jsonPrimitive?.content?.trim().orEmpty()
         val limit = JsonArgs.optionalLong(args, "limit", 50L, 1L, 200L).toInt()
         val includeSystem = args["include_system"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
@@ -325,12 +325,12 @@ class HostCapabilityToolBackend(
             .filter { includeSystem || !it.isSystemApp }
             .take(limit)
             .toList()
-        if (apps.isEmpty()) return true to "应用数据库中未找到：${query.ifBlank { "全部应用" }}"
+        if (apps.isEmpty()) return true to "No apps found in the database for: ${query.ifBlank { "all apps" }}"
         return true to apps.joinToString("\n") { app ->
             buildString {
                 append(app.label).append(" | ").append(app.packageName)
-                append(" | ").append(if (app.isSystemApp) "系统" else "用户")
-                append(" | ").append(if (app.isEnabled) "启用" else "禁用")
+                append(" | ").append(if (app.isSystemApp) "System" else "User")
+                append(" | ").append(if (app.isEnabled) "Enabled" else "Disabled")
                 if (app.isSuspended) append(" | 冻结")
                 if (app.isNetworkRestricted) append(" | 后台联网受限")
             }
