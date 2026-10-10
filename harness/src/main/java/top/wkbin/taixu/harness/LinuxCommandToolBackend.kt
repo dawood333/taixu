@@ -39,7 +39,7 @@ class LinuxCommandToolBackend(
 
     private suspend fun executeBase(args: JsonObject, workspace: String): Pair<Boolean, String> {
         val command = JsonArgs.requireString(args, "command")
-        require(command.length <= MAX_COMMAND_LENGTH) { "命令过长（${command.length} 字符，上限 $MAX_COMMAND_LENGTH）" }
+        require(command.length <= MAX_COMMAND_LENGTH) { "Command is too long (${command.length} characters; limit $MAX_COMMAND_LENGTH)" }
         val cwd = pathResolver.resolveWorkingDirectory(args["cwd"]?.jsonPrimitive?.content, workspace)
         val commandOutputCompressionEnabled = settingsDataStore?.let { prefs ->
             runCatching { prefs.commandOutputCompressionEnabled.first() }.getOrDefault(true)
@@ -85,11 +85,11 @@ class LinuxCommandToolBackend(
             if (stdout.isNotEmpty()) append("\n$stdout")
             if (stderr.isNotEmpty()) append("\n$stderr")
             if (!isSuccess && result.exitCode != 0) {
-                append("\n\n【执行失败反思与纠错要求】")
-                append("\n命令返回非零退出码 (${result.exitCode})。请仔细阅读上述错误信息：")
-                append("\n1. 严禁原样重复执行失败命令；")
-                append("\n2. 分析是参数拼写错误、路径不存在、沙箱缺少系统依赖还是语法错误；")
-                append("\n3. 修正命令、使用包管理器安装依赖或改用其他工具后再继续。")
+                append("\n\n[Failure Analysis and Correction Requirements]")
+                append("\nThe command returned a non-zero exit code (${result.exitCode}). Carefully review the error above:")
+                append("\n1. Do not repeat the failed command unchanged;")
+                append("\n2. Determine whether the cause is a typo in the arguments, a missing path, missing sandbox dependencies, or a syntax error;")
+                append("\n3. Fix the command, install dependencies with the package manager, or switch tools before continuing.")
             }
         }
         return isSuccess to body
@@ -102,10 +102,10 @@ class LinuxCommandToolBackend(
                 val externalId = requireProcessId(args)
                 val internalId = processId(externalId)
                 val command = JsonArgs.requireString(args, "command")
-                require(command.length <= MAX_COMMAND_LENGTH) { "命令过长（${command.length} 字符，上限 $MAX_COMMAND_LENGTH）" }
+                require(command.length <= MAX_COMMAND_LENGTH) { "Command is too long (${command.length} characters; limit $MAX_COMMAND_LENGTH)" }
                 val cwd = pathResolver.resolveWorkingDirectory(args["cwd"]?.jsonPrimitive?.content, workspace)
                 val existing = linuxRuntime.listBackground().firstOrNull { it.id == internalId && it.session.isAlive }
-                require(existing == null) { "后台进程 $externalId 已在运行；请先查询状态或停止它" }
+                require(existing == null) { "Background process $externalId is already running; check its status or stop it first" }
                 val managed = linuxRuntime.startBackground(
                     id = internalId,
                     command = ShellCommand(
@@ -116,28 +116,28 @@ class LinuxCommandToolBackend(
                     type = ProcessType.COMMAND,
                 )
                 true to buildString {
-                    append("后台进程已启动：").append(externalId)
+                    append("Background process started: ").append(externalId)
                     managed.pid?.let { append("\npid: ").append(it) }
-                    append("\n工作目录：").append(cwd)
-                    append("\n请用 process(status/logs/stop) 管理；命令应以前台模式运行，不要再套 nohup 或 &。")
+                    append("\nWorking directory: ").append(cwd)
+                    append("\nManage it with process(status/logs/stop). Run the command in the foreground; do not wrap it in nohup or &.")
                 }
             }
             "status" -> {
                 val externalId = requireProcessId(args)
                 val managed = linuxRuntime.listBackground().firstOrNull { it.id == processId(externalId) }
-                    ?: return false to "未找到后台进程：$externalId"
+                    ?: return false to "Background process not found: $externalId"
                 true to buildString {
-                    append("后台进程：").append(externalId)
-                    append("\n状态：").append(if (managed.session.isAlive) "运行中" else "已退出")
+                    append("Background process: ").append(externalId)
+                    append("\nStatus: ").append(if (managed.session.isAlive) "Running" else "Exited")
                     managed.pid?.let { append("\npid: ").append(it) }
-                    append("\n已运行：").append((System.currentTimeMillis() - managed.startedAt).coerceAtLeast(0L)).append(" ms")
+                    append("\nElapsed: ").append((System.currentTimeMillis() - managed.startedAt).coerceAtLeast(0L)).append(" ms")
                 }
             }
             "logs" -> {
                 val externalId = requireProcessId(args)
                 val tailLines = JsonArgs.optionalLong(args, "tail_lines", DEFAULT_PROCESS_LOG_LINES, 1L, MAX_PROCESS_LOG_LINES).toInt()
                 val logs = linuxRuntime.getBackgroundLogs(processId(externalId)).takeLast(tailLines)
-                true to if (logs.isEmpty()) "后台进程 $externalId 暂无日志" else logs.joinToString("\n")
+                true to if (logs.isEmpty()) "No logs yet for background process $externalId" else logs.joinToString("\n")
             }
             "list" -> {
                 val managed = linuxRuntime.listBackground().filter { it.id.startsWith(AGENT_PROCESS_PREFIX) }
@@ -146,14 +146,14 @@ class LinuxCommandToolBackend(
                 } else {
                     managed.joinToString("\n") {
                         val externalId = it.id.removePrefix(AGENT_PROCESS_PREFIX)
-                        "$externalId · ${if (it.session.isAlive) "运行中" else "已退出"} · ${(System.currentTimeMillis() - it.startedAt).coerceAtLeast(0L)} ms"
+                        "$externalId · ${if (it.session.isAlive) "Running" else "Exited"} · ${(System.currentTimeMillis() - it.startedAt).coerceAtLeast(0L)} ms"
                     }
                 }
             }
             "stop" -> {
                 val externalId = requireProcessId(args)
                 val stopped = linuxRuntime.stopBackground(processId(externalId))
-                stopped to if (stopped) "后台进程已停止：$externalId" else "未找到后台进程：$externalId"
+                stopped to if (stopped) "后台进程已停止：$externalId" else "Background process not found: $externalId"
             }
             else -> false to "不支持的 process action：$action；可用 start/status/logs/list/stop"
         }
