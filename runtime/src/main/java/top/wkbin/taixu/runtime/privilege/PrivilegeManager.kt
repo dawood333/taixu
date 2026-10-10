@@ -265,7 +265,7 @@ class PrivilegeManager(
             if (!isBinderAlive) {
                 return PrivilegeCheckResult.ServiceNotRunning(
                     ExecutionMode.SHIZUKU,
-                    "Shizuku service is not running。请打开 Shizuku App 确保服务状态为“已运行”（可通过无线调试或 Root 启动）。",
+                    "Shizuku service is not running. Open the Shizuku app and ensure its status is Running (start it via Wireless debugging or Root).",
                 )
             }
 
@@ -582,7 +582,7 @@ class PrivilegeManager(
      */
     private suspend fun executeViaShizuku(command: String, operationId: String): ShellExecResult {
         if (!runCatching { Shizuku.pingBinder() }.getOrDefault(false)) {
-            return ShellExecResult(false, -1, "", "Shizuku service is not running。请打开 Shizuku App 并确保服务已启动。")
+            return ShellExecResult(false, -1, "", "Shizuku service is not running. Open the Shizuku app and make sure the service has started.")
         }
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
             return ShellExecResult(false, -1, "", "Shizuku is not authorized. Grant TaiXu access in the Shizuku app.")
