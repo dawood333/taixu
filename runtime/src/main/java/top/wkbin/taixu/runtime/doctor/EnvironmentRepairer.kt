@@ -68,14 +68,14 @@ class EnvironmentRepairer(
         if (linuxRuntime.state.value !is RuntimeState.Ready) {
             emit(
                 RepairProgress(
-                    stepTitle = "Linux 沙箱未就绪",
+                    stepTitle = "Linux sandbox is not ready",
                     stepIndex = 0,
                     totalSteps = totalSteps,
                     progress = 0.0f,
-                    logs = listOf("错误: Linux 沙箱未初始化或处于异常状态，无法执行自愈修复"),
+                    logs = listOf("Error: Linux sandbox is not initialized or is in an error state; automatic repair cannot run"),
                     isCompleted = false,
                     isFailed = true,
-                    errorMessage = "Linux 沙箱未就绪，请先初始化沙箱",
+                    errorMessage = "Linux sandbox is not ready，请先初始化沙箱",
                 ),
             )
             return@flow
@@ -87,18 +87,18 @@ class EnvironmentRepairer(
             // ==========================================
             emit(
                 RepairProgress(
-                    stepTitle = "正在配置高可用 DNS 与 SSL 根证书...",
+                    stepTitle = "Configuring resilient DNS and SSL root certificates...",
                     stepIndex = 1,
                     totalSteps = totalSteps,
                     progress = 0.15f,
                     logs = logs.toList(),
                 ),
             )
-            addLog("[Step 1/5] 写入公共 DNS (114.114.114.114, 223.5.5.5, 8.8.8.8)")
+            addLog("[Step 1/5] Configuring public DNS (114.114.114.114, 223.5.5.5, 8.8.8.8)")
             val dnsCmd = "mkdir -p /etc && printf 'nameserver 114.114.114.114\\nnameserver 223.5.5.5\\nnameserver 8.8.8.8\\n' > /etc/resolv.conf"
             val dnsRes = executeCommand(dnsCmd, logs)
             if (!dnsRes.isSuccess) {
-                addLog("警告: 写入 /etc/resolv.conf 失败: ${dnsRes.stderr}")
+                addLog("Warning: failed to write /etc/resolv.conf: ${dnsRes.stderr}")
             }
 
             // ==========================================
@@ -106,14 +106,14 @@ class EnvironmentRepairer(
             // ==========================================
             emit(
                 RepairProgress(
-                    stepTitle = "正在配置清华大学国内镜像加速源...",
+                    stepTitle = "Configuring the Tsinghua mirror...",
                     stepIndex = 2,
                     totalSteps = totalSteps,
                     progress = 0.35f,
                     logs = logs.toList(),
                 ),
             )
-            addLog("[Step 2/5] 清理 dpkg/apt 事务锁并替换国内源")
+            addLog("[Step 2/5] Clearing dpkg/apt transaction locks and configuring the mirror")
             val mirrorScript = """
                 rm -rf /var/lib/dpkg/updates/* /var/lib/apt/lists/lock /var/cache/apt/archives/lock /var/lib/dpkg/lock* 2>/dev/null || true
                 DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>/dev/null || true
@@ -146,17 +146,17 @@ class EnvironmentRepairer(
             // ==========================================
             emit(
                 RepairProgress(
-                    stepTitle = "正在更新 APT 软件包索引...",
+                    stepTitle = "Updating APT package indexes...",
                     stepIndex = 3,
                     totalSteps = totalSteps,
                     progress = 0.55f,
                     logs = logs.toList(),
                 ),
             )
-            addLog("[Step 3/5] 执行 apt-get update 刷新索引")
+            addLog("[Step 3/5] Running apt-get update")
             val updateRes = executeCommand("rm -rf /var/lib/dpkg/updates/* /var/lib/dpkg/lock* 2>/dev/null || true; DEBIAN_FRONTEND=noninteractive dpkg --configure -a 2>/dev/null || true; DEBIAN_FRONTEND=noninteractive apt-get update -y", logs, timeoutMs = 120_000L)
             if (!updateRes.isSuccess) {
-                addLog("提示: apt-get update 产生部分非致命提示")
+                addLog("Notice: apt-get update returned non-fatal warnings")
             }
 
             // ==========================================
@@ -164,18 +164,18 @@ class EnvironmentRepairer(
             // ==========================================
             emit(
                 RepairProgress(
-                    stepTitle = "正在安装核心工具链 (Git / Curl / Tar / XZ)...",
+                    stepTitle = "Installing the core toolchain (Git / curl / tar / xz)...",
                     stepIndex = 4,
                     totalSteps = totalSteps,
                     progress = 0.75f,
                     logs = logs.toList(),
                 ),
             )
-            addLog("[Step 4/5] 安装 ca-certificates, curl, git, tar, xz-utils, procps, file")
+            addLog("[Step 4/5] Installing ca-certificates, curl, git, tar, xz-utils, procps, and file")
             val installToolsCmd = "DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl git tar xz-utils procps file"
             val installToolsRes = executeCommand(installToolsCmd, logs, timeoutMs = 180_000L)
             if (!installToolsRes.isSuccess) {
-                addLog("警告: 基础工具链安装异常: ${installToolsRes.stderr.ifBlank { installToolsRes.stdout }}")
+                addLog("Warning: core toolchain installation failed: ${installToolsRes.stderr.ifBlank { installToolsRes.stdout }}")
             }
 
             // ==========================================
@@ -183,25 +183,25 @@ class EnvironmentRepairer(
             // ==========================================
             emit(
                 RepairProgress(
-                    stepTitle = "正在就绪/升级 Node.js 运行时与 NPM/PIP 国内镜像...",
+                    stepTitle = "Setting up/updating Node.js and configuring npm/pip mirrors...",
                     stepIndex = 5,
                     totalSteps = totalSteps,
                     progress = 0.90f,
                     logs = logs.toList(),
                 ),
             )
-            addLog("[Step 5/5] 检查并自动升级 Node.js (>= v20 LTS) 及配置镜像加速")
+            addLog("[Step 5/5] Checking/updating Node.js (>= v20 LTS) and configuring mirrors")
             val setupNodeAndMirrors = """
                 NODE_VER=${'$'}(node -v 2>/dev/null | tr -d 'v' | cut -d. -f1)
                 if [ -z "${'$'}NODE_VER" ] || [ "${'$'}NODE_VER" -lt 20 ]; then
-                    echo "检测到 Node.js 缺失或版本较低 (当前: ${'$'}{NODE_VER:-未安装})，正在下载安装 Node.js v22 (LTS ARM64)..."
+                    echo "Node.js is missing or outdated (current: ${'$'}{NODE_VER:-not installed}); downloading Node.js v22 (ARM64 LTS)..."
                     mkdir -p /tmp/node_setup
                     curl -fsSL --connect-timeout 10 --max-time 180 https://npmmirror.com/mirrors/node/v22.14.0/node-v22.14.0-linux-arm64.tar.xz -o /tmp/node_setup/node.tar.xz || \
                     curl -fsSL --connect-timeout 10 --max-time 180 https://nodejs.org/dist/v22.14.0/node-v22.14.0-linux-arm64.tar.xz -o /tmp/node_setup/node.tar.xz || true
                     if [ -f /tmp/node_setup/node.tar.xz ]; then
                         tar -xJf /tmp/node_setup/node.tar.xz -C /usr/local --strip-components=1
                         rm -rf /tmp/node_setup
-                        echo "Node.js v22 升级完成: ${'$'}(node -v 2>/dev/null)"
+                        echo "Node.js v22 update complete: ${'$'}(node -v 2>/dev/null)"
                     else
                         echo "预编译包拉取受限，尝试通过系统包管理器就绪基础 Node..."
                         DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends nodejs npm || true
