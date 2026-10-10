@@ -37,7 +37,7 @@ class AskUserToolBackend(
                 createdAt = request.now,
                 toolCallId = request.toolCall.id,
                 success = false,
-                output = "该工具需要用户回答，但当前子智能体 Lane 不支持暂停等待用户输入，本次没有创建问题请求。请将问题交接给主智能体，由主会话重新发起 ask_user。",
+                output = "This tool requires user input, but the current subagent lane cannot pause and wait for it, so no question request was created. Hand the question back to the primary Agent and invoke ask_user from the main session.",
                 approvalDeferred = true,
             )
         }
@@ -48,11 +48,11 @@ class AskUserToolBackend(
             success = false,
             output = output,
         )
-        if (request.sessionId.isBlank()) return failure("ask_user 需要会话上下文（sessionId 为空）")
+        if (request.sessionId.isBlank()) return failure("ask_user requires session context (sessionId is empty)")
         val questions = runCatching { AskUserQuestions.parse(request.toolCall.args) }.getOrElse { error ->
-            return failure("ask_user 参数校验未通过：${error.message}。请修正参数后重新调用。")
+            return failure("ask_user parameter validation failed: ${error.message}. Fix the parameters and try again.")
         }
-        val repository = approvalRepository ?: return failure("审批仓储未初始化，无法向用户提问")
+        val repository = approvalRepository ?: return failure("Approval repository is not initialized; unable to ask the user")
         val approvalRequest = approvalPolicyEngine.createRequest(
             sessionId = request.sessionId,
             toolCall = ToolCall(
@@ -67,21 +67,21 @@ class AskUserToolBackend(
                 required = true,
                 riskLevel = "none",
                 reason = questions.first().question.take(200),
-                summary = "智能体向你提问（${questions.size} 个问题）",
+                summary = "The Agent has questions for you (${questions.size} questions)",
             ),
             operationId = request.operationId,
         )
         // 问题等待的是用户的思考与决策，TTL 比操作类审批（10 分钟）宽裕
         runCatching { repository.create(approvalRequest.copy(expiresAt = request.now + QUESTION_TTL_MS)) }
             .getOrElse { throwable ->
-                return failure("问题请求落库失败：${throwable.message ?: throwable::class.simpleName}")
+                return failure("Failed to save the question request: ${throwable.message ?: throwable::class.simpleName}")
             }
         return ToolResult(
             id = UUID.randomUUID().toString(),
             createdAt = request.now,
             toolCallId = request.toolCall.id,
             success = true,
-            output = "已向用户提出 ${questions.size} 个问题，等待回答。",
+            output = "Asked the user ${questions.size} questions and is waiting for answers.",
             awaitingApproval = true,
             approvalRequestId = approvalRequest.id,
         )
