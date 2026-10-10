@@ -185,13 +185,13 @@ private fun CreateKeystoreDialog(
             ) {
                 Text(stringResource(R.string.workshop_signing_create))
                 if (!createError.isNullOrBlank()) {
-                    val displayReason = if (createError == "Environment incomplete" || createError?.contains("环境") == true) {
+                    val displayReason = if (createError == "环境不完整" || createError?.contains("环境") == true) {
                         "Environment incomplete"
                     } else {
                         createError?.replace(Regex("^(生成|创建)签名失败[：:]?\\s*"), "") ?: ""
                     }
                     Text(
-                        text = "（Failed to create signing key:$displayReason）",
+                        text = "(Failed to create signing key: $displayReason)",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.error,
                         maxLines = 1,
