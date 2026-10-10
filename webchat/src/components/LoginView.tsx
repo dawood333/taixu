@@ -18,9 +18,9 @@ export function LoginView({ initialToken, busy, error, onLogin }: LoginViewProps
 
   return (
     <main className="login-view">
-      <section className="login-panel" aria-label="连接太墟智枢">
+      <section className="login-panel" aria-label="Connect to the TaiXu Agent Hub">
         <form className="login-form" onSubmit={submit}>
-          <label htmlFor="token-input">太墟智枢配对码</label>
+          <label htmlFor="token-input">TaiXu Agent Hub pairing code</label>
           <input
             id="token-input"
             name="token"
@@ -32,7 +32,7 @@ export function LoginView({ initialToken, busy, error, onLogin }: LoginViewProps
             required
           />
           <button className="primary-button" type="submit" disabled={busy}>
-            {busy ? "正在连接…" : "进入协作台"}
+            {busy ? "Connecting…" : "Open workspace"}
           </button>
         </form>
         <p className="form-error" role="alert">{error}</p>
