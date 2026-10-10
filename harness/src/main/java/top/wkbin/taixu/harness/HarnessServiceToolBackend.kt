@@ -31,20 +31,20 @@ class HarnessServiceToolBackend(
     override suspend fun execute(request: HarnessServiceRequest): Pair<Boolean, String> =
         when (request.tool) {
             HarnessTool.MEMORY -> contextExecutor?.executeMemory(request.args, request.sessionId, request.workspace)
-                ?: (false to "未初始化记忆执行器")
+                ?: (false to "Memory executor is not initialized")
             HarnessTool.PLAN -> contextExecutor?.executePlan(request.args, request.sessionId)
-                ?: (false to "未初始化计划执行器")
+                ?: (false to "Plan executor is not initialized")
             HarnessTool.SCRATCHPAD -> contextExecutor?.executeScratchpad(request.args, request.sessionId)
-                ?: (false to "未初始化草稿执行器")
+                ?: (false to "Scratchpad executor is not initialized")
             HarnessTool.SUBAGENT -> if (request.rawToolName.equals("invoke_dual_agent", ignoreCase = true)) {
                 dualAgentCoordinator?.executeFromTool(request.args, request.sessionId, request.workspace)
-                    ?: (false to "未初始化双智能体编排器")
+                    ?: (false to "Dual-agent orchestrator is not initialized")
             } else {
                 subagentOrchestrator?.executeSubagents(request.args, request.sessionId)
-                    ?: (false to "未初始化子智能体编排器")
+                    ?: (false to "Subagent orchestrator is not initialized")
             }
             HarnessTool.BUILD_SCRIPT -> buildScriptToolExecutor?.execute(request.args, request.workspace)
-                ?: (false to "未初始化构建脚本管理器")
+                ?: (false to "Build script manager is not initialized")
             HarnessTool.RENDER_SURFACE -> A2uiSurfaceBus.publishFromTool(request.args, request.sessionId)
             else -> throw IllegalArgumentException("Unsupported tool: ${request.tool}")
         }
