@@ -588,7 +588,7 @@ object ContextWindowPolicy {
         if (prompt.isBlank() || budget <= 0) return prompt
         val maxTokens = (budget * MAX_SYSTEM_PROMPT_FRACTION).toInt().coerceAtLeast(MIN_SYSTEM_PROMPT_TOKENS)
         if (estimateTokens(prompt) <= maxTokens) return prompt
-        val suffix = "\n\n[系统提示因上下文预算受限已截断；请优先遵守以上核心规则]"
+        val suffix = "\n\n[System prompt truncated due to context budget; prioritize the core rules above]"
         // 截断长度必须按 estimateTokens 二分校准：CJK ≈1.8 字/token、ASCII ≈2.5 字/token，
         // 与固定 4 字符/token 的换算差近 2 倍——中文系统提示按固定比截断后仍会超限 2 倍以上。
         var low = 0
@@ -647,7 +647,7 @@ object ContextWindowPolicy {
                 out[index] = message.copy(
                     imageUrls = emptyList(),
                     text = message.text +
-                        "\n\n[…… 本消息携带的 ${message.imageUrls.size} 张图片因上下文预算已从模型上下文省略 ……]",
+                        "\n\n[… ${message.imageUrls.size} image(s) attached to this message were omitted from model context due to the context budget …]",
                 )
                 overage -= savedTokens
             }
@@ -681,7 +681,7 @@ object ContextWindowPolicy {
             val result = out[idx] as ToolResult
             val (name, args) = toolCallDetails[result.toolCallId] ?: (null to null)
             val compacted = compactActiveToolOutput(name, args, result.output, result.success) +
-                "\n[工具输出因请求体体积限制已压缩；全文在会话记录中，需要细节时调用 history_read(message_id=\"${result.id}\") 回读]"
+                "\n[Tool output compacted due to request-body size limits; full text remains in session history. Use history_read(message_id=\"${result.id}\") for details]"
             if (compacted.length >= result.output.length) break
             val updated = result.copy(output = compacted)
             bytes += harnessMessagePayloadBytes(updated) - harnessMessagePayloadBytes(result)
@@ -696,7 +696,7 @@ object ContextWindowPolicy {
                 val updated = message.copy(
                     imageUrls = emptyList(),
                     text = message.text +
-                        "\n\n[…… 本消息携带的 ${message.imageUrls.size} 张图片因请求体体积限制已从模型上下文省略 ……]",
+                        "\n\n[… ${message.imageUrls.size} image(s) attached to this message were omitted due to request-body size limits …]",
                 )
                 bytes += harnessMessagePayloadBytes(updated) - harnessMessagePayloadBytes(message)
                 out[index] = updated
@@ -741,7 +741,7 @@ object ContextWindowPolicy {
                 val updated = message.copy(
                     imageUrls = emptyList(),
                     content = message.content.orEmpty() +
-                        "\n\n[…… ${message.imageUrls.size} 张图片因请求体体积限制已从模型上下文省略 ……]",
+                        "\n\n[… ${message.imageUrls.size} image(s) were omitted from model context due to request-body size limits …]",
                 )
                 bytes += apiMessagePayloadBytes(updated) - apiMessagePayloadBytes(message)
                 out[index] = updated
@@ -804,10 +804,10 @@ object ContextWindowPolicy {
         val path = runCatching { args?.get("path")?.jsonPrimitive?.contentOrNull }.getOrNull()
             ?: runCatching { args?.get("command")?.jsonPrimitive?.contentOrNull }.getOrNull()
         val hint = buildString {
-            if (!toolName.isNullOrBlank()) append("工具:$toolName ")
-            if (!path.isNullOrBlank()) append("对象:${path.take(180)} ")
+            if (!toolName.isNullOrBlank()) append("Tool: $toolName ")
+            if (!path.isNullOrBlank()) append("Object: ${path.take(180)} ")
         }.trim()
-        return "【当前轮执行结果·状态:$status】$hint\n${compactActiveText(output)}"
+        return "[Current-turn execution result · Status: $status]$hint\n${compactActiveText(output)}"
     }
 
     private fun compactActiveText(output: String): String {
@@ -815,7 +815,7 @@ object ContextWindowPolicy {
         if (output.length <= keep + 80) return output
         val omitted = output.length - ACTIVE_TOOL_KEEP_HEAD_CHARS - ACTIVE_TOOL_KEEP_TAIL_CHARS
         return output.take(ACTIVE_TOOL_KEEP_HEAD_CHARS) +
-            "\n... [请求体体积限制，已省略 $omitted 字符] ...\n" +
+            "\n... [request-body size limit; $omitted characters omitted] ...\n" +
             output.takeLast(ACTIVE_TOOL_KEEP_TAIL_CHARS)
     }
 
@@ -829,7 +829,7 @@ object ContextWindowPolicy {
     }
 
     private fun fitUserText(text: String, targetTokens: Int): String? {
-        val marker = "\n\n[…… 消息过长已截断：完整原文保留在会话记录中，需要时可用 history_read 读取 ……]\n\n"
+        val marker = "\n\n[… Message truncated due to length; the full text remains in session history. Use history_read when needed …]\n\n"
         var keptChars = (targetTokens * 1.5f).toInt().coerceAtLeast(marker.length + 2)
         repeat(6) {
             if (text.length <= keptChars) return null
@@ -902,12 +902,12 @@ object ContextWindowPolicy {
                 val htmlStart = text.lastIndexOf("<img", dataStart, ignoreCase = true).takeIf { it >= cursor }
                 val mediaStart = listOfNotNull(markdownStart, htmlStart).maxOrNull() ?: dataStart
                 out.append(text, cursor, mediaStart)
-                out.append("[助手生成了一张图片；图片二进制已从模型上下文中省略]")
+                out.append("[The assistant generated an image; image binary omitted from model context]")
                 val end = text.indexOfAny(charArrayOf(')', '"', '\'', '>', ' ', '\n', '\r', '\t'), dataStart)
                 cursor = if (end >= 0) end + 1 else text.length
             } else {
                 out.append(text, cursor, jsonKeyStart)
-                out.append("\"b64_json\":\"[图片二进制已省略]\"")
+                out.append("\"b64_json\":\"[image binary omitted]\"")
                 val colon = text.indexOf(':', jsonKeyStart + 10)
                 val valueStart = if (colon >= 0) text.indexOf('"', colon + 1) else -1
                 val valueEnd = if (valueStart >= 0) text.indexOf('"', valueStart + 1) else -1
@@ -977,16 +977,16 @@ object ContextWindowPolicy {
             .map { it.output.replace('\n', ' ').take(480) }
         val unresolved = recentRequests.takeLast(4)
         return buildString {
-            appendLine("[早期历史摘要，共折叠 ${messages.size} 条消息]")
-            firstRequest?.takeIf { it.isNotBlank() }?.let { appendLine("初始目标：$it") }
-            if (toolStates.isNotEmpty()) appendLine("关键工具状态（新→旧）：${toolStates.asReversed().joinToString(" | ")}")
-            if (failures.isNotEmpty()) appendLine("失败根因线索（新→旧）：${failures.asReversed().joinToString(" | ")}")
-            if (constraints.isNotEmpty()) appendLine("用户硬约束：${constraints.joinToString(" | ")}")
-            if (decisions.isNotEmpty()) appendLine("关键决定：${decisions.joinToString(" | ")}")
-            if (files.isNotEmpty()) appendLine("涉及文件：${files.joinToString(" | ")}")
-            if (recentRequests.isNotEmpty()) appendLine("近期用户要求（新→旧）：${recentRequests.asReversed().joinToString(" | ")}")
-            if (unresolved.isNotEmpty()) appendLine("未解决事项：${unresolved.joinToString(" | ")}")
-            lastAssistant?.takeIf { it.isNotBlank() }?.let { append("最近阶段结论：$it") }
+            appendLine("[Early history summary; ${messages.size} messages compacted]")
+            firstRequest?.takeIf { it.isNotBlank() }?.let { appendLine("Initial goal: $it") }
+            if (toolStates.isNotEmpty()) appendLine("Key tool states (newest → oldest): ${toolStates.asReversed().joinToString(" | ")}")
+            if (failures.isNotEmpty()) appendLine("Failure clues (newest → oldest): ${failures.asReversed().joinToString(" | ")}")
+            if (constraints.isNotEmpty()) appendLine("User constraints: ${constraints.joinToString(" | ")}")
+            if (decisions.isNotEmpty()) appendLine("Key decisions: ${decisions.joinToString(" | ")}")
+            if (files.isNotEmpty()) appendLine("Files involved: ${files.joinToString(" | ")}")
+            if (recentRequests.isNotEmpty()) appendLine("Recent user requests (newest → oldest): ${recentRequests.asReversed().joinToString(" | ")}")
+            if (unresolved.isNotEmpty()) appendLine("Unresolved items: ${unresolved.joinToString(" | ")}")
+            lastAssistant?.takeIf { it.isNotBlank() }?.let { append("Latest stage conclusion: $it") }
         }.take(MAX_INCREMENTAL_SUMMARY_CHARS)
     }
 
@@ -1011,25 +1011,25 @@ object ContextWindowPolicy {
         val issues = mutableListOf<String>()
         // ISO 8601 date: 2026-09-05 or 2026/09/05
         if (Regex("""\b20\d{2}[-/]\d{2}[-/]\d{2}\b""").containsMatchIn(prompt)) {
-            issues += "ISO 日期（YYYY-MM-DD）"
+            issues += "ISO date (YYYY-MM-DD)"
         }
         // Time of day: 14:30 or 14:30:05
         if (Regex("""\b\d{1,2}:\d{2}(:\d{2})?\b""").containsMatchIn(prompt)) {
-            issues += "时间（HH:MM）"
+            issues += "Time (HH:MM)"
         }
         // Unix timestamp (10-13 digit integer, typically used as currentTimeMillis or epochSeconds)
         if (Regex("""\b1[6-9]\d{8}\b|\b17\d{8}\b|\b1[6-9]\d{11}\b|\b17\d{11}\b""")
                 .containsMatchIn(prompt)) {
-            issues += "UNIX 时间戳"
+            issues += "UNIX timestamp"
         }
         // Chinese date patterns like "2026年9月5日"
         if (Regex("""\d{4}年\d{1,2}月\d{1,2}日""").containsMatchIn(prompt)) {
-            issues += "中文日期（YYYY年M月D日）"
+            issues += "Chinese date (YYYY-MM-DD in Chinese format)"
         }
         // Battery/charge level patterns: "电量: 83%" or "battery: 83%"
         if (Regex("""(?:电量|battery)[^\n]{0,20}?\d{1,3}%""", RegexOption.IGNORE_CASE)
                 .containsMatchIn(prompt)) {
-            issues += "实时电量百分比"
+            issues += "Current battery percentage"
         }
         return issues
     }
