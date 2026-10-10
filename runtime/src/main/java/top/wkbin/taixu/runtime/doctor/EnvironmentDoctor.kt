@@ -30,10 +30,10 @@ class EnvironmentDoctor(
             val unreadyItem = DoctorItem(
                 id = "sandbox_unready",
                 category = DoctorCategory.SANDBOX,
-                title = "PRoot 沙箱状态",
+                title = "PRoot sandbox status",
                 status = DoctorStatus.ERROR,
-                summary = if (state is RuntimeState.Error) "沙箱异常: ${state.throwable.message}" else "沙箱未初始化",
-                detail = "请先在仪表盘初始化并启动 Linux 沙箱环境",
+                summary = if (state is RuntimeState.Error) "Sandbox error: ${state.throwable.message}" else "Sandbox not initialized",
+                detail = "Initialize and start the Linux sandbox from the dashboard first",
                 fixable = false,
             )
             return@withContext DoctorReport(
@@ -64,10 +64,10 @@ class EnvironmentDoctor(
         // 5. 基础开发工具链检查 (git/curl/tar/xz)
         items.add(checkBaseDevTools())
 
-        // 6. Node.js 运行时检查
+        // 6. Node.js Runtime检查
         items.add(checkNodeRuntime())
 
-        // 7. Android 开发环境检查（可选插件，未安装时引导获取离线/在线插件包）
+        // 7. Android Development Environment检查（可选插件，未安装时引导获取离线/在线插件包）
         items.add(checkAndroidEnvironment())
 
         val healthyCount = items.count { it.status == DoctorStatus.HEALTHY }
@@ -96,7 +96,7 @@ class EnvironmentDoctor(
     /**
      * 沙箱探测统一入口：失败后以双倍超时重试一次。
      * 两次都拿不到结果（异常/超时）返回 null —— 探测不可达 ≠ 配置异常，
-     * 调用方应如实给出 UNKNOWN（灰牌「沙箱正忙，暂时无法确认」），
+     * 调用方应如实给出 UNKNOWN（灰牌「Sandbox is busy; status cannot be confirmed yet」），
      * 绝不把超时误报成 WARNING/ERROR 配置异常。
      */
     private suspend fun probe(commandLine: String, timeoutMs: Long): CommandResult? {
@@ -109,7 +109,7 @@ class EnvironmentDoctor(
         }.getOrNull()
     }
 
-    /** 「沙箱正忙，暂时无法确认」灰牌条目：不计入待修复项。 */
+    /** 「Sandbox is busy; status cannot be confirmed yet」灰牌条目：不计入待修复项。 */
     private fun unknownItem(
         id: String,
         category: DoctorCategory,
@@ -120,8 +120,8 @@ class EnvironmentDoctor(
         category = category,
         title = title,
         status = DoctorStatus.UNKNOWN,
-        summary = "沙箱正忙，暂时无法确认",
-        detail = detail ?: "沙箱正在处理其他任务导致探测超时，稍后重新体检即可恢复",
+        summary = "Sandbox is busy; status cannot be confirmed yet",
+        detail = detail ?: "The sandbox timed out while handling another task. Run diagnostics again later.",
         fixable = false,
     )
 
@@ -138,18 +138,18 @@ class EnvironmentDoctor(
             DoctorItem(
                 id = "host_all_files_access",
                 category = DoctorCategory.SANDBOX,
-                title = "所有文件访问权限",
+                title = "All files access permission",
                 status = DoctorStatus.HEALTHY,
-                summary = "已授权「所有文件访问」，文件浏览器可完整访问共享存储",
+                summary = "“All files access” is granted; the file browser can fully access shared storage",
             )
         } else {
             DoctorItem(
                 id = "host_all_files_access",
                 category = DoctorCategory.SANDBOX,
-                title = "所有文件访问权限",
+                title = "All files access permission",
                 status = DoctorStatus.WARNING,
-                summary = "未授权「所有文件访问」权限",
-                detail = "Android 会过滤共享存储中其他应用的文件，文件浏览器 /sdcard 入口可能只显示文件夹而看不到文件。点击右侧「去授权」立即前往系统设置开启。",
+                summary = "“All files access” permission is not granted",
+                detail = "Android filters files belonging to other apps in shared storage, so the file browser's /sdcard view may show folders but not files. Tap Go to authorization on the right to open system settings.",
                 fixable = true,
             )
         }
@@ -169,23 +169,23 @@ class EnvironmentDoctor(
             res == null -> unknownItem(
                 id = "sandbox_storage",
                 category = DoctorCategory.SANDBOX,
-                title = "PRoot 沙箱与工作区",
-                detail = "读写探针超时，沙箱可能正忙（如正在执行构建/安装任务）",
+                title = "PRoot Sandbox & Workspace",
+                detail = "Read/write probe timed out; the sandbox may be busy (for example, building or installing)",
             )
             res.isSuccess -> DoctorItem(
                 id = "sandbox_storage",
                 category = DoctorCategory.SANDBOX,
-                title = "PRoot 沙箱与工作区",
+                title = "PRoot Sandbox & Workspace",
                 status = DoctorStatus.HEALTHY,
-                summary = "沙箱虚拟环境正常，/workspace 与 /tmp 读写就绪",
+                summary = "Sandbox is healthy; /workspace and /tmp are writable",
             )
             else -> DoctorItem(
                 id = "sandbox_storage",
                 category = DoctorCategory.SANDBOX,
-                title = "PRoot 沙箱与工作区",
+                title = "PRoot Sandbox & Workspace",
                 status = DoctorStatus.ERROR,
-                summary = "工作区读写或权限测试失败",
-                detail = res.stderr.ifBlank { res.stdout }.ifBlank { "探针命令执行失败" },
+                summary = "Workspace read/write or permission test failed",
+                detail = res.stderr.ifBlank { res.stdout }.ifBlank { "Probe command failed" },
             )
         }
     }
@@ -198,7 +198,7 @@ class EnvironmentDoctor(
             return unknownItem(
                 id = "network_dns",
                 category = DoctorCategory.NETWORK_SSL,
-                title = "DNS 域名解析",
+                title = "DNS Resolution",
             )
         }
 
@@ -209,19 +209,19 @@ class EnvironmentDoctor(
             return DoctorItem(
                 id = "network_dns",
                 category = DoctorCategory.NETWORK_SSL,
-                title = "DNS 域名解析",
+                title = "DNS Resolution",
                 status = DoctorStatus.WARNING,
-                summary = "未配置有效 DNS 解析服务器",
-                detail = "/etc/resolv.conf 为空或缺失，可能导致无法解析软件下载域名",
+                summary = "No valid DNS resolver is configured",
+                detail = "/etc/resolv.conf is empty or missing, which may prevent resolving software download domains",
             )
         }
 
         return DoctorItem(
             id = "network_dns",
             category = DoctorCategory.NETWORK_SSL,
-            title = "DNS 域名解析",
+            title = "DNS Resolution",
             status = DoctorStatus.HEALTHY,
-            summary = "DNS 解析配置正常",
+            summary = "DNS resolution is configured correctly",
             detail = resolvContent.lineSequence().filter { it.startsWith("nameserver") }.take(2).joinToString(", "),
         )
     }
@@ -237,22 +237,22 @@ class EnvironmentDoctor(
             certCheck == null -> unknownItem(
                 id = "ca_certificates",
                 category = DoctorCategory.NETWORK_SSL,
-                title = "SSL 根证书 (CA)",
+                title = "SSL Root Certificates (CA)",
             )
             certCheck.isSuccess -> DoctorItem(
                 id = "ca_certificates",
                 category = DoctorCategory.NETWORK_SSL,
-                title = "SSL 根证书 (CA)",
+                title = "SSL Root Certificates (CA)",
                 status = DoctorStatus.HEALTHY,
-                summary = "CA 根证书正常就绪，支持 HTTPS 依赖下载",
+                summary = "CA root certificates are ready for HTTPS dependency downloads",
             )
             else -> DoctorItem(
                 id = "ca_certificates",
                 category = DoctorCategory.NETWORK_SSL,
-                title = "SSL 根证书 (CA)",
+                title = "SSL Root Certificates (CA)",
                 status = DoctorStatus.WARNING,
-                summary = "系统缺失 CA 根证书",
-                detail = "下载 HTTPS 资源或 Git Clone 时可能出现 SSL 验证错误",
+                summary = "System CA root certificates are missing",
+                detail = "SSL verification errors may occur when downloading HTTPS resources or cloning Git repositories",
             )
         }
     }
@@ -268,7 +268,7 @@ class EnvironmentDoctor(
             return unknownItem(
                 id = "apt_mirrors",
                 category = DoctorCategory.PACKAGE_MANAGER,
-                title = "APT 软件包源",
+                title = "APT Package Sources",
             )
         }
 
@@ -278,8 +278,8 @@ class EnvironmentDoctor(
             return unknownItem(
                 id = "apt_mirrors",
                 category = DoctorCategory.PACKAGE_MANAGER,
-                title = "APT 软件包源",
-                detail = "未读取到任何 APT 源配置内容，无法判定镜像状态；沙箱正忙或源列表异常，稍后重新体检确认",
+                title = "APT Package Sources",
+                detail = "No APT source configuration was read, so mirror status cannot be determined. The sandbox may be busy or the source list may be invalid; run diagnostics again later.",
             )
         }
 
@@ -290,10 +290,10 @@ class EnvironmentDoctor(
             return DoctorItem(
                 id = "apt_mirrors",
                 category = DoctorCategory.PACKAGE_MANAGER,
-                title = "APT 软件包源",
+                title = "APT Package Sources",
                 status = DoctorStatus.WARNING,
-                summary = "APT 源配置异常 (Ubuntu ARM64 需使用 ubuntu-ports 源)",
-                detail = "检测到 ARM64 架构下使用了 x86 镜像路径，会导致软件包 404 错误。请点击一键修复自动纠正。",
+                summary = "APT source configuration is invalid (Ubuntu ARM64 requires the ubuntu-ports source)",
+                detail = "An x86 mirror path was detected on ARM64, which can cause package 404 errors. Tap One-tap repair to fix it automatically.",
             )
         }
 
@@ -307,18 +307,18 @@ class EnvironmentDoctor(
             DoctorItem(
                 id = "apt_mirrors",
                 category = DoctorCategory.PACKAGE_MANAGER,
-                title = "APT 软件包源",
+                title = "APT Package Sources",
                 status = DoctorStatus.HEALTHY,
-                summary = "已配置国内镜像源加速 (清华/阿里/中科大)",
+                summary = "Regional mirrors are configured (Tsinghua, Alibaba, USTC)",
             )
         } else {
             DoctorItem(
                 id = "apt_mirrors",
                 category = DoctorCategory.PACKAGE_MANAGER,
-                title = "APT 软件包源",
+                title = "APT Package Sources",
                 status = DoctorStatus.WARNING,
-                summary = "当前为官方默认源，国内安装可能缓慢或超时",
-                detail = "建议一键切换为国内镜像源以获得高速稳定的依赖下载体验",
+                summary = "Official default sources are in use; downloads in some regions may be slow or time out",
+                detail = "Switch to a regional mirror for faster, more reliable dependency downloads",
             )
         }
     }
@@ -334,7 +334,7 @@ class EnvironmentDoctor(
             return unknownItem(
                 id = "base_devtools",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "核心基础工具链",
+                title = "Core Toolchain",
             )
         }
 
@@ -344,18 +344,18 @@ class EnvironmentDoctor(
             DoctorItem(
                 id = "base_devtools",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "核心基础工具链",
+                title = "Core Toolchain",
                 status = DoctorStatus.HEALTHY,
-                summary = "Git, Curl, Tar, XZ, File 等常用工具已就绪",
+                summary = "Common tools such as Git, curl, tar, xz, and file are ready",
             )
         } else {
             DoctorItem(
                 id = "base_devtools",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "核心基础工具链",
+                title = "Core Toolchain",
                 status = DoctorStatus.WARNING,
-                summary = "缺少常用基础工具: ${missingTools.joinToString(", ")}",
-                detail = "部分安装脚本或插件依赖上述工具进行解压与代码拉取",
+                summary = "Missing common tools: ${missingTools.joinToString(", ")}",
+                detail = "Some installers and plugins require these tools to extract archives and fetch source code",
             )
         }
     }
@@ -384,10 +384,10 @@ class EnvironmentDoctor(
         val notInstalledItem = DoctorItem(
             id = "android_environment",
             category = DoctorCategory.DEV_RUNTIMES,
-            title = "Android 开发环境",
+            title = "Android Development Environment",
             status = DoctorStatus.WARNING,
-            summary = "未安装 Android / Flutter / 反编译环境",
-            detail = "可加入官方 QQ 群下载全量离线插件包（已集成 Android、Flutter、反编译三大环境，免在线安装），或前往插件中心在线安装。",
+            summary = "Android, Flutter, and decompilation tools are not installed",
+            detail = "Download the complete offline plugin bundle from the official QQ group (includes Android, Flutter, and decompilation toolchains), or install the tools online from the Tool Center.",
             fixable = false,
         )
 
@@ -397,16 +397,16 @@ class EnvironmentDoctor(
             installed == true -> DoctorItem(
                 id = "android_environment",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "Android 开发环境",
+                title = "Android Development Environment",
                 status = DoctorStatus.HEALTHY,
-                summary = "JDK 17 / Android SDK / Gradle / NDK 已就绪，可构建与反编译 APK",
+                summary = "JDK 17, Android SDK, Gradle, and NDK are ready for building and decompiling APKs",
             )
             // 探针执行了但沙箱不可达：灰牌，不误报「未安装」
             installed == null -> unknownItem(
                 id = "android_environment",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "Android 开发环境",
-                detail = "Android 环境探针超时，沙箱可能正忙（如正在执行构建任务），稍后重新体检即可确认",
+                title = "Android Development Environment",
+                detail = "Android environment probe timed out; the sandbox may be busy with a build. Run diagnostics again later.",
             )
             else -> notInstalledItem
         }
@@ -423,7 +423,7 @@ class EnvironmentDoctor(
             return unknownItem(
                 id = "node_runtime",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "Node.js 运行时",
+                title = "Node.js Runtime",
             )
         }
 
@@ -432,10 +432,10 @@ class EnvironmentDoctor(
             return DoctorItem(
                 id = "node_runtime",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "Node.js 运行时",
+                title = "Node.js Runtime",
                 status = DoctorStatus.WARNING,
-                summary = "未检测到 Node.js 运行时",
-                detail = "OpenClaw、Claude Code 等 AI 智能体工具强依赖 Node.js (推荐 >= v20)",
+                summary = "未检测到 Node.js Runtime",
+                detail = "Agent tools such as OpenClaw and Claude Code require Node.js (v20 or later recommended)",
             )
         }
 
@@ -444,18 +444,18 @@ class EnvironmentDoctor(
             DoctorItem(
                 id = "node_runtime",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "Node.js 运行时",
+                title = "Node.js Runtime",
                 status = DoctorStatus.HEALTHY,
-                summary = "Node.js $rawVersion (满足主流 AI 工具要求)",
+                summary = "Node.js $rawVersion (meets the requirements of most AI tools)",
             )
         } else {
             DoctorItem(
                 id = "node_runtime",
                 category = DoctorCategory.DEV_RUNTIMES,
-                title = "Node.js 运行时",
+                title = "Node.js Runtime",
                 status = DoctorStatus.WARNING,
-                summary = "Node.js $rawVersion 版本较低 (建议 >= v20)",
-                detail = "新版 AI 工具可能需要更新的 JavaScript/V8 引擎特性",
+                summary = "Node.js $rawVersion is outdated (v20 or later recommended)",
+                detail = "Newer AI tools may require more recent JavaScript/V8 features",
             )
         }
     }
