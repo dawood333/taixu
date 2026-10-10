@@ -64,7 +64,7 @@ class WorkshopSigningViewModel(
                 organization = draft.organization,
             )
             val errMsg = result.errorOrNull()?.message
-            _message.value = errMsg ?: "签名创建成功：${draft.name.trim()}"
+            _message.value = errMsg ?: "Signing key created: ${draft.name.trim()}"
             _busy.value = false
             if (result.isSuccess) {
                 onSuccess()
@@ -90,7 +90,7 @@ class WorkshopSigningViewModel(
                 keyPassword = draft.keyPassword,
             )
             val errMsg = result.errorOrNull()?.message
-            _message.value = errMsg ?: "签名导入成功：${draft.name.trim()}"
+            _message.value = errMsg ?: "Signing key imported: ${draft.name.trim()}"
             _busy.value = false
             if (result.isSuccess) {
                 onSuccess()
@@ -105,7 +105,7 @@ class WorkshopSigningViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             _busy.value = true
             val result = signingManager.deleteKeystore(keystore.id)
-            _message.value = result.errorOrNull()?.message ?: "已删除签名：${keystore.name}"
+            _message.value = result.errorOrNull()?.message ?: "Signing key deleted: ${keystore.name}"
             _busy.value = false
         }
     }
