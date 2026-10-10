@@ -83,7 +83,7 @@ private fun StorageScanNotice(warnings: List<String>) {
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            "部分目录未计入统计",
+            "Some directories were not included",
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -91,19 +91,19 @@ private fun StorageScanNotice(warnings: List<String>) {
             overflow = TextOverflow.Ellipsis,
         )
         RuntimeTextButton(onClick = { showDetails = true }) {
-            Text("详情", style = MaterialTheme.typography.labelMedium, maxLines = 1)
+            Text("Details", style = MaterialTheme.typography.labelMedium, maxLines = 1)
         }
     }
     if (showDetails) {
         RuntimeAlertDialog(
             onDismissRequest = { showDetails = false },
-            title = { Text("扫描详情") },
+            title = { Text("扫描Details") },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text("部分目录未能完整读取，显示的占用可能低于实际值。以下为扫描时记录的详细信息（最多 20 条）。")
+                    Text("Some directories could not be read completely, so the displayed usage may be lower than the actual amount. Details recorded during the scan (up to 20 entries):")
                     warnings.forEach { warning ->
                         Text(
                             warning,
@@ -114,7 +114,7 @@ private fun StorageScanNotice(warnings: List<String>) {
                 }
             },
             confirmButton = {
-                RuntimeTextButton(onClick = { showDetails = false }) { Text("关闭") }
+                RuntimeTextButton(onClick = { showDetails = false }) { Text("Close") }
             },
         )
     }
@@ -140,29 +140,29 @@ fun StorageUsageScreen(
             is CleanupDialogTarget.QuickSafe -> {
                 RuntimeAlertDialog(
                     onDismissRequest = viewModel::dismissDialog,
-                    title = { Text("清理过期归档日志？") },
+                    title = { Text("Clean up archived logs?") },
                     text = {
                         Column(
                             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            Text("清理超过 7 天、扫描后未改变的归档日志：", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            Text("• .log.gz 与 .log.数字 格式的历史日志")
-                            Text("• 当前日志、安装资源与回滚备份会保留")
+                            Text("Clean archived logs older than 7 days that have not changed since the scan:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text("• Historical logs in .log.gz and .log.N formats")
+                            Text("• Current logs, installation assets, and rollback backups will be kept")
                             Spacer(Modifier.height(4.dp))
-                            Text("历史诊断信息将被删除。请先关闭终端并停止运行中的任务。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            Text("历史诊断信息将被删除。请先Close终端并停止运行中的任务。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         }
                     },
                     confirmButton = {
                         RuntimeButton(
                             onClick = viewModel::quickSafeClean,
                         ) {
-                            Text("立即清理")
+                            Text("Clean now")
                         }
                     },
                     dismissButton = {
                         RuntimeTextButton(onClick = viewModel::dismissDialog) {
-                            Text("取消")
+                            Text("Cancel")
                         }
                     },
                 )
@@ -171,29 +171,29 @@ fun StorageUsageScreen(
             is CleanupDialogTarget.AllProjectBuilds -> {
                 RuntimeAlertDialog(
                     onDismissRequest = viewModel::dismissDialog,
-                    title = { Text("清理已识别项目缓存？") },
+                    title = { Text("Clean recognized project caches?") },
                     text = {
                         Column(
                             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            Text("仅处理已识别工程中超过 7 天且未修改的缓存文件：", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                            Text("• Gradle 工程的 .gradle 与 Dart/Flutter 工程的 .dart_tool")
+                            Text("Only cache files older than 7 days and unchanged in recognized projects will be processed:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            Text("• .gradle in Gradle projects and .dart_tool in Dart/Flutter projects")
                             Spacer(Modifier.height(4.dp))
-                            Text("• build、dist、out、target 和未识别目录由工作区管理。", color = MaterialTheme.colorScheme.primary)
-                            Text("• 下次构建需重新生成缓存，可能需要执行 pub get；请先停止任务。", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("• build, dist, out, target, and unrecognized directories remain managed by the workspace.", color = MaterialTheme.colorScheme.primary)
+                            Text("• The next build must regenerate caches and may need to run pub get. Stop running tasks first.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
                     confirmButton = {
                         RuntimeButton(
                             onClick = { viewModel.cleanProjectBuilds() },
                         ) {
-                            Text("确认清理")
+                            Text("Confirm cleanup")
                         }
                     },
                     dismissButton = {
                         RuntimeTextButton(onClick = viewModel::dismissDialog) {
-                            Text("取消")
+                            Text("Cancel")
                         }
                     },
                 )
@@ -203,14 +203,14 @@ fun StorageUsageScreen(
                 val category = target.category
                 RuntimeAlertDialog(
                     onDismissRequest = viewModel::dismissDialog,
-                    title = { Text("清理分类【${category.name}】？") },
+                    title = { Text("Clean category “${category.name}”?") },
                     text = {
                         Column(
                             modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             Text("预计删除 ${category.reclaimableBytes.readableSize()}（文件大小）")
-                            Text(category.cleanupHint ?: "确认清理该分类下的可清理数据吗？")
+                            Text(category.cleanupHint ?: "Confirm cleanup该分类下的Potentially cleanable数据吗？")
                             category.entries.filter { it.cleanable }.forEach { item ->
                                 Text("• ${item.name}：${item.reclaimableBytes.readableSize()}")
                             }
@@ -225,12 +225,12 @@ fun StorageUsageScreen(
                         RuntimeButton(
                             onClick = { viewModel.clearCategory(category.id) },
                         ) {
-                            Text("确认清理")
+                            Text("Confirm cleanup")
                         }
                     },
                     dismissButton = {
                         RuntimeTextButton(onClick = viewModel::dismissDialog) {
-                            Text("取消")
+                            Text("Cancel")
                         }
                     },
                 )
@@ -247,7 +247,7 @@ fun StorageUsageScreen(
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             Text("预计删除 ${entry.reclaimableBytes.readableSize()}（文件大小）")
-                            Text(entry.cleanupHint ?: "确认清理此细项吗？")
+                            Text(entry.cleanupHint ?: "Confirm cleanup此细项吗？")
                             entry.path?.let {
                                 Text("目标路径：$it", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -260,12 +260,12 @@ fun StorageUsageScreen(
                         RuntimeButton(
                             onClick = { viewModel.clearEntry(target.categoryId, entry.id, entry.name) },
                         ) {
-                            Text("确认清理")
+                            Text("Confirm cleanup")
                         }
                     },
                     dismissButton = {
                         RuntimeTextButton(onClick = viewModel::dismissDialog) {
-                            Text("取消")
+                            Text("Cancel")
                         }
                     },
                 )
@@ -459,7 +459,7 @@ private fun StorageDashboardCard(
     }
 
     Spacer(Modifier.height(8.dp))
-    Text("按文件大小统计，不包含 APK；与系统磁盘占用可能不同。可清理量只计超过 7 天的已识别文件。",
+    Text("按文件大小统计，不包含 APK；与系统磁盘占用可能不同。Potentially cleanable量只计超过 7 天的已识别文件。",
         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(14.dp))
 
@@ -613,7 +613,7 @@ private fun SmartCleanupCards(
     onCleanProjectBuilds: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // 1. 可清理的归档日志卡片
+        // 1. Potentially cleanable的归档日志卡片
         if (safeCleanableBytes > 0) {
             RuntimeCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -636,7 +636,7 @@ private fun SmartCleanupCards(
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                             Text(
-                                "可清理的归档日志",
+                                "Potentially cleanable的归档日志",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -800,7 +800,7 @@ private fun SmartCleanupCards(
 }
 
 /**
- * 分类详情卡片：宽松大气的两段式布局（上层标题与占用量，下层风险徽标与操作按钮）
+ * 分类Details卡片：宽松大气的两段式布局（上层标题与占用量，下层风险徽标与操作按钮）
  */
 @Composable
 private fun StorageCategoryDetailCard(
@@ -839,7 +839,7 @@ private fun StorageCategoryDetailCard(
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "可清理 ${category.reclaimableBytes.readableSize()} · ${category.description}",
+                    text = "Potentially cleanable ${category.reclaimableBytes.readableSize()} · ${category.description}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -948,7 +948,7 @@ private fun StorageEntryRow(
                 if (entry.detail.isNotBlank()) {
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        "可清理 ${entry.reclaimableBytes.readableSize()} · ${entry.detail}",
+                        "Potentially cleanable ${entry.reclaimableBytes.readableSize()} · ${entry.detail}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 3,
@@ -1053,7 +1053,7 @@ private fun StorageEntryRow(
 private fun RiskBadge(riskLevel: StorageRiskLevel, modifier: Modifier = Modifier) {
     val (label, bg, fg) = when (riskLevel) {
         StorageRiskLevel.SAFE -> Triple(
-            "归档日志 · 可清理",
+            "归档日志 · Potentially cleanable",
             Color(0xFFE6F8F0),
             Color(0xFF0E9F6E),
         )
