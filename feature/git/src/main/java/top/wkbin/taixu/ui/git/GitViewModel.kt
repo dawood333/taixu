@@ -65,7 +65,7 @@ class GitViewModel(
                 workspaceManager.listProjects().firstOrNull { it.name == projectName }
             }.getOrNull()
             if (project == null) {
-                _uiState.update { it.copy(loading = false, error = "未找到工作区项目：$projectName") }
+                _uiState.update { it.copy(loading = false, error = "Workspace project not found: $projectName") }
                 return@launch
             }
             val isRepo = gitManager.isRepository(project.path)
@@ -264,8 +264,8 @@ class GitViewModel(
             val commitSummary = (commitResult as GitOpResult.Ok).message
             handleOpResult(
                 when (pushResult) {
-                    is GitOpResult.Ok -> GitOpResult.Ok("$commitSummary，已推送")
-                    is GitOpResult.Failed -> GitOpResult.Failed("$commitSummary，但推送失败：${pushResult.message}")
+                    is GitOpResult.Ok -> GitOpResult.Ok("$commitSummary, pushed")
+                    is GitOpResult.Failed -> GitOpResult.Failed("$commitSummary, but push failed: ${pushResult.message}")
                 },
             )
         }
@@ -373,7 +373,7 @@ class GitViewModel(
                         ApiMessage(
                             role = "user",
                             content = """
-                                你是 Git 提交信息撰写助手。根据以下改动生成一条 commit message。
+                                You are a Git commit-message assistant. Generate one commit message based on the following changes.
                                 要求：第一行是 50 字符内的中文祈使句摘要（不加前缀）；若改动较复杂，空一行后附 2-4 条要点列表。只输出提交信息本身，不要任何解释、代码块标记或引号。
 
                                 $summary
@@ -382,13 +382,13 @@ class GitViewModel(
                     ),
                 )
                 val text = result.content?.trim().orEmpty()
-                check(text.isNotBlank()) { "模型返回了空内容" }
+                check(text.isNotBlank()) { "The model returned empty content" }
                 text
             }.onSuccess { message ->
                 _uiState.update { it.copy(operation = null, commitMessageDraft = message) }
             }.onFailure { failure ->
                 _uiState.update {
-                    it.copy(operation = null, error = "AI 生成失败：${failure.message ?: "请检查模型配置"}")
+                    it.copy(operation = null, error = "AI generation failed: ${failure.message ?: "Check the model configuration"}")
                 }
             }
         }
@@ -408,14 +408,14 @@ class GitViewModel(
                 .onSuccess {
                     _uiState.update { state ->
                         state.copy(
-                            notice = "已保存 $host 的凭据",
+                            notice = "Credentials for $host saved",
                             credentialHosts = (state.credentialHosts + host.trim().lowercase()).distinct().sorted(),
                         )
                     }
                     onDone()
                 }
                 .onFailure { failure ->
-                    _uiState.update { it.copy(error = "凭据保存失败：${failure.message}") }
+                    _uiState.update { it.copy(error = "Failed to save credentials: ${failure.message}") }
                 }
         }
     }
