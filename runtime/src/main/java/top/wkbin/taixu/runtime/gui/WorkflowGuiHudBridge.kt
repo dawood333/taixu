@@ -28,7 +28,7 @@ class WorkflowGuiHudBridge() {
         val workflowName: String,
         val nodeTitle: String = "",
         val phase: Phase = Phase.THINKING,
-        val stepLabel: String = "准备中",
+        val stepLabel: String = "Preparing",
         val detail: String = "",
         /** When false the overlay window must be detached (screen ops in progress). */
         val overlayVisible: Boolean = true,
@@ -50,7 +50,7 @@ class WorkflowGuiHudBridge() {
             executionId = executionId,
             workflowName = workflowName,
             phase = Phase.THINKING,
-            stepLabel = "工作流已启动",
+            stepLabel = "Workflow started",
             overlayVisible = true,
             active = true,
         )
@@ -90,7 +90,7 @@ class WorkflowGuiHudBridge() {
      * Hide overlay before screen dump / input. Nested calls are refcounted.
      * First enter waits briefly so WindowManager can detach the view.
      */
-    suspend fun beginScreenOp(stepLabel: String = "操作屏幕中…") {
+    suspend fun beginScreenOp(stepLabel: String = "Operating screen…") {
         val depth = screenOpDepth.incrementAndGet()
         _session.update { current ->
             current?.copy(
@@ -123,7 +123,7 @@ class WorkflowGuiHudBridge() {
         _session.update { current ->
             current?.copy(
                 phase = if (success) Phase.SUCCESS else Phase.FAILED,
-                stepLabel = if (success) "已完成" else "失败",
+                stepLabel = if (success) "Completed" else "Failed",
                 detail = message.take(280),
                 overlayVisible = true,
                 active = false,
@@ -132,12 +132,12 @@ class WorkflowGuiHudBridge() {
         cancelAction.set(null)
     }
 
-    fun cancelled(message: String = "已停止") {
+    fun cancelled(message: String = "Stopped") {
         screenOpDepth.set(0)
         _session.update { current ->
             current?.copy(
                 phase = Phase.CANCELLED,
-                stepLabel = "已停止",
+                stepLabel = "Stopped",
                 detail = message.take(280),
                 overlayVisible = true,
                 active = false,
@@ -150,7 +150,7 @@ class WorkflowGuiHudBridge() {
         val id = _session.value?.executionId ?: return
         stopRequestedFor.set(id)
         cancelAction.getAndSet(null)?.invoke()
-        cancelled("用户点击停止")
+        cancelled("User tapped Stop")
     }
 
     fun isStopRequested(): Boolean {
