@@ -215,7 +215,7 @@ fun StorageUsageScreen(
                                 Text("• ${item.name}：${item.reclaimableBytes.readableSize()}")
                             }
                             if (category.riskLevel == StorageRiskLevel.CAUTION) {
-                                Text("提示：缓存需要重新下载或生成，会增加下次构建时间并可能影响离线使用。", style = MaterialTheme.typography.bodySmall, color = Color(0xFFD97706))
+                                Text("Note: caches must be downloaded or generated again, which may increase the next build time and affect offline use.", style = MaterialTheme.typography.bodySmall, color = Color(0xFFD97706))
                             } else if (category.riskLevel == StorageRiskLevel.DANGEROUS) {
                                 Text("Warning: This action cannot be undone. Make sure your data is backed up.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                             }
@@ -1058,7 +1058,7 @@ private fun RiskBadge(riskLevel: StorageRiskLevel, modifier: Modifier = Modifier
             Color(0xFF0E9F6E),
         )
         StorageRiskLevel.CAUTION -> Triple(
-            "按需Clean · 需恢复缓存",
+            "Clean as needed · caches may need to be restored",
             Color(0xFFFFF4E5),
             Color(0xFFB76E00),
         )
