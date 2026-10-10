@@ -50,7 +50,7 @@ class TaiXuWebChatAgentGateway(
         sessions.upsert(
             HarnessSessionEntity(
                 id = id,
-                title = title.trim().ifBlank { "新会话" },
+                title = title.trim().ifBlank { "New conversation" },
                 createdAt = now,
                 updatedAt = now,
                 modelId = defaultModel?.id,
@@ -100,10 +100,10 @@ class TaiXuWebChatAgentGateway(
             is PromptSubmission.Accepted -> WebChatInputReceipt(
                 result.disposition.name.lowercase(), result.taskId, result.queue?.id, result.queueItemId)
             is PromptSubmission.Rejected -> throw IllegalArgumentException(when (result.reason) {
-                PromptSubmission.Rejection.INVALID_SESSION -> "会话 ID 不能为空"
-                PromptSubmission.Rejection.EMPTY_INPUT -> "消息不能为空"
-                PromptSubmission.Rejection.SESSION_NOT_FOUND -> "会话不存在"
-                PromptSubmission.Rejection.LAUNCH_REJECTED -> "会话启动失败"
+                PromptSubmission.Rejection.INVALID_SESSION -> "Session ID cannot be empty"
+                PromptSubmission.Rejection.EMPTY_INPUT -> "Message cannot be empty"
+                PromptSubmission.Rejection.SESSION_NOT_FOUND -> "Session not found"
+                PromptSubmission.Rejection.LAUNCH_REJECTED -> "Failed to start session"
             })
         }
 
@@ -139,7 +139,7 @@ class TaiXuWebChatAgentGateway(
                     putJsonArray("attachments") {
                         message.imageUrls.forEachIndexed { index, url ->
                             add(buildJsonObject {
-                                put("name", "图片 ${index + 1}")
+                                put("name", "Image ${index + 1}")
                                 put("dataUrl", url)
                                 put("isImage", true)
                             })
@@ -178,7 +178,7 @@ class TaiXuWebChatAgentGateway(
             type = 2,
             content = buildJsonObject {
                 put("type", "agent_tool_summary")
-                put("toolTitle", "工具结果")
+                put("toolTitle", "Tool result")
                 put("toolType", "tool")
                 put("status", if (message.success) "success" else "error")
                 put("output", message.output)
@@ -206,7 +206,7 @@ class TaiXuWebChatAgentGateway(
             type = 2,
             content = buildJsonObject {
                 put("type", "agent_tool_summary")
-                put("toolTitle", "技能建议: ${message.skillName}")
+                put("toolTitle", "Skill suggestion: ${message.skillName}")
                 put("toolType", "skill_suggestion")
                 put("status", message.status)
                 put("action", message.action)
