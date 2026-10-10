@@ -38,7 +38,7 @@ object A2uiSurfaceBus {
         val createdAt: Long,
     )
 
-    /** 用户与 A2UI 界面交互产生的事件（由渲染器从官方 outboundEvents 转发而来）。 */
+    /** 用户与 A2UI surface交互产生的事件（由渲染器从官方 outboundEvents 转发而来）。 */
     data class A2uiUserEvent(
         val surfaceId: String,
         val surfaceTitle: String,
@@ -175,15 +175,15 @@ object A2uiSurfaceBus {
      */
     fun publishFromTool(args: JsonObject, sessionId: String = ""): Pair<Boolean, String> {
         val payload = parseToolArgs(args, sessionId).getOrElse { failure ->
-            return false to "render_surface 参数校验未通过：${failure.message}。请修正参数后重新调用。"
+            return false to "render_surface parameter validation failed: ${failure.message}. Fix the parameters and try again."
         }
         publish(payload)
         return true to buildString {
-            append("已提交 A2UI 界面「${payload.title}」（surfaceId=${payload.surfaceId}，")
-            append("${payload.messageCount} 条协议消息）。界面已在用户聊天流中渲染为原生组件；")
-            append("如需更新该界面，请用相同 surfaceId 再次调用并只携带 updateComponents 消息；")
-            append("如需移除界面，发送 deleteSurface 消息。用户与界面的交互（按钮点击等）")
-            append("会以 [A2UI 界面事件] 消息回传给你。")
+            append("Submitted A2UI surface “${payload.title}” (surfaceId=${payload.surfaceId}, ")
+            append("${payload.messageCount} protocol messages). The surface has been rendered as native components in the user's chat stream;")
+            append("to update it, call again with the same surfaceId and include only updateComponents messages;")
+            append("to remove it, send a deleteSurface message. User interactions with the surface (such as button taps)")
+            append("are returned to you as [A2UI Surface Event] messages.")
         }
     }
 
@@ -216,44 +216,44 @@ object A2uiSurfaceBus {
 
     /** 把用户交互事件格式化为注入 agent 会话的消息文本。表单值在 dataModel，不在 context。 */
     fun formatUserEvent(event: A2uiUserEvent): String = buildString {
-        append("[A2UI 界面事件] 用户在界面「${event.surfaceTitle}」（surfaceId=${event.surfaceId}）")
-        append("上触发了交互：组件 componentId=${event.componentId}，事件 eventName=${event.eventName}")
-        if (event.context.isNotEmpty()) append("，携带 context=${event.context}")
+        append("[A2UI Surface Event] The user interacted with “${event.surfaceTitle}” (surfaceId=${event.surfaceId})")
+        append(": componentId=${event.componentId}, eventName=${event.eventName}")
+        if (event.context.isNotEmpty()) append(", context=${event.context}")
         val model = event.dataModel
-        if (model != null && model.isNotEmpty()) append("，表单数据 dataModel=${compactDataModel(model)}")
-        append("。这是 A2UI 界面的用户交互回传，请根据事件语义继续处理；")
-        append("如需更新界面，用相同 surfaceId 调用 render_surface 并只携带 updateComponents 消息。")
+        if (model != null && model.isNotEmpty()) append(", form dataModel=${compactDataModel(model)}")
+        append(". This is a user interaction event from an A2UI surface. Continue based on the event semantics;")
+        append("to update the surface, call render_surface with the same surfaceId and only updateComponents messages.")
     }
 
     /** 数据模型可能整棵带回；超长时截断，避免一条界面事件撑爆会话。 */
     private fun compactDataModel(model: Map<String, Any?>): String {
         val text = model.toString()
         if (text.length <= MAX_DATA_MODEL_CHARS) return text
-        return text.take(MAX_DATA_MODEL_CHARS) + "…(已截断)"
+        return text.take(MAX_DATA_MODEL_CHARS) + "…(truncated)"
     }
 
     /** 把引擎运行时错误格式化为注入 agent 会话的消息文本（否则界面只会静默转圈）。 */
     fun formatErrorEvent(event: A2uiErrorEvent): String = buildString {
-        append("[A2UI 界面错误] 界面「${event.surfaceTitle}」（surfaceId=${event.surfaceId}）")
-        append("渲染失败：[${event.code}] ${event.message}。")
-        append("请修正组件定义（属性名/类型/子组件引用必须符合 Catalog），")
-        append("用相同 surfaceId 重新调用 render_surface 并携带完整 components 列表（含 id=root 的顶部组件）。")
+        append("[A2UI Surface Error] Surface “${event.surfaceTitle}” (surfaceId=${event.surfaceId})")
+        append("render failed: [${event.code}] ${event.message}.")
+        append("Fix the component definition (property names, types, and child references must match the catalog),")
+        append("then call render_surface again with the same surfaceId and the complete components list, including the root component with id=root.")
     }
 
     internal fun parseToolArgs(args: JsonObject, sessionId: String = ""): Result<A2uiSurfacePayload> = runCatching {
         val surfaceId = args["surfaceId"]?.jsonPrimitive?.contentOrNull?.trim().orEmpty()
         require(surfaceId.isNotEmpty()) { "缺少 surfaceId" }
         require(surfaceId.length <= MAX_ID_CHARS && SURFACE_ID_REGEX.matches(surfaceId)) {
-            "surfaceId 仅允许字母数字与 _ . : -，且不超过 $MAX_ID_CHARS 字符"
+            "surfaceId may contain only letters, digits, _, ., :, and -; maximum length is $MAX_ID_CHARS characters"
         }
-        val title = args["title"]?.jsonPrimitive?.contentOrNull?.trim().takeIf { !it.isNullOrBlank() } ?: "A2UI 界面"
-        require(title.length <= MAX_TITLE_CHARS) { "title 不超过 $MAX_TITLE_CHARS 字符" }
+        val title = args["title"]?.jsonPrimitive?.contentOrNull?.trim().takeIf { !it.isNullOrBlank() } ?: "A2UI surface"
+        require(title.length <= MAX_TITLE_CHARS) { "title must not exceed $MAX_TITLE_CHARS characters" }
         val rawMessages = args["messages"]?.jsonPrimitive?.contentOrNull?.trim().orEmpty()
         require(rawMessages.length in MIN_JSON_CHARS..MAX_JSON_CHARS) {
-            "messages 必须是 A2UI 协议消息数组的 JSON 字符串（长度 $MIN_JSON_CHARS..$MAX_JSON_CHARS）"
+            "messages must be a JSON string containing an array of A2UI protocol messages (length $MIN_JSON_CHARS..$MAX_JSON_CHARS)"
         }
         val messagesJson = parseMessagesArray(rawMessages).toString()
-        deepValidator?.invoke(messagesJson)?.let { error -> error("A2UI 协议校验失败：$error") }
+        deepValidator?.invoke(messagesJson)?.let { error -> error("A2UI protocol validation failed: $error") }
         A2uiSurfacePayload(
             surfaceId = surfaceId,
             title = title,
@@ -290,20 +290,20 @@ object A2uiSurfaceBus {
             if (repaired is JsonArray) return validateArrayShape(repaired)
         }
         throw IllegalArgumentException(
-            "messages 必须是 A2UI 协议消息数组的 JSON 字符串（首条 createSurface，" +
-                "其后 updateComponents/deleteSurface）；不要对 messages 参数做二次转义，" +
-                "直接给出数组原文即可",
+            "messages must be a JSON string containing an array of A2UI protocol messages (first item createSurface," +
+                "followed by updateComponents/deleteSurface); do not escape the messages parameter a second time," +
+                "provide the raw array directly",
         )
     }
 
     private fun validateArrayShape(array: JsonArray): JsonArray {
         require(array.isNotEmpty() && array.all { it is JsonObject && it.containsKey("version") }) {
-            "messages 数组每项必须是带 version 的 A2UI 协议消息对象"
+            "Each item in the messages array must be an A2UI protocol message object with a version"
         }
         array.forEach { message ->
             val version = (message as JsonObject)["version"]?.jsonPrimitive?.contentOrNull
             require(version in SUPPORTED_VERSIONS) {
-                "协议 version 仅支持 $SUPPORTED_VERSIONS（收到：$version）"
+                "Supported protocol versions: $SUPPORTED_VERSIONS (received: $version)"
             }
         }
         return array
@@ -333,7 +333,7 @@ object A2uiSurfaceBus {
         """[{"version":"v0.9","createSurface":{"surfaceId":"$surfaceId","catalogId":"${A2uiSurfaceContract.CATALOG_ID}"}},
 {"version":"v0.9","updateComponents":{"surfaceId":"$surfaceId","components":[
 {"id":"root","component":"Column","children":["title","table"]},
-{"id":"title","component":"Text","text":"太墟 A2UI"},
-{"id":"table","component":"Table","columns":["项","值"],"rows":[{"cells":["协议","v0.9"]},{"cells":["目录","Basic + Table"]}]}
+{"id":"title","component":"Text","text":"TaiXu A2UI"},
+{"id":"table","component":"Table","columns":["Item","Value"],"rows":[{"cells":["Protocol","v0.9"]},{"cells":["Catalog","Basic + Table"]}]}
 ]}}]"""
 }
