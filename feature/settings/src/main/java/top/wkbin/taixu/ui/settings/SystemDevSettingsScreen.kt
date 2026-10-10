@@ -159,7 +159,7 @@ fun SystemDevSettingsScreen(
                         value = when {
                             phantomBusy && phantomStatus == null -> "Checking"
                             phantomStatus?.state == PhantomProcessLimitState.REMOVED -> "Removed"
-                            phantomStatus?.state == PhantomProcessLimitState.ACTIVE -> "未解除"
+                            phantomStatus?.state == PhantomProcessLimitState.ACTIVE -> "Not removed"
                             phantomStatus?.state == PhantomProcessLimitState.UNSUPPORTED -> "Not required"
                             else -> "Pending check"
                         },
@@ -181,9 +181,9 @@ fun SystemDevSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Terminal,
-                        title = "无线 ADB 与日志抓取",
-                        subtitle = "mDNS 自动配对发现、免配对自动重连与 Logcat 实时工作台",
-                        value = "进入工作台",
+                        title = "Wireless ADB & Log Capture",
+                        subtitle = "mDNS pairing discovery, automatic reconnect, and live Logcat workspace",
+                        value = "Open workspace",
                         onClick = onOpenAdbLogcat,
                     )
                 }
@@ -191,7 +191,7 @@ fun SystemDevSettingsScreen(
 
             item {
                 Text(
-                    text = "太墟自定义迭代与共建",
+                    text = "TaiXu Custom Development",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -199,8 +199,8 @@ fun SystemDevSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Code,
-                        title = "自定义迭代（TaiXuDev）",
-                        subtitle = "在手机沙盒中调用 AI 开发太墟自身并云端构建 APK",
+                        title = "Custom Iteration (TaiXuDev)",
+                        subtitle = "Use AI in the phone sandbox to develop TaiXu itself and build APKs in the cloud",
                         onClick = onOpenCustomIteration,
                     )
                 }
@@ -208,7 +208,7 @@ fun SystemDevSettingsScreen(
 
             item {
                 Text(
-                    text = "开发者调试与控制台",
+                    text = "Developer Debugging & Console",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -216,8 +216,8 @@ fun SystemDevSettingsScreen(
                 SettingsGroup {
                     ToggleRow(
                         icon = RuntimeIconName.Bug,
-                        title = "开发者诊断模式",
-                        subtitle = "开启底层健康监控与调试控制台",
+                        title = "Developer Diagnostics Mode",
+                        subtitle = "Enable low-level health monitoring and the debug console",
                         checked = developer,
                         change = viewModel::setDeveloperMode,
                     )
@@ -225,19 +225,19 @@ fun SystemDevSettingsScreen(
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         SettingsRow(
                             icon = RuntimeIconName.Terminal,
-                            title = "开发者控制台",
-                            subtitle = "实时查看 PRoot 进程与命令追踪",
+                            title = "Developer Console",
+                            subtitle = "View PRoot processes and command traces in real time",
                             onClick = onOpenDeveloper,
                         )
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     ToggleRow(
                         icon = RuntimeIconName.Cpu,
-                        title = "QEMU x86_64 兼容模式",
+                        title = "QEMU x86_64 Compatibility Mode",
                         subtitle = if (qemuCompatibilityReady) {
-                            "允许明确请求的会话使用 QEMU x86_64 user-mode；ARM64 会话不受影响"
+                            "Allow sessions that explicitly request it to use QEMU x86_64 user mode; ARM64 sessions are unaffected"
                         } else {
-                            "未检测到 QEMU x86_64 兼容环境，请先在插件中心安装 qemu-x86-64-compat 插件"
+                            "QEMU x86_64 compatibility environment not detected. Install the qemu-x86-64-compat plugin from the Tool Center first."
                         },
                         checked = qemuCompatibilityEnabled && qemuCompatibilityReady,
                         enabled = qemuCompatibilityReady,
@@ -245,9 +245,9 @@ fun SystemDevSettingsScreen(
                     )
                     Text(
                         text = qemuCompatibilityMessage ?: if (qemuCompatibilityEnabled) {
-                            "已开启。兼容插件只提供 ARM64 QEMU user-mode 与最小 x86_64 RootFS。"
+                            "Enabled. The compatibility plugin provides ARM64 QEMU user mode and a minimal x86_64 RootFS only."
                         } else {
-                            "默认关闭，不会下载或使用 x86_64 工具。开启后仅对明确选择兼容环境的第三方项目生效，不会改变 APK 的 arm64-v8a 默认 ABI。"
+                            "Disabled by default; no x86_64 tools are downloaded or used. When enabled, it applies only to third-party projects that explicitly select compatibility mode and does not change the APK's default arm64-v8a ABI."
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = if (qemuCompatibilityReady) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
@@ -274,7 +274,7 @@ private fun BatteryOptimizationDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RuntimeIcon(RuntimeIconName.Shield, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("电池优化与后台运行", fontWeight = FontWeight.Bold)
+                Text("Battery Optimization & Background Execution", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -292,7 +292,7 @@ private fun BatteryOptimizationDialog(
                         },
                     ) {
                         Text(
-                            if (exempted) "Exempted电池优化" else "Not exempted · 后台可能被冻结",
+                            if (exempted) "Battery optimization exempted" else "Not exempted · background processes may be frozen",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = if (exempted) {
                                 MaterialTheme.colorScheme.onPrimaryContainer
@@ -304,8 +304,8 @@ private fun BatteryOptimizationDialog(
                     }
                 }
                 Text(
-                    "太墟在 Agent 执行期间会启动前台服务并持有 CPU 进程锁，但系统电池优化仍可能在息屏后" +
-                        "冻结进程，表现为 Agent 推理或命令执行中途停住。建议开启以下两项：",
+                    "TaiXu starts a foreground service and holds a CPU wake lock while the Agent runs, but system battery optimization may still" +
+                        "freeze processes after the screen turns off, causing Agent inference or commands to stall. We recommend enabling the following two options:",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -319,13 +319,13 @@ private fun BatteryOptimizationDialog(
                                 ),
                             )
                         }.onFailure {
-                            Toast.makeText(context, "无法打开系统设置，请手动进入设置授予电池优化豁免", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Could not open system settings. Manually grant the battery optimization exemption in Settings.", Toast.LENGTH_LONG).show()
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                 ) {
-                    Text("申请豁免电池优化")
+                    Text("Request battery optimization exemption")
                 }
                 OutlinedButton(
                     onClick = {
@@ -337,24 +337,24 @@ private fun BatteryOptimizationDialog(
                                 ),
                             )
                         }.onFailure {
-                            Toast.makeText(context, "无法打开应用详情，请手动进入系统设置", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Could not open app details. Open them manually in system Settings.", Toast.LENGTH_LONG).show()
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                 ) {
-                    Text("打开应用详情（自启动/后台运行）")
+                    Text("Open app details (autostart/background execution)")
                 }
                 Text(
-                    "提示：小米/华为/OPPO 等厂商系统还需在应用详情中手动允许「自启动」与「后台运行」，" +
-                        "否则厂商省电策略仍会终止进程。",
+                    "Note: On Xiaomi, Huawei, OPPO, and other vendor ROMs, you may also need to allow Autostart and Background execution manually in app details," +
+                        "otherwise vendor power-saving policies may still terminate processes.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("关闭") }
+            TextButton(onClick = onDismiss) { Text("Close") }
         },
     )
 }
@@ -374,11 +374,11 @@ private fun PhantomProcessLimitDialog(
 
     val state = status?.state
     val statusText = when (state) {
-        PhantomProcessLimitState.REMOVED -> "Removed限制"
-        PhantomProcessLimitState.ACTIVE -> "限制仍生效"
-        PhantomProcessLimitState.UNSUPPORTED -> "当前系统Not required"
-        PhantomProcessLimitState.UNAVAILABLE -> "暂时无法检测"
-        null -> if (busy) "正在检测" else "尚未检测"
+        PhantomProcessLimitState.REMOVED -> "Limit removed"
+        PhantomProcessLimitState.ACTIVE -> "Limit still active"
+        PhantomProcessLimitState.UNSUPPORTED -> "Not required on this system"
+        PhantomProcessLimitState.UNAVAILABLE -> "Temporarily unavailable"
+        null -> if (busy) "Checking" else "Not checked yet"
     }
     val healthy = state == PhantomProcessLimitState.REMOVED || state == PhantomProcessLimitState.UNSUPPORTED
     val statusContainer = if (healthy) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
@@ -416,7 +416,7 @@ private fun PhantomProcessLimitDialog(
                 }
 
                 Text(
-                    status?.details ?: "读取系统实际配置，确认幽灵进程限制是否仍在生效。",
+                    status?.details ?: "Read the actual system configuration to check whether the phantom-process limit is still active.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -432,11 +432,11 @@ private fun PhantomProcessLimitDialog(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Text(
-                                "最大幽灵进程数：${status.maxPhantomProcesses ?: "系统默认（通常为 32）"}",
+                                "Maximum phantom processes: ${status.maxPhantomProcesses ?: "system default (usually 32)"}",
                                 style = MaterialTheme.typography.labelSmall,
                             )
                             Text(
-                                "幽灵进程监控：${when (status.monitoringEnabled) { true -> "开启"; false -> "关闭"; null -> "系统默认（开启）" }}",
+                                "Phantom-process monitoring: ${when (status.monitoringEnabled) { true -> "Enabled"; false -> "Disabled"; null -> "system default (enabled)" }}",
                                 style = MaterialTheme.typography.labelSmall,
                             )
                         }
@@ -444,7 +444,7 @@ private fun PhantomProcessLimitDialog(
                 }
 
                 Text(
-                    "Android 12+ 会监控应用派生的子进程，超过系统上限后可能终止 PRoot、编译器或 Agent 任务。这里解除的是子进程限制，不是 Java/Kotlin 线程数。",
+                    "Android 12+ monitors child processes spawned by apps. Exceeding the system limit may terminate PRoot, compilers, or Agent tasks. This changes the child-process limit, not the number of Java/Kotlin threads.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -458,14 +458,14 @@ private fun PhantomProcessLimitDialog(
                     if (busy) {
                         CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
-                        Text("正在处理")
+                        Text("Working")
                     } else {
-                        Text("使用 Shizuku / Root 一键解除")
+                        Text("Remove limit with Shizuku / Root")
                     }
                 }
 
                 Text(
-                    "也可以在已连接手机的电脑终端执行：",
+                    "You can also run this command in a computer terminal connected to the phone:",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -483,15 +483,15 @@ private fun PhantomProcessLimitDialog(
                         OutlinedButton(
                             onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                clipboard?.setPrimaryClip(ClipData.newPlainText("Android 12 child-process limits命令", adbCommand))
-                                Toast.makeText(context, "命令已复制", Toast.LENGTH_SHORT).show()
+                                clipboard?.setPrimaryClip(ClipData.newPlainText("Android 12 child-process limit command", adbCommand))
+                                Toast.makeText(context, "Command copied", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
                         ) {
                             RuntimeIcon(RuntimeIconName.Copy, Modifier.size(15.dp))
                             Spacer(Modifier.width(7.dp))
-                            Text("复制命令")
+                            Text("Copy command")
                         }
                     }
                 }
@@ -510,7 +510,7 @@ private fun PhantomProcessLimitDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("关闭") }
+            TextButton(onClick = onDismiss) { Text("Close") }
         },
     )
 }
