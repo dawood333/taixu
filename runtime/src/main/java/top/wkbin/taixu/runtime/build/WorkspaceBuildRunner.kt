@@ -411,7 +411,7 @@ class WorkspaceBuildRunner(
                     lastStepTime = now
                 }
 
-                heartbeatStep = "正在Running Gradle compilation ($androidTask)..."
+                heartbeatStep = "Running Gradle compilation ($androidTask)..."
                 heartbeatProgress = 0.35f
                 val buildCmd = if (androidScriptPath.endsWith("taixu-build.sh")) {
                     "/bin/sh $androidScriptPath android \"${project.linuxPath}\" $androidTask"
