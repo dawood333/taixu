@@ -25,7 +25,7 @@ class AndroidAppManager(
     suspend fun synchronize(): Result<AppInventorySyncResult> = withContext(Dispatchers.IO) {
         runCatching {
             val localApps = installedApplications()
-            check(localApps.isNotEmpty()) { "未读取到应用清单，已保留现有数据库数据。" }
+            check(localApps.isNotEmpty()) { "No app inventory was read. Existing database data has been preserved." }
             val privilege = privilegeManager.getPrivilegeInfo()
             val privilegedSections = if (privilege.mode != ExecutionMode.PROOT && privilege.modeActive) {
                 privilegeManager.executeShellCommand(INVENTORY_COMMAND, "android-app-inventory")
@@ -72,7 +72,7 @@ class AndroidAppManager(
     suspend fun requireInitialized(packageName: String): AndroidAppEntity {
         check(repository.count() > 0) { INITIALIZATION_REQUIRED_MESSAGE }
         return requireNotNull(repository.findByPackageName(packageName)) {
-            "应用 $packageName 不在已同步的应用数据库中；请到设置 → 应用管理执行同步后重试。"
+            "App $packageName is not in the synced app database. Go to Settings → App Management, sync, and try again."
         }
     }
 
@@ -118,7 +118,7 @@ class AndroidAppManager(
         .toSet()
 
     private companion object {
-        const val INITIALIZATION_REQUIRED_MESSAGE = "应用数据库尚未初始化；请先到设置 → 应用管理完成初始化和同步。"
+        const val INITIALIZATION_REQUIRED_MESSAGE = "The app database has not been initialized. Go to Settings → App Management to initialize and sync first."
         const val DISABLED = "DISABLED"
         const val SUSPENDED = "SUSPENDED"
         const val NETWORK = "NETWORK"
