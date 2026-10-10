@@ -670,7 +670,7 @@ private fun ServiceLogsCard(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "暂无服务日志。点击【Start】网关后将在此实时输出控制台信息与Error报错。",
+                        text = "No service logs yet. Start the gateway to stream console output and errors here.",
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
@@ -882,11 +882,11 @@ private fun AutoStartCard(
         ) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "随Apply自Start",
+                    text = "Start automatically with the app",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = "Linux 环境就绪后自动Start $toolName Gateway service",
+                    text = "Start the $toolName gateway automatically when the Linux environment is ready",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -943,7 +943,7 @@ private fun AccessLinkCard(
                 shape = RoundedCornerShape(6.dp),
             ) {
                 Text(
-                    text = if (running) "Bound to 0.0.0.0" else "服务未Start",
+                    text = if (running) "Bound to 0.0.0.0" else "Service not started",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold),
                     color = if (running) successStatusColor() else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -954,9 +954,9 @@ private fun AccessLinkCard(
         Spacer(Modifier.height(4.dp))
         Text(
             text = if (running) {
-                "Gateway service已绑定全网卡 (0.0.0.0)。同局域网设备打开【LAN IP 链接】即可直接Actions，无需 localhost 映射。"
+                "The gateway is bound to all interfaces (0.0.0.0). Devices on the same LAN can use the LAN IP link directly; no localhost forwarding is required."
             } else {
-                "服务尚未Start，请先在【Gateway service】卡片中点击Start，Start成功后将在此展示可Access URL。Token 可提前生成，Start时自动注入。"
+                "The service is not running. Start it from the Gateway Service card to display an accessible URL here. A token can be generated in advance and will be injected at startup."
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1001,7 +1001,7 @@ private fun AccessLinkCard(
         if (selectedMode == "LAN" && !state.deviceLanIp.isNullOrBlank()) {
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "设备LAN IP：${state.deviceLanIp}",
+                text = "Device LAN IP: ${state.deviceLanIp}",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 10.sp,
@@ -1040,7 +1040,7 @@ private fun AccessLinkCard(
                         modifier = Modifier
                             .minimumInteractiveComponentSize()
                             .size(32.dp),
-                        contentDescription = "复制Access URL",
+                        contentDescription = "Copy access URL",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Copy,
@@ -1057,7 +1057,7 @@ private fun AccessLinkCard(
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
             ) {
                 Text(
-                    text = "Start网关后此处将展示可Access URL",
+                    text = "An accessible URL will appear here after the gateway starts",
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
@@ -1125,7 +1125,7 @@ private fun ToolMetadataCard(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             InfoRow(label = "Tool ID", value = tool.id)
             InfoRow(
-                label = "Start类型",
+                label = "Launch type",
                 value = when (manifest.launchType) {
                     "web" -> "Web Gateway service"
                     "pty" -> "Interactive terminal"
@@ -1138,7 +1138,7 @@ private fun ToolMetadataCard(
             InfoRow(label = "Installation method", value = manifest.installMethod, isCode = false)
 
             manifest.launchCommand?.let {
-                CodeBlockRow(label = "Start命令", code = it)
+                CodeBlockRow(label = "Start command", code = it)
             }
             manifest.verifyCommand?.let {
                 CodeBlockRow(label = "Verification command", code = it)
@@ -1304,7 +1304,7 @@ private fun ToolActionsCard(
                 }
             } else {
                 Text(
-                    text = "工具尚Not installed，请先在工具中心完成安装",
+                    text = "Tool is not installed. Install it from the Tool Center first.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1340,7 +1340,7 @@ internal fun UninstallToolConfirmDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "• 将移除该工具及其在沙箱内的Data directory",
+                    text = "• This removes the tool and its data directory from the sandbox",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1361,14 +1361,14 @@ internal fun UninstallToolConfirmDialog(
                 ),
             ) {
                 Text(
-                    text = if (countdown > 0) "确认卸载 (${countdown}s)" else "确认卸载",
+                    text = if (countdown > 0) "Confirm uninstall (${countdown}s)" else "Confirm uninstall",
                     color = if (countdown == 0) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onError.copy(alpha = 0.6f),
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "取消")
+                Text(text = "Cancel")
             }
         },
     )
