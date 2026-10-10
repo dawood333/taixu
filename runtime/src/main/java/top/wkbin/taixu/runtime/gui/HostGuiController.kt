@@ -29,17 +29,17 @@ data class ScreenObservation(
     val rawXml: String = "",
 ) {
     fun toAgentSummary(maxNodes: Int = 80): String = buildString {
-        appendLine("【当前前台应用】$packageName (Activity: $activityName)")
+        appendLine("[Current foreground app] $packageName (Activity: $activityName)")
         if (nodes.isEmpty()) {
-            appendLine("【屏幕控件】当前界面未检测到交互节点或正在加载动画中")
+            appendLine("[Screen controls] No interactive nodes detected; the screen may still be loading or animating.")
         } else {
             val shown = selectForDisplay(maxNodes)
-            appendLine("【交互与可视节点】(共 ${nodes.size} 个，展示 ${shown.size} 个；id 省略包名前缀，@x,y 为控件中心坐标可直接用于点击)")
+            appendLine("[Interactive and visible nodes] (${nodes.size} total, showing ${shown.size}; package prefixes are omitted from IDs, and @x,y gives the control center for tapping)")
             shown.forEach { node ->
                 appendLine("- ${node.toCompactString()}")
             }
             if (shown.size < nodes.size) {
-                appendLine("[其余 ${nodes.size - shown.size} 个节点已省略（可交互控件优先保留）...]")
+                appendLine("[${nodes.size - shown.size} additional nodes omitted; interactive controls are prioritized...]")
             }
         }
     }
@@ -74,7 +74,7 @@ class HostGuiController(
      * 感知屏幕状态：获取当前前台应用、Activity 及 UI 控件树
      */
     suspend fun observeScreen(onlyInteractive: Boolean = true): Result<ScreenObservation> = withContext(Dispatchers.IO) {
-        hud.beginScreenOp("感知屏幕…")
+        hud.beginScreenOp("Inspecting screen…")
         try {
             runCatching {
                 val foreground = getForegroundInfo()
@@ -149,13 +149,13 @@ class HostGuiController(
     }
 
     private fun actionHudLabel(action: GuiPrimitive): String = when (action) {
-        is GuiPrimitive.Tap -> "点击中…"
-        is GuiPrimitive.DoubleTap -> "双击中…"
-        is GuiPrimitive.LongPress -> "长按中…"
-        is GuiPrimitive.Swipe -> "滑动中…"
-        is GuiPrimitive.Scroll -> "滚动中…"
-        is GuiPrimitive.Key -> "按键 ${action.key.name.lowercase()}…"
-        is GuiPrimitive.PasteText -> "粘贴/输入中…"
+        is GuiPrimitive.Tap -> "Tapping…"
+        is GuiPrimitive.DoubleTap -> "Double-tapping…"
+        is GuiPrimitive.LongPress -> "Long-pressing…"
+        is GuiPrimitive.Swipe -> "Swiping…"
+        is GuiPrimitive.Scroll -> "Scrolling…"
+        is GuiPrimitive.Key -> "Pressing ${action.key.name.lowercase()}…"
+        is GuiPrimitive.PasteText -> "Pasting/typing…"
     }
 
     /** 点击屏幕坐标 (x, y) — 自动降级：无障碍手势 → cmd input → bin input */
@@ -184,7 +184,7 @@ class HostGuiController(
     /** 发送系统导航或功能按键 */
     suspend fun sendKey(keyName: String): Result<String> {
         val key = GuiKey.parse(keyName)
-            ?: return Result.failure(IllegalArgumentException("未知按键：$keyName（支持 back/home/recents/enter/delete/paste/power）"))
+            ?: return Result.failure(IllegalArgumentException("Unknown key: $keyName (supported: back/home/recents/enter/delete/paste/power)"))
         return execute(GuiPrimitive.Key(key))
     }
 
@@ -198,13 +198,13 @@ class HostGuiController(
             if (launchIntent != null) {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(launchIntent)
-                "已启动应用：$packageName"
+                "Launched app: $packageName"
             } else {
                 // 回退 monkey 唤醒
                 val res = privilegeManager.executeShellCommand(
                     "/system/bin/monkey -p ${ShellQuote.of(packageName)} -c android.intent.category.LAUNCHER 1"
                 )
-                if (res.success) "已通过 shell 唤起应用：$packageName" else error("无法启动应用 $packageName：${res.stderr}")
+                if (res.success) "Launched app via shell: $packageName" else error("Unable to launch app $packageName: ${res.stderr}")
             }
         }
     }
@@ -215,7 +215,7 @@ class HostGuiController(
     suspend fun captureScreenshot(targetPath: String): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val res = privilegeManager.executeShellCommand("/system/bin/screencap -p ${ShellQuote.of(targetPath)}")
-            if (res.success) "屏幕截图已保存至 $targetPath" else error(res.stderr.ifBlank { "截图失败" })
+            if (res.success) "Screenshot saved to $targetPath" else error(res.stderr.ifBlank { "Screenshot failed" })
         }
     }
 
@@ -231,7 +231,7 @@ class HostGuiController(
         component?.takeIf { it.isNotBlank() }?.let { intent.component = parseComponent(it) }
         putExtras(intent, extras)
         context.sendBroadcast(intent)
-        "已发送广播：$action" + (packageName?.let { " → $it" } ?: "")
+        "Broadcast sent: $action" + (packageName?.let { " → $it" } ?: "")
     }
 
     fun startActivityIntent(
@@ -242,7 +242,7 @@ class HostGuiController(
         extras: Map<String, String> = emptyMap(),
     ): Result<String> = runCatching {
         require(!component.isNullOrBlank() || !action.isNullOrBlank() || !dataUri.isNullOrBlank()) {
-            "start_activity 至少需要 component、action 或 dataUri 之一"
+            "start_activity requires at least one of component, action, or dataUri"
         }
         val intent = Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         component?.takeIf { it.isNotBlank() }?.let { intent.component = parseComponent(it) }
@@ -252,20 +252,20 @@ class HostGuiController(
         }
         putExtras(intent, extras)
         context.startActivity(intent)
-        "已启动 Activity：" + listOfNotNull(component, action, dataUri).joinToString(" ")
+        "Activity started: " + listOfNotNull(component, action, dataUri).joinToString(" ")
     }
 
     suspend fun forceStopApp(packageName: String): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val res = privilegeManager.executeShellCommand("/system/bin/am force-stop ${ShellQuote.of(packageName)}")
-            if (res.success) "已强制停止：$packageName" else error(res.stderr.ifBlank { "force-stop 失败" })
+            if (res.success) "Force-stopped: $packageName" else error(res.stderr.ifBlank { "force-stop failed" })
         }
     }
 
     suspend fun clearAppData(packageName: String): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val res = privilegeManager.executeShellCommand("/system/bin/pm clear ${ShellQuote.of(packageName)}")
-            if (res.success) "已清除数据：$packageName\n${res.stdout}".trim() else error(res.stderr.ifBlank { "pm clear 失败" })
+            if (res.success) "Cleared data for $packageName\n${res.stdout}".trim() else error(res.stderr.ifBlank { "pm clear failed" })
         }
     }
 
@@ -275,12 +275,12 @@ class HostGuiController(
             while (System.currentTimeMillis() < deadline) {
                 val (pkg, activity) = getForegroundInfo()
                 if (pkg.equals(packageName, ignoreCase = true)) {
-                    return@runCatching "前台已就绪：$pkg/$activity"
+                    return@runCatching "Foreground ready: $pkg/$activity"
                 }
                 delay(400)
             }
             val (pkg, activity) = getForegroundInfo()
-            error("等待前台超时：期望 $packageName，当前 $pkg/$activity")
+            error("Timed out waiting for foreground app: expected $packageName, current $pkg/$activity")
         }
     }
 
@@ -288,7 +288,7 @@ class HostGuiController(
         Handler(Looper.getMainLooper()).post {
             Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
         }
-        "已弹出 Toast：$text"
+        "Toast shown: $text"
     }
 
     @Suppress("DEPRECATION")
@@ -305,7 +305,7 @@ class HostGuiController(
                 vibrator.vibrate(ms)
             }
         }
-        "已震动 ${ms}ms"
+        "Vibrated for ${ms}ms"
     }
 
     fun clipboardSet(text: String): Result<String> = runCatching {
@@ -322,10 +322,10 @@ class HostGuiController(
             }
         }
         if (!latch.await(3, TimeUnit.SECONDS)) {
-            error("写入剪贴板超时")
+            error("Clipboard write timed out")
         }
         error?.let { throw it }
-        "已写入剪贴板（${text.length} 字符）"
+        "Clipboard updated (${text.length} characters)"
     }
 
     fun clipboardGet(): Result<String> = runCatching {
@@ -369,7 +369,7 @@ class HostGuiController(
             val fullClass = if (cls.startsWith('.')) "$pkg$cls" else cls
             return ComponentName(pkg, fullClass)
         }
-        error("无法解析组件：$value")
+        error("Unable to parse component: $value")
     }
 
     private suspend fun getForegroundInfo(): Pair<String, String> {
