@@ -79,7 +79,7 @@ enum class ProjectTemplate {
 }
 
 /**
- * APK reverse engineering模板的安装包来源：
+ * APK reverse-engineering template的安装包来源：
  * - [FromInstalledApp]：从本机已安装应用提取安装包（applicationInfo.sourceDir）；
  * - [FromFileUri]：通过系统文件管理器（SAF OpenDocument）选择 .apk 文件。
  */
@@ -787,7 +787,7 @@ class WorkspaceManager(
         name: String,
         apkSource: ApkImportSource?,
     ): ImportedApk {
-        requireNotNull(apkSource) { "APK reverse engineering模板必须选择安装包来源（已安装应用或 APK 文件）" }
+        requireNotNull(apkSource) { "APK reverse engineering模板必须选择安装包来源（installed app or APK file）" }
         projectDir.mkdirs()
 
         // 1. 解析来源并拷贝安装包到工程目录
@@ -958,7 +958,7 @@ class WorkspaceManager(
 
             | 壳级别 | 特征 | 脱壳方案 |
             | :--- | :--- | :--- |
-            | **一代壳**（整体 dex 加密） | jadx 只能看到 stub | **General脱壳**：FRIDA-DEXDump（`frida -U -f 包名 -l frida-dexdump.js`）、BlackDex / FullDump（免 root 一键）、MT 管理器脱壳插件 |
+            | **一代壳**（整体 dex 加密） | jadx 只能看到 stub | **General deprotection**：FRIDA-DEXDump（`frida -U -f 包名 -l frida-dexdump.js`）、BlackDex / FullDump（免 root 一键）、MT 管理器脱壳插件 |
             | **二代壳**（方法抽取 / 函数抽取） | 方法体运行时回填 | **主动调用脱壳**：FART / Youpk / 反射大师（定制 ROM 或 Xposed 级框架触发每个方法回填后再 dump） |
             | **VMP 壳**（指令虚拟化，如娜迦 chaosvmp） | 代码被虚拟化保护 | 极难整体脱，通常只能**动态调试关键逻辑**（Frida hook / Unidbg 模拟执行） |
 
