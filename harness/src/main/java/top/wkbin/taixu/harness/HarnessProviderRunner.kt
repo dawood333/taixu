@@ -39,7 +39,7 @@ internal inline fun <T> withinStreamHandling(block: () -> T): T = try {
 } catch (cancellation: CancellationException) {
     throw cancellation
 } catch (throwable: Throwable) {
-    throw StreamChunkHandlingException(throwable.message ?: "流式增量处理失败", throwable)
+    throw StreamChunkHandlingException(throwable.message ?: "Streaming delta processing failed", throwable)
 }
 
 /** 模型能力选择、流式请求重试及助手回复持久化；不持有会话调度状态。 */
@@ -143,13 +143,13 @@ class HarnessProviderRunner(
             agentEventLogger.log(
                 sessId,
                 "LargeContextRetryPolicy",
-                "估算输入约 $estimatedRequestTokens tokens，大上下文网络重试限制为 $maxNetworkRetries 次",
+                "Estimated input: about $estimatedRequestTokens tokens; network retries are limited to $maxNetworkRetries for large contexts",
             )
         }
         var requestAttempt = 0
         while (streamed == null) {
             try {
-                stateMirrors.setStatus(sessId, "等待模型首个响应（${netRetry + 1}/$maxAttempts）")
+                stateMirrors.setStatus(sessId, "Waiting for the model's first response (${netRetry + 1}/$maxAttempts)")
                 operationCoordinator.providerIntent(
                     operationId = operationId,
                     effectId = assistantId,
@@ -179,16 +179,16 @@ class HarnessProviderRunner(
                             stateMirrors.setStatus(
                                 sessId,
                                 if (progress.name == "write") {
-                                    "正在生成 write · +${progress.addedLines}"
+                                    "Generating write · +${progress.addedLines} lines"
                                 } else {
-                                    "正在生成 edit · +${progress.addedLines} -${progress.deletedLines}"
+                                    "Generating edit · +${progress.addedLines} -${progress.deletedLines} lines"
                                 },
                             )
                         }
                     },
                 ) { chunk ->
                     withinStreamHandling {
-                        stateMirrors.setStatus(sessId, "回复中")
+                        stateMirrors.setStatus(sessId, "Responding")
                         streamText.append(chunk)
                         streamText.publishIfDue(now(), ProviderClient.STREAM_PUBLISH_INTERVAL_MS)?.let {
                             messageProjector.streamText(sessId, assistantId, assistantAt, it)
@@ -207,7 +207,7 @@ class HarnessProviderRunner(
             } catch (cancellation: CancellationException) {
                 persistCancelledPartial(sessId, assistantId, assistantAt, streamText, streamReasoning, startedAt, operationId, round)
                 withContext(NonCancellable) {
-                    agentEventLogger.log(sessId, "Cancelled", "用户主动取消执行，保留已生成内容 ${streamText.length} 字符")
+                    agentEventLogger.log(sessId, "Cancelled", "Execution cancelled by user; preserved ${streamText.length} characters of generated content")
                 }
                 throw cancellation
             } catch (handling: StreamChunkHandlingException) {
@@ -216,7 +216,7 @@ class HarnessProviderRunner(
                 agentEventLogger.log(
                     sessId,
                     "StreamChunkHandling",
-                    "流式增量处理失败（本地异常，禁止网络重发）：${handling.message}",
+                    "Streaming delta processing failed（本地异常，禁止网络重发）：${handling.message}",
                     handling,
                 )
                 if (streamText.length > 0) {
@@ -234,7 +234,7 @@ class HarnessProviderRunner(
                     messageProjector.remove(sessId, assistantId)
                 }
                 return TurnProviderOutcome.Failed(
-                    "流式响应处理失败（本地异常，未自动重试）：${friendly(handling.cause ?: handling)}",
+                    "Streaming response processing failed (local error; not retried automatically): ${friendly(handling.cause ?: handling)}",
                 )
             } catch (rateLimit: LlmRateLimitException) {
                 currentCoroutineContext().ensureActive()
@@ -244,7 +244,7 @@ class HarnessProviderRunner(
                     // 移除空的流式气泡；错误通过 error state 展示，不写入消息历史，避免下一轮注入模型上下文
                     messageProjector.remove(sessId, assistantId)
                     val detail = rateLimit.message?.takeIf { it.isNotBlank() }?.let { "\n\n$it" }.orEmpty()
-                    return TurnProviderOutcome.Failed("模型服务商额度已耗尽，无法继续执行。请充值、切换可用模型或更新 API Key。$detail")
+                    return TurnProviderOutcome.Failed("Provider quota is exhausted. Add credit, switch to an available model, or update the API key. $detail")
                 }
                 netRetry++
                 if (netRetry > maxNetworkRetries) {
@@ -254,12 +254,12 @@ class HarnessProviderRunner(
                 metrics.streamRetry()
                 stateMirrors.setThinkingLive(sessId, false)
                 val waitSeconds = rateLimit.retryAfterSeconds ?: (netRetry * RETRY_BACKOFF_SEC).coerceAtMost(60L)
-                stateMirrors.setStatus(sessId, "请求受限，${waitSeconds} 秒后自动重试（$netRetry/$maxNetworkRetries）")
-                agentEventLogger.log(sessId, "RateLimitRetry", "限流退避 ${waitSeconds}s，重试 $netRetry/$maxNetworkRetries", rateLimit)
+                stateMirrors.setStatus(sessId, "Rate limited; retrying automatically in ${waitSeconds}s ($netRetry/$maxNetworkRetries)")
+                agentEventLogger.log(sessId, "RateLimitRetry", "Rate-limit backoff ${waitSeconds}s; retry $netRetry/$maxNetworkRetries", rateLimit)
                 resetStreamBaseline()
                 for (remaining in waitSeconds downTo 1L) {
                     currentCoroutineContext().ensureActive()
-                    stateMirrors.setStatus(sessId, "请求受限，${remaining} 秒后自动重试（$netRetry/$maxNetworkRetries）")
+                    stateMirrors.setStatus(sessId, "Rate limited; retrying automatically in ${remaining}s ($netRetry/$maxNetworkRetries)")
                     delay(1000L.milliseconds)
                 }
             } catch (invalidOutputTokens: LlmInvalidOutputTokensException) {
@@ -272,7 +272,7 @@ class HarnessProviderRunner(
                 agentEventLogger.log(
                     sessId,
                     "OutputBudgetReduction",
-                    "Provider 拒绝输出预算，严格降额至 $reduced 后重试",
+                    "Provider rejected the output budget; retrying with a reduced budget of $reduced",
                     invalidOutputTokens,
                 )
                 resetStreamBaseline()
@@ -284,7 +284,7 @@ class HarnessProviderRunner(
                 // 永远到不了 overflow -> compact -> replay 的自愈闭环。
                 if (!overflowRecovered) {
                     overflowRecovered = true
-                    stateMirrors.setStatus(sessId, "上下文超限，正在紧急压缩历史后重试")
+                    stateMirrors.setStatus(sessId, "Context limit exceeded; compacting history urgently before retrying")
                     agentEventLogger.log(
                         sessId,
                         "ContextOverflowRecovery",
@@ -369,7 +369,7 @@ class HarnessProviderRunner(
                 if (!currentCoroutineContext().isActive) {
                     persistCancelledPartial(sessId, assistantId, assistantAt, streamText, streamReasoning, startedAt, operationId, round)
                     withContext(NonCancellable) {
-                        agentEventLogger.log(sessId, "Cancelled", "用户主动取消执行，保留已生成内容 ${streamText.length} 字符")
+                        agentEventLogger.log(sessId, "Cancelled", "Execution cancelled by user; preserved ${streamText.length} characters of generated content")
                     }
                 }
                 currentCoroutineContext().ensureActive()
