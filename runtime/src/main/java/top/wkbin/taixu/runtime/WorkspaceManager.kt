@@ -880,7 +880,7 @@ class WorkspaceManager(
         }
     }
 
-    /** 生成逆向工作流指引 README，衔接太墟内置的 jadx / apktool / 逆向 MCP 能力。 */
+    /** Generate the reverse-engineering README linking to TaiXu's built-in jadx, apktool, and reverse-engineering MCP capabilities. */
     private fun writeReverseReadme(
         projectDir: File,
         name: String,
@@ -891,78 +891,78 @@ class WorkspaceManager(
         val entryCount = unpackedDir.walkTopDown().count { it.isFile }
         File(projectDir, "REVERSE.md").writeText(
             """
-            # $name · APK reverse engineering工程
+            # $name · APK Reverse-Engineering Project
 
-            > 来源：$sourceLabel
-            > 导入时间：${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}
+            > Source: $sourceLabel
+            > Imported: ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}
 
-            ## 工程结构
+            ## Project Structure
 
-            | 路径 | 说明 |
+            | Path | Description |
             | :--- | :--- |
-            | `$apkFileName` | 原始安装包（未改动） |
-            | `unpacked/` | 第一层 ZIP 解包产物（$entryCount 个文件）：`classes.dex`、`resources.arsc`、`AndroidManifest.xml`（二进制 AXML）、`res/`、`assets/`、`lib/` 等 |
-            | `apk-info.properties` | 来源与元数据 |
+            | `$apkFileName` | Original APK (unmodified) |
+            | `unpacked/` | First-level ZIP extraction ($entryCount files): `classes.dex`, `resources.arsc`, `AndroidManifest.xml` (binary AXML), `res/`, `assets/`, `lib/`, etc. |
+            | `apk-info.properties` | Source and metadata |
 
-            ## 下一步：在太墟终端 / Agent 中继续深挖
+            ## Next Steps: Continue Analysis in the TaiXu Terminal or Agent
 
-            沙箱内已内置逆向工具链（Android & 移动全栈开发套件 或 apktool 套件装配后可用）：
+            The sandbox includes a reverse-engineering toolchain (available after installing the Android & Mobile Development bundle or the apktool bundle):
 
             ```bash
-            # 1) DEX -> Java 源码（推荐，可读性最好）
+            # 1) DEX -> Java source (recommended for readability)
             jadx -d java-src "$apkFileName"
 
-            # 2) 完整解包资源 + Smali（可回编译）
+            # 2) Extract resources and Smali (rebuildable)
             apktool d "$apkFileName" -o apktool-out
-            #   回编译：apktool b apktool-out -o rebuilt.apk
+            #   Rebuild: apktool b apktool-out -o rebuilt.apk
 
-            # 3) 二进制清单解码（配合 apktool 产物）
-            #    aapt dump badging "$apkFileName"   # 包名 / 版本 / 权限
+            # 3) Decode the binary manifest (with apktool output)
+            #    aapt dump badging "$apkFileName"   # package / version / permissions
             #    aapt dump xmltree "$apkFileName" AndroidManifest.xml
             ```
 
-            Agent 对话中还可启用内置 **Android 逆向 MCP 服务**（`mcp_apktool`，在 MCP 设置中开启）：
+            You can also enable the built-in **Android reverse-engineering MCP service** (`mcp_apktool`) in MCP Settings:
             `decode_apk` / `analyze_manifest` / `extract_strings` / `search_smali` / `build_apk` / `sign_apk`。
 
-            ## 分析关注点
+            ## What to Inspect
 
-            - **AndroidManifest.xml**：四大组件导出状态、权限声明、Application 类
-            - **classes.dex**：核心业务逻辑（jadx 反编译后检索 URL / 密钥 / 加解密特征）
-            - **lib/**：native .so（可用 IDA / 玄星逆核 SOMCP 深度分析）
-            - **assets/** 与 **res/**：内置资源、配置文件、可能存在的加固壳特征
+            - **AndroidManifest.xml**: exported status of the four component types, permissions, and Application class
+            - **classes.dex**: core application logic (after decompiling with jadx, search for URLs, keys, and encryption/decryption patterns)
+            - **lib/**: native .so libraries (analyze with IDA or the Xuanxing reverse-engineering SOMCP)
+            - **assets/** and **res/**: bundled resources, configuration files, and possible app-protection indicators
 
-            > 提示：如果打开 `unpacked/AndroidManifest.xml` 是乱码，属正常现象（AXML 二进制格式），
-            > 用 `apktool d` 或 `aapt dump xmltree` 解码即可。
+            > Note: `unpacked/AndroidManifest.xml` may look like garbled text because AXML is a binary format.
+            > Decode it with `apktool d` or `aapt dump xmltree`.
 
-            ## 识别加固壳（jadx 打开看不到真实代码时）
+            ## Identifying App Protection (when jadx cannot show the real code)
 
-            若 `unpacked/classes.dex` 反编译后只有壳的 stub 加载器，说明 APK 被加固。看 `lib/` 下的 so 名最快定位厂商：
+            If decompiling `unpacked/classes.dex` shows only a stub loader, the APK is protected. The library names under `lib/` can help identify the vendor:
 
-            | 特征 so | 加固厂商 |
+            | Library indicators | Protection vendor |
             | :--- | :--- |
-            | `libjiagu.so` / `libjiagu_art.so` | **360 加固**（入口 `com.stub.StubApp`） |
-            | `libDexHelper.so` / `libSecShell.so` / `libsecexe.so` | **梆梆（SecNeo/Bangcle）**（入口 `com.secneo.apkwrapper.ApplicationWrapper`） |
-            | `libshellx-super*.so` / `libtup.so` / `libexec.so` | **腾讯乐固 / 御安全**（`com.tencent.StubShell`） |
-            | `libnesec.so` | **网易易盾**（`com.netease.nis.wrapper`） |
-            | `ijiami.ajm` / `libexecmain.so` / `assets/ijm_lib/` | **爱加密**（入口 `s.h.e.l.l.S`） |
-            | `libbaiduprotect.so` / `assets/baiduprotect*` | **百度加固** |
-            | `libzuma.so` / `assets/qihoo/` | **阿里聚安全** |
-            | `libddog.so` / `libchaosvmp.so` | **娜迦（Nagain，VMP 壳）** |
-            | `libx3g.so` | **顶像** |
-            | `libkwscmm.so` / `libkwsgmain.so` | **几维** |
-            | `libnqshield.so` / `libmobisec.so` / `libkiroro.so` | 网秦 / 阿里旧版 / Kiro 等 |
+            | `libjiagu.so` / `libjiagu_art.so` | **360 protection** (entry point `com.stub.StubApp`) |
+            | `libDexHelper.so` / `libSecShell.so` / `libsecexe.so` | **Bangcle (SecNeo)** (entry point `com.secneo.apkwrapper.ApplicationWrapper`) |
+            | `libshellx-super*.so` / `libtup.so` / `libexec.so` | **Tencent Legu / Yu Security** (`com.tencent.StubShell`) |
+            | `libnesec.so` | **NetEase Yidun** (`com.netease.nis.wrapper`) |
+            | `ijiami.ajm` / `libexecmain.so` / `assets/ijm_lib/` | **Ijiami** (entry point `s.h.e.l.l.S`) |
+            | `libbaiduprotect.so` / `assets/baiduprotect*` | **Baidu protection** |
+            | `libzuma.so` / `assets/qihoo/` | **Alibaba Juxian** |
+            | `libddog.so` / `libchaosvmp.so` | **Nagain (VMP protection)** |
+            | `libx3g.so` | **Dingxiang** |
+            | `libkwscmm.so` / `libkwsgmain.so` | **Jiwei** |
+            | `libnqshield.so` / `libmobisec.so` / `libkiroro.so` | NetQin, older Alibaba protection, Kiro, etc. |
 
-            辅助判据：`assets/` 下的特征文件（`ijiami.dat`、`bangcleplugin/`、`libjiagu*`、`appsealing*`），以及 AndroidManifest 入口 `android:name`。
+            Additional indicators include files under `assets/` (`ijiami.dat`, `bangcleplugin/`, `libjiagu*`, `appsealing*`) and the `android:name` entry in AndroidManifest.
 
-            ## 遇到加固壳：脱壳指引
+            ## Protection Removal Guidance
 
-            | 壳级别 | 特征 | 脱壳方案 |
+            | Protection type | Indicators | Suggested approach |
             | :--- | :--- | :--- |
-            | **一代壳**（整体 dex 加密） | jadx 只能看到 stub | **General deprotection**：FRIDA-DEXDump（`frida -U -f 包名 -l frida-dexdump.js`）、BlackDex / FullDump（免 root 一键）、MT 管理器脱壳插件 |
-            | **二代壳**（方法抽取 / 函数抽取） | 方法体运行时回填 | **主动调用脱壳**：FART / Youpk / 反射大师（定制 ROM 或 Xposed 级框架触发每个方法回填后再 dump） |
-            | **VMP 壳**（指令虚拟化，如娜迦 chaosvmp） | 代码被虚拟化保护 | 极难整体脱，通常只能**动态调试关键逻辑**（Frida hook / Unidbg 模拟执行） |
+            | **First-generation** (whole-DEX encryption) | jadx shows only a stub | **General deprotection**: FRIDA-DEXDump (`frida -U -f package.name -l frida-dexdump.js`), BlackDex / FullDump (one-tap, no root), or an MT Manager deprotection plugin |
+            | **Second-generation** (method/function extraction) | Method bodies are restored at runtime | **Invoke-based deprotection**: FART / Youpk / Reflection Master (use a custom ROM or Xposed-level framework to trigger each method before dumping) |
+            | **VMP protection** (instruction virtualization, e.g. Nagain chaosvmp) | Code is virtualized | Full removal is difficult; usually **debug key logic dynamically** with Frida hooks or Unidbg emulation |
 
-            脱壳后处理：dump 出的 `classesN.dex` 可能头部/校验被破坏 → 修复 dex header 后再 `jadx` 反编译；若要改逻辑，多数壳允许在原 APK 对应 smali/so 上 patch 后重打包。
+            After dumping, `classesN.dex` may have a damaged header or checksum. Repair the DEX header before decompiling with `jadx`. To modify behavior, many protected APKs can be patched in the corresponding smali or native libraries and repackaged.
             """.trimIndent() + "\n",
             Charsets.UTF_8,
         )
@@ -970,7 +970,7 @@ class WorkspaceManager(
 
     /**
      * 把工程内导入的 APK 同步导出到宿主公共下载目录（best-effort，供宿主侧 MT 管理器等外部工具直接读取；
-     * Android 11+ 需已授予"所有文件访问"权限，未授权时静默跳过，不影响工程创建）。
+     * Android 11+ requires “All files access” permission. If it is not granted, export is silently skipped and project creation is unaffected).
      */
     private fun exportApkToDownload(apkFileName: String, projectDir: File, projectName: String) {
         runCatching {
