@@ -75,16 +75,16 @@ import top.wkbin.taixu.core.model.ToolManifest
 import top.wkbin.taixu.feature.components.R
 
 /**
- * 太墟 · 插件配置详情页 (Tool Detail & Configuration Screen)
+ * 太墟 · 插件Configuration details页 (Tool Detail & Configuration Screen)
  *
  * 功能概览：
  * - 工具概览与状态
  * - 网关/服务管理（Web 类工具）
- * - 一键应用模型配置
- * - 自启动开关
- * - 生成带 Token 的访问链接
+ * - 一键ApplyModel configuration
+ * - 自Start开关
+ * - 生成带 Token 的Access URL
  * - 工具元信息面板
- * - 操作按钮（自检、终端、卸载）
+ * - Actions按钮（自检、终端、卸载）
  */
 @Composable
 fun ToolDetailScreen(
@@ -103,12 +103,12 @@ fun ToolDetailScreen(
     val tool = state.tool
     val manifest = state.manifest
 
-    // 加载中与「工具未找到」区分：首次数据未就绪时显示进度圈，超时仍未找到才判定为不存在
+    // 加载中与「Tool not found」区分：首次数据未就绪时显示进度圈，超时仍未找到才判定为不存在
     var hasLoadedOnce by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     LaunchedEffect(tool) {
         if (tool != null) hasLoadedOnce = true
     }
-    // 卸载工具属于破坏性操作，需二次确认
+    // Uninstall tool属于破坏性Actions，需二次确认
     var showUninstallConfirm by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
 
     if (showUninstallConfirm && tool != null) {
@@ -127,7 +127,7 @@ fun ToolDetailScreen(
         topBar = {
             RuntimeTopBar(
                 title = tool?.name ?: toolId,
-                statusText = "配置详情",
+                statusText = "Configuration details",
                 onBack = onBack,
             )
         },
@@ -143,10 +143,10 @@ fun ToolDetailScreen(
                     // 工具列表尚未加载完成：显示加载中而非「未找到」
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         CircularProgressIndicator(modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
-                        Text("正在加载工具信息…", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                        Text("Loading tool information…", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     }
                 } else {
-                    Text("工具未找到", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Tool not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             return@Scaffold
@@ -183,12 +183,12 @@ fun ToolDetailScreen(
                             )
                             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                 Text(
-                                    text = "工具安装/环境自检未通过",
+                                    text = "Tool installation/environment check failed",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.error,
                                 )
                                 Text(
-                                    text = state.error ?: "可呼叫太墟 Agent 在 PRoot 沙箱内自主排查与自愈",
+                                    text = state.error ?: "Ask the TaiXu Agent to diagnose and repair the issue inside the PRoot sandbox",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 2,
@@ -208,7 +208,7 @@ fun ToolDetailScreen(
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         ) {
-                            Text("呼叫自愈", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
+                            Text("Run AI repair", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
@@ -232,7 +232,7 @@ fun ToolDetailScreen(
                     onStop = viewModel::stopGateway,
                 )
 
-                // ── 2.5 服务实时控制台日志 ──
+                // ── 2.5 Live service console log ──
                 ServiceLogsCard(
                     logs = state.serviceLogs,
                     running = state.gatewayRunning,
@@ -240,12 +240,12 @@ fun ToolDetailScreen(
                     onCopy = { text ->
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                         clipboard?.setPrimaryClip(ClipData.newPlainText("service_logs", text))
-                        Toast.makeText(context, "控制台日志已复制", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Console log copied", Toast.LENGTH_SHORT).show()
                     },
                 )
             }
 
-            // ── 3. 模型配置（仅 AI 类工具：AI Agent / Coding Agent，非 AI 的纯开发工具不需要模型注入） ──
+            // ── 3. Model configuration（仅 AI 类工具：AI Agent / Coding Agent，非 AI 的纯开发工具不需要模型注入） ──
             if (tool.category == "AI_AGENT" || tool.category == "CODING_AGENT") {
                 ModelApplyCard(
                     toolName = tool.name,
@@ -256,7 +256,7 @@ fun ToolDetailScreen(
                 )
             }
 
-            // ── 4. 自启动配置 ──
+            // ── 4. 自Start配置 ──
             if (state.isWebService) {
                 AutoStartCard(
                     enabled = state.autoStartEnabled,
@@ -265,7 +265,7 @@ fun ToolDetailScreen(
                 )
             }
 
-            // ── 5. 带 Token 访问链接（仅 Web 类工具，支持局域网 IP / 0.0.0.0 / 127.0.0.1） ──
+            // ── 5. 带 Token Access URL（仅 Web 类工具，支持LAN IP / 0.0.0.0 / 127.0.0.1） ──
             if (state.isWebService) {
                 AccessLinkCard(
                     state = state,
@@ -275,7 +275,7 @@ fun ToolDetailScreen(
                     onCopy = { url ->
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                         clipboard?.setPrimaryClip(ClipData.newPlainText("tool_url", url))
-                        Toast.makeText(context, "链接已复制", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Link copied", Toast.LENGTH_SHORT).show()
                     },
                 )
             }
@@ -285,7 +285,7 @@ fun ToolDetailScreen(
                 ToolMetadataCard(tool = tool, manifest = manifest)
             }
 
-            // ── 7. 操作区 ──
+            // ── 7. Actions区 ──
             ToolActionsCard(
                 isInstalled = tool.state == ToolState.INSTALLED.name || tool.state == ToolState.UPDATE_AVAILABLE.name,
                 onLaunchTerminal = { onLaunchTerminal(toolId) },
@@ -420,9 +420,9 @@ private fun ToolOverviewCard(
                         Text(
                             text = "${tool.publisher} · ${
                                 when (tool.category) {
-                                    "CODING_AGENT" -> "编程智能体"
-                                    "AI_AGENT" -> "AI 智能体"
-                                    "DEVELOPER_TOOL" -> "开发加速包"
+                                    "CODING_AGENT" -> "Coding agent"
+                                    "AI_AGENT" -> "AI agent"
+                                    "DEVELOPER_TOOL" -> "Developer toolkit"
                                     else -> tool.category
                                 }
                             }",
@@ -458,12 +458,12 @@ private fun ToolOverviewCard(
 
             StatusBadge(
                 text = when {
-                    gatewayOperating -> "启动中"
-                    gatewayRunning -> "运行中"
-                    tool.state == ToolState.UPDATE_AVAILABLE.name -> "可更新"
-                    isInstalled -> "已就绪"
-                    tool.state == ToolState.FAILED.name -> "异常"
-                    else -> "未安装"
+                    gatewayOperating -> "Starting"
+                    gatewayRunning -> "Running"
+                    tool.state == ToolState.UPDATE_AVAILABLE.name -> "Update available"
+                    isInstalled -> "Ready"
+                    tool.state == ToolState.FAILED.name -> "Error"
+                    else -> "Not installed"
                 },
                 color = when {
                     gatewayOperating -> warningStatusColor()
@@ -511,7 +511,7 @@ private fun GatewayManagementCard(
                         tint = if (running) successStatusColor() else MaterialTheme.colorScheme.outline,
                     )
                     Text(
-                        text = "网关服务",
+                        text = "Gateway service",
                         style = MaterialTheme.typography.titleMedium,
                     )
                 }
@@ -525,9 +525,9 @@ private fun GatewayManagementCard(
                         else -> MaterialTheme.colorScheme.outline
                     }
                     val statusText = when {
-                        running -> "运行中"
-                        operating -> "启动中…"
-                        else -> "已停止"
+                        running -> "Running"
+                        operating -> "Starting…"
+                        else -> "Stopped"
                     }
                     Box(
                         modifier = Modifier
@@ -546,7 +546,7 @@ private fun GatewayManagementCard(
                     )
                     if (port != null) {
                         Text(
-                            text = "· 端口 $port",
+                            text = "· Port $port",
                             style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -564,7 +564,7 @@ private fun GatewayManagementCard(
                 ) {
                     RuntimeIcon(name = RuntimeIconName.Stop, modifier = Modifier.size(15.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("停止", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Stop", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Button(
@@ -574,14 +574,14 @@ private fun GatewayManagementCard(
                 ) {
                     RuntimeIcon(name = RuntimeIconName.Play, modifier = Modifier.size(15.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("启动", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Start", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
     }
 }
 
-/** 网关服务控制台实时日志卡片 */
+/** Gateway service控制台实时日志卡片 */
 @Composable
 private fun ServiceLogsCard(
     logs: List<String>,
@@ -614,7 +614,7 @@ private fun ServiceLogsCard(
                     tint = if (running) successStatusColor() else MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = "服务实时控制台日志",
+                    text = "Live service console log",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -629,7 +629,7 @@ private fun ServiceLogsCard(
                         modifier = Modifier
                             .minimumInteractiveComponentSize()
                             .size(30.dp),
-                        contentDescription = "复制服务日志",
+                        contentDescription = "Copy service log",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Copy,
@@ -642,7 +642,7 @@ private fun ServiceLogsCard(
                         modifier = Modifier
                             .minimumInteractiveComponentSize()
                             .size(30.dp),
-                        contentDescription = "清空服务日志",
+                        contentDescription = "Clear service log",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Trash,
@@ -670,7 +670,7 @@ private fun ServiceLogsCard(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "暂无服务日志。点击【启动】网关后将在此实时输出控制台信息与异常报错。",
+                        text = "暂无服务日志。点击【Start】网关后将在此实时输出控制台信息与Error报错。",
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
@@ -711,7 +711,7 @@ private fun ServiceLogsCard(
     }
 }
 
-/** 3. 一键应用模型配置 */
+/** 3. 一键ApplyModel configuration */
 @Composable
 private fun ModelApplyCard(
     toolName: String,
@@ -736,7 +736,7 @@ private fun ModelApplyCard(
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = "模型配置",
+                    text = "Model configuration",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -745,7 +745,7 @@ private fun ModelApplyCard(
                 shape = RoundedCornerShape(6.dp),
             ) {
                 Text(
-                    text = "AI 插件",
+                    text = "AI plugin",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -754,14 +754,14 @@ private fun ModelApplyCard(
         }
         Spacer(Modifier.height(4.dp))
         Text(
-            text = "一键将已配置的 AI 模型（API Key、Base URL 与 Model）注入至 $toolName，插件重启后生效。",
+            text = "Inject the configured AI model (API key, base URL, and model) into $toolName. Changes take effect after restarting the plugin.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         if (models.isEmpty()) {
             Spacer(Modifier.height(8.dp))
-            NoticeBanner(text = "尚未配置任何模型档案，可前往【设置 → 模型档案管理】添加 Claude、OpenAI 或 DeepSeek 模型")
+            NoticeBanner(text = "No model profiles configured. Go to Settings → Model Profiles to add Claude, OpenAI, or DeepSeek.")
         } else {
             Spacer(Modifier.height(10.dp))
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -809,7 +809,7 @@ private fun ModelApplyCard(
                                             shape = RoundedCornerShape(4.dp),
                                         ) {
                                             Text(
-                                                text = "当前活跃",
+                                                text = "Active",
                                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                                 color = MaterialTheme.colorScheme.primary,
                                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
@@ -822,7 +822,7 @@ private fun ModelApplyCard(
                                             shape = RoundedCornerShape(4.dp),
                                         ) {
                                             Text(
-                                                text = "已应用",
+                                                text = "Applied",
                                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                                 color = successStatusColor(),
                                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
@@ -831,7 +831,7 @@ private fun ModelApplyCard(
                                     }
                                 }
                                 Text(
-                                    text = "${model.provider} · ${model.model.ifBlank { "默认模型" }}",
+                                    text = "${model.provider} · ${model.model.ifBlank { "Default model" }}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.outline,
                                     maxLines = 1,
@@ -848,7 +848,7 @@ private fun ModelApplyCard(
                                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                                 ) {
                                     Text(
-                                        "应用",
+                                        "Apply",
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                     )
                                 }
@@ -867,7 +867,7 @@ private fun ModelApplyCard(
     }
 }
 
-/** 4. 自启动配置 */
+/** 4. 自Start配置 */
 @Composable
 private fun AutoStartCard(
     enabled: Boolean,
@@ -882,11 +882,11 @@ private fun AutoStartCard(
         ) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "随应用自启动",
+                    text = "随Apply自Start",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = "Linux 环境就绪后自动启动 $toolName 网关服务",
+                    text = "Linux 环境就绪后自动Start $toolName Gateway service",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -900,7 +900,7 @@ private fun AutoStartCard(
     }
 }
 
-/** 5. 带 Token 访问链接（支持局域网 IP / 0.0.0.0 / 127.0.0.1 模式） */
+/** 5. 带 Token Access URL（支持LAN IP / 0.0.0.0 / 127.0.0.1 模式） */
 @Composable
 private fun AccessLinkCard(
     state: ToolDetailUiState,
@@ -933,7 +933,7 @@ private fun AccessLinkCard(
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = "访问链接",
+                    text = "Access URL",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -943,7 +943,7 @@ private fun AccessLinkCard(
                 shape = RoundedCornerShape(6.dp),
             ) {
                 Text(
-                    text = if (running) "已绑定 0.0.0.0" else "服务未启动",
+                    text = if (running) "Bound to 0.0.0.0" else "服务未Start",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold),
                     color = if (running) successStatusColor() else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -954,9 +954,9 @@ private fun AccessLinkCard(
         Spacer(Modifier.height(4.dp))
         Text(
             text = if (running) {
-                "网关服务已绑定全网卡 (0.0.0.0)。同局域网设备打开【局域网 IP 链接】即可直接操作，无需 localhost 映射。"
+                "Gateway service已绑定全网卡 (0.0.0.0)。同局域网设备打开【LAN IP 链接】即可直接Actions，无需 localhost 映射。"
             } else {
-                "服务尚未启动，请先在【网关服务】卡片中点击启动，启动成功后将在此展示可访问链接。Token 可提前生成，启动时自动注入。"
+                "服务尚未Start，请先在【Gateway service】卡片中点击Start，Start成功后将在此展示可Access URL。Token 可提前生成，Start时自动注入。"
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -964,13 +964,13 @@ private fun AccessLinkCard(
 
         Spacer(Modifier.height(10.dp))
 
-        // 地址模式选择 (局域网 IP / 0.0.0.0 / 127.0.0.1)
+        // 地址模式选择 (LAN IP / 0.0.0.0 / 127.0.0.1)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             listOf(
-                "LAN" to "局域网 IP",
+                "LAN" to "LAN IP",
                 "0.0.0.0" to "0.0.0.0",
                 "127.0.0.1" to "127.0.0.1",
             ).forEach { (modeKey, label) ->
@@ -1001,7 +1001,7 @@ private fun AccessLinkCard(
         if (selectedMode == "LAN" && !state.deviceLanIp.isNullOrBlank()) {
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "设备局域网 IP：${state.deviceLanIp}",
+                text = "设备LAN IP：${state.deviceLanIp}",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 10.sp,
@@ -1040,7 +1040,7 @@ private fun AccessLinkCard(
                         modifier = Modifier
                             .minimumInteractiveComponentSize()
                             .size(32.dp),
-                        contentDescription = "复制访问链接",
+                        contentDescription = "复制Access URL",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Copy,
@@ -1057,7 +1057,7 @@ private fun AccessLinkCard(
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
             ) {
                 Text(
-                    text = "启动网关后此处将展示可访问链接",
+                    text = "Start网关后此处将展示可Access URL",
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
@@ -1077,7 +1077,7 @@ private fun AccessLinkCard(
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 Text(
-                    text = if (state.accessToken != null) "重新生成 Token" else "生成安全 Token",
+                    text = if (state.accessToken != null) "Regenerate token" else "Generate secure token",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                 )
             }
@@ -1087,7 +1087,7 @@ private fun AccessLinkCard(
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                 ) {
                     Text(
-                        "清除 Token",
+                        "Clear token",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.error,
                     )
@@ -1115,7 +1115,7 @@ private fun ToolMetadataCard(
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = "工具信息",
+                text = "Tool information",
                 style = MaterialTheme.typography.titleMedium,
             )
         }
@@ -1123,34 +1123,34 @@ private fun ToolMetadataCard(
         Spacer(Modifier.height(10.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            InfoRow(label = "工具 ID", value = tool.id)
+            InfoRow(label = "Tool ID", value = tool.id)
             InfoRow(
-                label = "启动类型",
+                label = "Start类型",
                 value = when (manifest.launchType) {
-                    "web" -> "Web 网关服务"
-                    "pty" -> "交互式终端"
-                    "one_shot" -> "一次性命令"
+                    "web" -> "Web Gateway service"
+                    "pty" -> "Interactive terminal"
+                    "one_shot" -> "One-shot command"
                     else -> manifest.launchType
                 },
                 isCode = false,
             )
-            manifest.servicePort?.let { InfoRow(label = "服务端口", value = it.toString()) }
-            InfoRow(label = "安装方式", value = manifest.installMethod, isCode = false)
+            manifest.servicePort?.let { InfoRow(label = "Service port", value = it.toString()) }
+            InfoRow(label = "Installation method", value = manifest.installMethod, isCode = false)
 
             manifest.launchCommand?.let {
-                CodeBlockRow(label = "启动命令", code = it)
+                CodeBlockRow(label = "Start命令", code = it)
             }
             manifest.verifyCommand?.let {
-                CodeBlockRow(label = "验证命令", code = it)
+                CodeBlockRow(label = "Verification command", code = it)
             }
 
-            CodeBlockRow(label = "安装路径", code = "/opt/taixu/tools/${tool.id}")
-            CodeBlockRow(label = "数据目录", code = "/opt/taixu/data/${tool.id}")
+            CodeBlockRow(label = "Installation path", code = "/opt/taixu/tools/${tool.id}")
+            CodeBlockRow(label = "Data directory", code = "/opt/taixu/data/${tool.id}")
 
             if (manifest.dependencies.isNotEmpty()) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHighest)
                 Text(
-                    text = "依赖项",
+                    text = "Dependencies",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1180,7 +1180,7 @@ private fun ToolMetadataCard(
             if (manifest.environment.isNotEmpty()) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHighest)
                 Text(
-                    text = "环境变量",
+                    text = "Environment variables",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1221,7 +1221,7 @@ private fun ToolMetadataCard(
             if (tool.permissions.isNotBlank()) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHighest)
                 Text(
-                    text = "权限清单",
+                    text = "Permissions",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1248,7 +1248,7 @@ private fun ToolMetadataCard(
     }
 }
 
-/** 7. 操作区 */
+/** 7. Actions区 */
 @Composable
 private fun ToolActionsCard(
     isInstalled: Boolean,
@@ -1266,7 +1266,7 @@ private fun ToolActionsCard(
                 tint = MaterialTheme.colorScheme.primary,
             )
             Text(
-                text = "操作",
+                text = "Actions",
                 style = MaterialTheme.typography.titleMedium,
             )
         }
@@ -1286,7 +1286,7 @@ private fun ToolActionsCard(
                 ) {
                     RuntimeIcon(name = RuntimeIconName.Terminal, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("打开终端", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Open terminal", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                 }
 
                 OutlinedButton(
@@ -1300,11 +1300,11 @@ private fun ToolActionsCard(
                 ) {
                     RuntimeIcon(name = RuntimeIconName.Trash, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("卸载工具", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Text("Uninstall tool", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Text(
-                    text = "工具尚未安装，请先在工具中心完成安装",
+                    text = "工具尚Not installed，请先在工具中心完成安装",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1313,7 +1313,7 @@ private fun ToolActionsCard(
     }
 }
 
-/** 卸载工具二次确认弹窗（与 DistroManagementScreen 删除确认同款倒计时锁样式） */
+/** Uninstall tool二次确认弹窗（与 DistroManagementScreen 删除确认同款倒计时锁样式） */
 @Composable
 internal fun UninstallToolConfirmDialog(
     toolName: String,
@@ -1333,19 +1333,19 @@ internal fun UninstallToolConfirmDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "卸载 $toolName？",
+                text = "Uninstall $toolName?",
                 style = MaterialTheme.typography.titleMedium,
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "• 将移除该工具及其在沙箱内的数据目录",
+                    text = "• 将移除该工具及其在沙箱内的Data directory",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "• 卸载后可随时在工具中心重新安装",
+                    text = "• You can reinstall it from the Tool Center at any time",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
