@@ -227,7 +227,7 @@ fun SshSettingsScreen(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = "首次Connection输入 yes 确认服务器指纹，然后输入 root Login password",
+                            text = "On first connection, type yes to accept the server fingerprint, then enter the root password",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -246,7 +246,7 @@ fun SshSettingsScreen(
             if (vpnActive) {
                 item {
                     NoticeBanner(
-                        text = "检测到手机正处于 VPN Connection中，当前 VPN 会接管本应用流量，同一局域网的电脑Connection可能超时。请先关闭 VPN，或将本应用加入 VPN 直连/排除名单。",
+                        text = "A VPN is active and routing this app's traffic, so connections from computers on the same LAN may time out. Disable the VPN or add this app to the VPN bypass/exclusion list.",
                         isError = true,
                     )
                 }
@@ -292,7 +292,7 @@ fun SshSettingsScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            "无需公钥也可以使用Password登录。需要免密Connection时，每行添加一个 OpenSSH 公钥。",
+                            "Password authentication works without a public key. For passwordless connections, add one OpenSSH public key per line.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -368,7 +368,7 @@ private fun PasswordSettingsDialog(
     val matches = password == confirmation
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (passwordConfigured) "修改 SSH Login password" else "设置 SSH Login password") },
+        title = { Text(if (passwordConfigured) "Change SSH password" else "Set SSH password") },
         text = {
             Column(
                 modifier = Modifier
