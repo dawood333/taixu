@@ -50,7 +50,7 @@ internal class TouchForwardVideoView(context: Context) :
                 size = ctrl.getVideoSize()
             }
             val (videoW, videoH) = size ?: run {
-                ShowerLog.e(TAG, "TextureView: 等不到视频尺寸，画面会一直是黑的")
+                ShowerLog.e(TAG, "TextureView: video dimensions did not arrive; the screen will remain black")
                 return@launch
             }
             if (!isAvailable || videoW <= 0 || videoH <= 0) return@launch
@@ -59,7 +59,7 @@ internal class TouchForwardVideoView(context: Context) :
             decodeSurface = output
             renderer.attach(output, videoW, videoH)
             ctrl.setBinaryHandler { frame -> renderer.onFrame(frame) }
-            ShowerLog.d(TAG, "TextureView: 解码表面已接上 ${videoW}x$videoH")
+            ShowerLog.d(TAG, "TextureView: decoder surface attached at ${videoW}x$videoH")
         }
     }
 
@@ -136,7 +136,7 @@ internal class TouchForwardVideoView(context: Context) :
             pressure = if (touch.action == MotionEvent.ACTION_UP || touch.action == MotionEvent.ACTION_CANCEL) 0f else 1f,
             size = 1f, metaState = 0, xPrecision = 1f, yPrecision = 1f, deviceId = 0, edgeFlags = 0,
         )
-        if (!accepted) ShowerLog.w(TAG, "触摸回传失败: action=${touch.action}")
+        if (!accepted) ShowerLog.w(TAG, "Touch forwarding failed: action=${touch.action}")
     }
     private companion object {
         const val TAG = "VirtualDisplayHud"
