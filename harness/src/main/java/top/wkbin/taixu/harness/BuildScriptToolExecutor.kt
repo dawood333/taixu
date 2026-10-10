@@ -16,27 +16,27 @@ class BuildScriptToolExecutor(
         return when (action) {
             "list" -> {
                 val scripts = repository.listScripts()
-                true to if (scripts.isEmpty()) "暂无构建脚本" else scripts.joinToString("\n") {
-                    "${it.id}\t[${it.projectType}]\t${it.name}\t${it.description.ifBlank { "无描述" }}${if (it.isBuiltin) "\t[builtin]" else ""}"
+                true to if (scripts.isEmpty()) "No build scripts yet" else scripts.joinToString("\n") {
+                    "${it.id}\t[${it.projectType}]\t${it.name}\t${it.description.ifBlank { "No description" }}${if (it.isBuiltin) "\t[builtin]" else ""}"
                 }
             }
             "get" -> {
                 val id = args.string("id")
-                if (id.isBlank()) return false to "缺少参数：id"
-                val script = repository.findScript(id) ?: return false to "构建脚本不存在：$id"
+                if (id.isBlank()) return false to "Missing required parameter: id"
+                val script = repository.findScript(id) ?: return false to "Build script not found: $id"
                 true to "id: ${script.id}\nname: ${script.name}\nproject_type: ${script.projectType}\ndescription: ${script.description}\n--- script ---\n${script.content}"
             }
             "create", "update" -> {
                 val id = args.string("id")
-                if (action == "update" && id.isBlank()) return false to "缺少参数：id"
-                val old = if (action == "update") repository.findScript(id) ?: return false to "构建脚本不存在：$id" else null
+                if (action == "update" && id.isBlank()) return false to "Missing required parameter: id"
+                val old = if (action == "update") repository.findScript(id) ?: return false to "Build script not found: $id" else null
                 val name = args.string("name").ifBlank { old?.name.orEmpty() }
                 val type = args.string("project_type").ifBlank { old?.projectType.orEmpty() }.trim().uppercase()
                 val content = args.string("content").ifBlank { old?.content.orEmpty() }
-                if (name.isBlank()) return false to "name 不能为空"
-                if (type !in setOf("ANDROID", "FLUTTER")) return false to "project_type 只能是 android 或 flutter"
-                if (content.isBlank() || content.length > 200_000) return false to "content 不能为空且不能超过 200 KB"
-                if (!content.lineSequence().firstOrNull().orEmpty().contains("sh")) return false to "脚本首行必须声明 shell（例如 #!/bin/sh）"
+                if (name.isBlank()) return false to "name cannot be empty"
+                if (type !in setOf("ANDROID", "FLUTTER")) return false to "project_type must be android or flutter"
+                if (content.isBlank() || content.length > 200_000) return false to "content cannot be empty or exceed 200 KB"
+                if (!content.lineSequence().firstOrNull().orEmpty().contains("sh")) return false to "The first line must declare the shell (for example, #!/bin/sh)"
                 val now = System.currentTimeMillis()
                 val saved = BuildScriptEntity(
                     id = old?.id ?: UUID.randomUUID().toString(),
@@ -49,28 +49,28 @@ class BuildScriptToolExecutor(
                     updatedAt = now,
                 )
                 repository.upsertScript(saved)
-                true to "已${if (old == null) "创建" else "更新"}构建脚本：${saved.name} (${saved.id})"
+                true to "Build script ${if (old == null) "created" else "updated"}: ${saved.name} (${saved.id})"
             }
             "delete" -> {
                 val id = args.string("id")
-                if (id.isBlank()) return false to "缺少参数：id"
-                if (repository.deleteScript(id)) true to "已删除构建脚本及其项目挂载" else false to "内置脚本不可删除，或脚本不存在"
+                if (id.isBlank()) return false to "Missing required parameter: id"
+                if (repository.deleteScript(id)) true to "Deleted build script and its project mount" else false to "Built-in scripts cannot be deleted, or the script does not exist"
             }
             "bind" -> {
                 val project = resolveProject(args, workspace)
-                if (project.isBlank()) return false to "project 不能为空，且当前会话没有工作区"
+                if (project.isBlank()) return false to "project cannot be empty, and the current session has no workspace"
                 val id = args.string("id")
-                if (id.isBlank()) return false to "缺少参数：id"
+                if (id.isBlank()) return false to "Missing required parameter: id"
                 runCatching {
                     repository.bind(project, id)
                 }.fold(
-                    onSuccess = { true to "已将项目 $project 挂载到构建脚本 $id" },
+                    onSuccess = { true to "Mounted project $project to build script $id" },
                     onFailure = { false to (it.message ?: "挂载失败") },
                 )
             }
             "unbind" -> {
                 val project = resolveProject(args, workspace)
-                if (project.isBlank()) return false to "project 不能为空，且当前会话没有工作区"
+                if (project.isBlank()) return false to "project cannot be empty, and the current session has no workspace"
                 repository.unbind(project)
                 true to "项目 $project 已恢复标准构建流程"
             }
