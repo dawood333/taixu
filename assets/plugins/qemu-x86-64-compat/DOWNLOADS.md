@@ -1,57 +1,56 @@
-# QEMU x86_64 兼容环境 — 离线插件包
+# QEMU x86_64 Compatibility Environment — Offline Plugin Package
 
-本目录是 `qemu-x86-64-compat` 插件的源文件布局，用于打包为可直接导入的本地 `.txplugin`。
+This directory contains the source layout for the `qemu-x86-64-compat` plugin, packaged as a local `.txplugin` for direct import.
 
-## 用途
+## Purpose
 
-在 ARM64（`arm64-v8a`）Android 运行时上，通过 PRoot + QEMU 用户态模拟器（`qemu-x86_64`）运行一个隔离的 x86_64 Linux 构建环境，用于第三方项目的兼容构建（仅 APK 编译链路）。
+On ARM64 (`arm64-v8a`) Android, PRoot and the QEMU user-mode emulator (`qemu-x86_64`) provide an isolated x86_64 Linux build environment for third-party compatibility builds (APK compilation only).
 
-- 宿主 QEMU 二进制：`usr/bin/qemu-x86_64-static`（ARM64 ELF）
-- 隔离 rootfs：`ubuntu-base-24.04.3-base-amd64`（x86_64）
-- 不包含 JDK、Gradle、Android SDK 或 Flutter；这些工具链由其它插件提供。
+- Host QEMU binary: `usr/bin/qemu-x86_64-static` (ARM64 ELF)
+- Isolated rootfs: `ubuntu-base-24.04.3-base-amd64` (x86_64)
+- JDK, Gradle, Android SDK, and Flutter are not included; those toolchains are supplied by other plugins.
 
-## 打包内容
+## Package contents
 
-```
+```text
 manifest.json
 payload/
   checksums/SHA256SUMS
   scripts/install-qemu-x86-64-compat.sh
-  scripts/verify-qemu-x86-64-compat.sh
   scripts/uninstall-qemu-x86-64-compat.sh
-  archives/<2 个离线归档>
+  scripts/verify-qemu-x86-64-compat.sh
+  archives/<2 offline archives>
 ```
 
-## 归档清单（SHA256）
+## Archive manifest (SHA-256)
 
-| 文件名 | 大小 | SHA256 |
-|---|---|---|
-| `ubuntu-base-24.04.3-base-amd64.tar.gz` | ~30 MB | `6bc2cde3930ad088b3bb46fa45279e96d25bc3810f209850ecbe4722711874f9` |
-| `qemu-user-static_8.2.2_arm64.deb` | ~17 MB | `b43890498d911499d19ef029884734562b018234eb76acbafbb81ee5078423ad` |
+| Filename | Size | SHA-256 |
+|---|---:|---|
+| `qemu-x86_64-static.tar.gz` | See manifest | See `payload/checksums/SHA256SUMS` |
+| `ubuntu-base-24.04.3-base-amd64.tar.gz` | See manifest | See `payload/checksums/SHA256SUMS` |
 
-## 来源 URL
+## Source URLs
 
-- Ubuntu Base: `https://cdimage.ubuntu.com/ubuntu-base/releases/24.04.3/release/ubuntu-base-24.04.3-base-amd64.tar.gz`
-- QEMU: `https://ports.ubuntu.com/pool/universe/q/qemu/qemu-user-static_8.2.2+ds-0ubuntu1_arm64.deb`
+See the archive URLs recorded in the plugin manifest and packaging configuration.
 
-## 校验
+## Verification
 
-`payload/checksums/SHA256SUMS` 使用 `sha256sum -c checksums/SHA256SUMS` 校验（相对 `payload/` 目录执行，条目路径为 `archives/<filename>`）。
+The `payload/checksums/SHA256SUMS` file is verified with `sha256sum -c checksums/SHA256SUMS` from the `payload/` directory (entries use paths relative to `payload/`, such as `archives/<filename>`).
 
-## 打包成 `.txplugin`
+## Package as `.txplugin`
 
-在 `assets/plugins/qemu-x86-64-compat/` 目录内执行：
+Run inside `assets/plugins/qemu-x86-64-compat/`:
 
-```powershell
-Compress-Archive -Path "manifest.json", "payload" -DestinationPath "$env:USERPROFILE\Desktop\qemu-x86-64-compat.txplugin" -Force
+```bash
+python ../../../tools/package-qemu-compat-plugin.py
 ```
 
-打包结果必须只包含：
-- 根目录 `manifest.json`
-- 根目录 `payload/`（含 `scripts/`、`checksums/`、`archives/`）
+The package must contain only:
+- Root `manifest.json`
+- Root `payload/` directory, including `scripts/`, `checksums/`, and `archives/`
 
-## 注意事项
+## Notes
 
-- 全部脚本为 POSIX `sh`，安装过程不访问网络，仅解包本地 `archives/` 并做 SHA256 校验。
-- 安装目标固定为 `/opt/taixu/compat/x86_64`（宿主 `taixuRoot/compat/x86_64`），与 `runtime` 模块 `QemuCompatibilityLayout` 一致。
-- 命令链接只写入 `$TAIXU_TOOL_DIR/bin` 与 `/opt/taixu/bin`：`qemu-x86_64`。
+- All scripts use POSIX `sh`. Installation does not access the network; it extracts local archives and verifies their SHA-256 checksums.
+- The installation target is fixed at `/opt/taixu/compat/x86_64` (host `taixuRoot/compat/x86_64`), matching `QemuCompatibilityLayout` in the `runtime` module.
+- Command links are written only to `$TAIXU_TOOL_DIR/bin` and `/opt/taixu/bin`: `qemu-x86_64`.
