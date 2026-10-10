@@ -106,7 +106,7 @@ internal suspend fun <T> executeWithRotatedApiKey(
                 delay(selection.waitMillis.milliseconds)
                 continue
             }
-            throw lastRateLimit ?: IllegalStateException("当前模型没有可用的 API Key")
+            throw lastRateLimit ?: IllegalStateException("No API key is available for the current model")
         }
         try {
             return request(model.copy(apiKey = selectedKey))
