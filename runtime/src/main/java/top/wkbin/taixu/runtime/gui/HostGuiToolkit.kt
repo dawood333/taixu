@@ -47,7 +47,7 @@ class HostGuiToolkit(
                     anchorY = action.anchorY,
                 )
                 swipe(mapped.x1, mapped.y1, mapped.x2, mapped.y2, mapped.durationMs)
-                    .let { it.copy(message = "滚动 ${action.direction.name.lowercase()} · ${it.message}") }
+                    .let { it.copy(message = "Scroll ${action.direction.name.lowercase()} · ${it.message}") }
             }
             is GuiPrimitive.Key -> key(action.key)
             is GuiPrimitive.PasteText -> pasteText(action.text)
@@ -55,30 +55,30 @@ class HostGuiToolkit(
     }
 
     private suspend fun tap(x: Int, y: Int): GuiExecResult =
-        runTouch("点击 ($x,$y)") { backend ->
+        runTouch("Tap ($x,$y)") { backend ->
             when (backend) {
                 GuiBackendId.ACCESSIBILITY -> {
                     if (!AccessibilityGestureBridge.isAvailable()) {
                         accessibilityEnabler.ensureEnabled()
                     }
                     if (AccessibilityGestureBridge.isAvailable() && AccessibilityGestureBridge.tap(x, y))
-                        ok(backend, "已点击 ($x,$y)")
-                    else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "手势取消" else "无障碍服务未就绪（已尝试特权自授权）")
+                        ok(backend, "已Tap ($x,$y)")
+                    else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "Gesture cancelled" else "Accessibility service is unavailable (privileged self-authorization was attempted)")
                 }
-                GuiBackendId.CMD_INPUT -> shellInput(backend, "cmd input tap $x $y", "已点击 ($x,$y)")
-                GuiBackendId.BIN_INPUT -> shellInput(backend, "/system/bin/input tap $x $y", "已点击 ($x,$y)")
-                else -> fail(backend, "不适用")
+                GuiBackendId.CMD_INPUT -> shellInput(backend, "cmd input tap $x $y", "已Tap ($x,$y)")
+                GuiBackendId.BIN_INPUT -> shellInput(backend, "/system/bin/input tap $x $y", "已Tap ($x,$y)")
+                else -> fail(backend, "Not applicable")
             }
         }
 
     private suspend fun doubleTap(x: Int, y: Int, gapMs: Long): GuiExecResult =
-        runTouch("双击 ($x,$y)") { backend ->
+        runTouch("Double-tap ($x,$y)") { backend ->
             when (backend) {
                 GuiBackendId.ACCESSIBILITY -> {
                     if (!AccessibilityGestureBridge.isAvailable()) accessibilityEnabler.ensureEnabled()
                     if (AccessibilityGestureBridge.isAvailable() && AccessibilityGestureBridge.doubleTap(x, y, gapMs))
-                        ok(backend, "已双击 ($x,$y)")
-                    else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "手势取消" else "无障碍服务未就绪（已尝试特权自授权）")
+                        ok(backend, "已Double-tap ($x,$y)")
+                    else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "Gesture cancelled" else "Accessibility service is unavailable (privileged self-authorization was attempted)")
                 }
                 GuiBackendId.CMD_INPUT, GuiBackendId.BIN_INPUT -> {
                     val prefix = if (backend == GuiBackendId.CMD_INPUT) "cmd input" else "/system/bin/input"
@@ -86,47 +86,47 @@ class HostGuiToolkit(
                     if (!first.success) return@runTouch fail(backend, first.stderr.ifBlank { "exit=${first.exitCode}" })
                     delay(gapMs.coerceIn(40L, 400L))
                     val second = privilegeManager.executeShellCommand("$prefix tap $x $y")
-                    if (second.success) ok(backend, "已双击 ($x,$y)")
-                    else fail(backend, second.stderr.ifBlank { "第二次点击失败" })
+                    if (second.success) ok(backend, "已Double-tap ($x,$y)")
+                    else fail(backend, second.stderr.ifBlank { "Second tap failed" })
                 }
-                else -> fail(backend, "不适用")
+                else -> fail(backend, "Not applicable")
             }
         }
 
     private suspend fun longPress(x: Int, y: Int, durationMs: Long): GuiExecResult {
         val hold = durationMs.coerceIn(200L, 5_000L)
-        return runTouch("长按 ($x,$y) ${hold}ms") { backend ->
+        return runTouch("Long press ($x,$y) for ${hold}ms") { backend ->
             when (backend) {
                 GuiBackendId.ACCESSIBILITY -> {
                     if (!AccessibilityGestureBridge.isAvailable()) accessibilityEnabler.ensureEnabled()
                     if (AccessibilityGestureBridge.isAvailable() && AccessibilityGestureBridge.longPress(x, y, hold))
-                        ok(backend, "已长按 ($x,$y) ${hold}ms")
-                    else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "手势取消" else "无障碍服务未就绪（已尝试特权自授权）")
+                        ok(backend, "已Long press ($x,$y) for ${hold}ms")
+                    else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "Gesture cancelled" else "Accessibility service is unavailable (privileged self-authorization was attempted)")
                 }
                 GuiBackendId.CMD_INPUT ->
-                    shellInput(backend, "cmd input swipe $x $y $x $y $hold", "已长按 ($x,$y) ${hold}ms")
+                    shellInput(backend, "cmd input swipe $x $y $x $y $hold", "已Long press ($x,$y) for ${hold}ms")
                 GuiBackendId.BIN_INPUT ->
-                    shellInput(backend, "/system/bin/input swipe $x $y $x $y $hold", "已长按 ($x,$y) ${hold}ms")
-                else -> fail(backend, "不适用")
+                    shellInput(backend, "/system/bin/input swipe $x $y $x $y $hold", "已Long press ($x,$y) for ${hold}ms")
+                else -> fail(backend, "Not applicable")
             }
         }
     }
 
     private suspend fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, durationMs: Long): GuiExecResult {
         val dur = durationMs.coerceIn(50L, 5_000L)
-        return runTouch("滑动 ($x1,$y1)→($x2,$y2)") { backend ->
+        return runTouch("Swipe ($x1,$y1)→($x2,$y2)") { backend ->
             when (backend) {
                 GuiBackendId.ACCESSIBILITY -> {
                     if (!AccessibilityGestureBridge.isAvailable()) accessibilityEnabler.ensureEnabled()
                     if (AccessibilityGestureBridge.isAvailable() && AccessibilityGestureBridge.swipe(x1, y1, x2, y2, dur))
-                        ok(backend, "已滑动 ($x1,$y1)→($x2,$y2)")
-                    else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "手势取消" else "无障碍服务未就绪（已尝试特权自授权）")
+                        ok(backend, "已Swipe ($x1,$y1)→($x2,$y2)")
+                    else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "Gesture cancelled" else "Accessibility service is unavailable (privileged self-authorization was attempted)")
                 }
                 GuiBackendId.CMD_INPUT ->
-                    shellInput(backend, "cmd input swipe $x1 $y1 $x2 $y2 $dur", "已滑动 ($x1,$y1)→($x2,$y2)")
+                    shellInput(backend, "cmd input swipe $x1 $y1 $x2 $y2 $dur", "已Swipe ($x1,$y1)→($x2,$y2)")
                 GuiBackendId.BIN_INPUT ->
-                    shellInput(backend, "/system/bin/input swipe $x1 $y1 $x2 $y2 $dur", "已滑动 ($x1,$y1)→($x2,$y2)")
-                else -> fail(backend, "不适用")
+                    shellInput(backend, "/system/bin/input swipe $x1 $y1 $x2 $y2 $dur", "已Swipe ($x1,$y1)→($x2,$y2)")
+                else -> fail(backend, "Not applicable")
             }
         }
     }
@@ -143,9 +143,9 @@ class HostGuiToolkit(
                 GuiKey.RECENTS -> AccessibilityService.GLOBAL_ACTION_RECENTS
             }
             if (TaiXuGuiAccessibilityService.performGlobal(global)) {
-                return GuiExecResult(true, "已触发按键：${key.name.lowercase()}", GuiBackendId.ACCESSIBILITY)
+                return GuiExecResult(true, "Pressed key: ${key.name.lowercase()}", GuiBackendId.ACCESSIBILITY)
             }
-            attempts += GuiAttempt(GuiBackendId.ACCESSIBILITY, false, "无障碍全局动作不可用（已尝试特权自授权）")
+            attempts += GuiAttempt(GuiBackendId.ACCESSIBILITY, false, "Accessibility global action is unavailable (privileged self-authorization was attempted)")
         }
         for (backend in listOf(GuiBackendId.CMD_INPUT, GuiBackendId.BIN_INPUT)) {
             val cmd = if (backend == GuiBackendId.CMD_INPUT) {
@@ -155,11 +155,11 @@ class HostGuiToolkit(
             }
             val res = privilegeManager.executeShellCommand(cmd)
             if (res.success) {
-                return GuiExecResult(true, "已触发按键：${key.name.lowercase()} (${key.keyCode})", backend, attempts)
+                return GuiExecResult(true, "Pressed key: ${key.name.lowercase()} (${key.keyCode})", backend, attempts)
             }
             attempts += GuiAttempt(backend, false, res.stderr.ifBlank { "exit=${res.exitCode}" })
         }
-        return GuiExecResult(false, "按键失败：${key.name.lowercase()}", attempts = attempts)
+        return GuiExecResult(false, "Key press failed: ${key.name.lowercase()}", attempts = attempts)
     }
 
     private suspend fun pasteText(text: String): GuiExecResult {
@@ -169,7 +169,7 @@ class HostGuiToolkit(
     private suspend fun pasteTextLocked(text: String): GuiExecResult {
         val attempts = mutableListOf<GuiAttempt>()
         if (text.isEmpty()) {
-            return GuiExecResult(false, "粘贴文本为空")
+            return GuiExecResult(false, "Cannot paste empty text")
         }
 
         // 0) 首选无障碍直接设值：支持任意 Unicode，且能读回校验，不依赖剪贴板与键盘快捷键
@@ -180,7 +180,7 @@ class HostGuiToolkit(
         attempts += GuiAttempt(
             GuiBackendId.CLIPBOARD,
             clipOk,
-            if (clipOk) "已写入 ${text.length} 字" else "写入剪贴板失败",
+            if (clipOk) "Wrote ${text.length} characters" else "Failed to write to clipboard",
         )
         if (clipOk) {
             runCatching {
@@ -198,7 +198,7 @@ class HostGuiToolkit(
                 }
                 val res = privilegeManager.executeShellCommand(cmd)
                 if (res.success) {
-                    return GuiExecResult(true, "已通过剪贴板粘贴（${text.length} 字）：$text", backend, attempts)
+                    return GuiExecResult(true, "Pasted via clipboard (${text.length} characters): $text", backend, attempts)
                 }
                 attempts += GuiAttempt(backend, false, "KEYCODE_PASTE: ${res.stderr.ifBlank { "exit=${res.exitCode}" }}")
             }
@@ -206,7 +206,7 @@ class HostGuiToolkit(
                 "/system/bin/input keycombination 113 50 || cmd input keycombination 113 50 || /system/bin/input keyevent 113 50",
             )
             if (chord.success) {
-                return GuiExecResult(true, "已通过 Ctrl+V 粘贴（${text.length} 字）：$text", GuiBackendId.BIN_INPUT, attempts)
+                return GuiExecResult(true, "Pasted via Ctrl+V (${text.length} characters): $text", GuiBackendId.BIN_INPUT, attempts)
             }
             attempts += GuiAttempt(GuiBackendId.BIN_INPUT, false, "Ctrl+V: ${chord.stderr.ifBlank { "exit=${chord.exitCode}" }}")
         }
@@ -215,7 +215,7 @@ class HostGuiToolkit(
         val typed = tryInputText(text, attempts)
         if (typed != null) return typed
 
-        return GuiExecResult(false, "粘贴与 input text 均失败", attempts = attempts)
+        return GuiExecResult(false, "Both clipboard paste and input text failed", attempts = attempts)
     }
 
     /**
@@ -229,9 +229,9 @@ class HostGuiToolkit(
         var accepted = false
         repeat(2) { round ->
             if (!TaiXuGuiAccessibilityService.setFocusedText(text)) {
-                attempts += GuiAttempt(GuiBackendId.ACCESSIBILITY, false, "ACTION_SET_TEXT 不被当前输入框接受")
+                attempts += GuiAttempt(GuiBackendId.ACCESSIBILITY, false, "The current input field rejected ACTION_SET_TEXT")
                 return if (accepted) {
-                    GuiExecResult(true, "已设置文本（${text.length} 字，未通过读回校验）：$text", GuiBackendId.ACCESSIBILITY, attempts)
+                    GuiExecResult(true, "Set text (${text.length} characters; read-back not verified): $text", GuiBackendId.ACCESSIBILITY, attempts)
                 } else {
                     null
                 }
@@ -244,23 +244,23 @@ class HostGuiToolkit(
                     attempts += GuiAttempt(
                         GuiBackendId.ACCESSIBILITY,
                         true,
-                        "第 ${round + 1} 次设值成功，焦点节点未暴露 text，无法读回校验",
+                        "Attempt ${round + 1} succeeded, but the focused node did not expose text for read-back verification",
                     )
-                    return GuiExecResult(true, "已设置文本（${text.length} 字，无法读回校验）：$text", GuiBackendId.ACCESSIBILITY, attempts)
+                    return GuiExecResult(true, "Set text (${text.length} characters; read-back unavailable): $text", GuiBackendId.ACCESSIBILITY, attempts)
                 }
                 actual.contains(text) -> {
-                    attempts += GuiAttempt(GuiBackendId.ACCESSIBILITY, true, "第 ${round + 1} 次设值并读回校验通过")
-                    return GuiExecResult(true, "已设置文本并校验通过（${text.length} 字）：$text", GuiBackendId.ACCESSIBILITY, attempts)
+                    attempts += GuiAttempt(GuiBackendId.ACCESSIBILITY, true, "Attempt ${round + 1} set the value and passed read-back verification")
+                    return GuiExecResult(true, "Set and verified text (${text.length} characters): $text", GuiBackendId.ACCESSIBILITY, attempts)
                 }
                 else -> attempts += GuiAttempt(
                     GuiBackendId.ACCESSIBILITY,
                     false,
-                    "第 ${round + 1} 次读回不匹配：$actual",
+                    "Attempt ${round + 1} read-back mismatch: $actual",
                 )
             }
         }
         // 曾被接受但始终读不回目标文本：不再降级，避免追加式后端写出重复内容
-        return GuiExecResult(true, "已设置文本（${text.length} 字，读回校验未通过）：$text", GuiBackendId.ACCESSIBILITY, attempts)
+        return GuiExecResult(true, "Set text (${text.length} characters; read-back verification failed): $text", GuiBackendId.ACCESSIBILITY, attempts)
     }
 
     /**
@@ -272,7 +272,7 @@ class HostGuiToolkit(
             val prefix = if (backend == GuiBackendId.CMD_INPUT) "cmd input" else "/system/bin/input"
             val res = privilegeManager.executeShellCommand("$prefix text $escaped")
             if (res.success) {
-                return GuiExecResult(true, "已 input text（${text.length} 字）：$text", backend, attempts)
+                return GuiExecResult(true, "Sent input text (${text.length} characters): $text", backend, attempts)
             }
             attempts += GuiAttempt(backend, false, "input text: ${res.stderr.ifBlank { "exit=${res.exitCode}" }}")
         }
@@ -286,7 +286,7 @@ class HostGuiToolkit(
                     attempts += GuiAttempt(
                         GuiBackendId.BIN_INPUT,
                         false,
-                        "input text 分字失败 at=$okCount: ${res.stderr.ifBlank { "exit=${res.exitCode}" }}",
+                        "Character-by-character input text failed at $okCount: ${res.stderr.ifBlank { "exit=${res.exitCode}" }}",
                     )
                     break
                 }
@@ -294,10 +294,10 @@ class HostGuiToolkit(
                 delay(30)
             }
             if (okCount == text.length) {
-                return GuiExecResult(true, "已分字 input text（$okCount 字）：$text", GuiBackendId.BIN_INPUT, attempts)
+                return GuiExecResult(true, "Sent input text character by character ($okCount characters): $text", GuiBackendId.BIN_INPUT, attempts)
             }
             if (okCount > 0) {
-                attempts += GuiAttempt(GuiBackendId.BIN_INPUT, false, "分字仅成功 $okCount/${text.length}")
+                attempts += GuiAttempt(GuiBackendId.BIN_INPUT, false, "Character-by-character input succeeded only for $okCount/${text.length} characters")
             }
         }
         return null
@@ -331,7 +331,7 @@ class HostGuiToolkit(
             }
         }
         Log.w(TAG, "$label failed after ${attempts.size} backends")
-        return GuiExecResult(false, "$label 失败", attempts = attempts)
+        return GuiExecResult(false, "$label failed", attempts = attempts)
     }
 
     private suspend fun shellInput(backend: GuiBackendId, command: String, successMessage: String): Pair<Boolean, GuiAttempt> {
