@@ -1,6 +1,6 @@
 import type { QuickPhrase } from "./types";
 
-/** 过滤停用短语并按 sortOrder 稳定排序，容忍服务端字段的缺失与脏数据。 */
+/** Filter disabled phrases and sort stably by sortOrder, tolerating missing or malformed server fields. */
 export function normalizeQuickPhrases(raw: unknown): QuickPhrase[] {
   if (!Array.isArray(raw)) return [];
   const phrases: Array<QuickPhrase & { sortOrder: number }> = [];
