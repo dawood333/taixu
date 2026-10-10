@@ -153,7 +153,7 @@ object AttachmentHelper {
             )
         } catch (e: Exception) {
             // 失败不能静默：记录日志并由 ChatViewModel 统计后以 Toast 上抛给用户
-            Log.w(TAG, "附件处理失败 uri=$uri", e)
+            Log.w(TAG, "Attachment processing failed, uri=$uri", e)
             null
         }
     }
