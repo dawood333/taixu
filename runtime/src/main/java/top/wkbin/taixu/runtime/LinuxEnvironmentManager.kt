@@ -57,7 +57,7 @@ class LinuxEnvironmentManager(
     ): Result<Unit> = mutate(distroId) { records ->
         val normalized = normalizeKey(key)
         validateValue(value, allowEmpty = false)
-        require(records.none { it.metadata.key == normalized }) { "环境变量 $normalized 已存在" }
+        require(records.none { it.metadata.key == normalized }) { "Environment variable $normalized already exists" }
         records + LinuxEnvironmentRecord(
             metadata = EnvironmentVariable(
                 id = UUID.randomUUID().toString(),
@@ -77,9 +77,9 @@ class LinuxEnvironmentManager(
         distroId: String = linuxRuntime.activeDistroId.value,
     ): Result<Unit> = mutate(distroId) { records ->
         val normalized = normalizeKey(key)
-        require(records.any { it.metadata.id == id }) { "环境变量不存在" }
+        require(records.any { it.metadata.id == id }) { "Environment variable not found" }
         require(records.none { it.metadata.id != id && it.metadata.key == normalized }) {
-            "环境变量 $normalized 已存在"
+            "Environment variable $normalized already exists"
         }
         records.map { record ->
             if (record.metadata.id != id) {
@@ -98,7 +98,7 @@ class LinuxEnvironmentManager(
         id: String,
         distroId: String = linuxRuntime.activeDistroId.value,
     ): Result<Unit> = mutate(distroId) { records ->
-        require(records.any { it.metadata.id == id }) { "环境变量不存在" }
+        require(records.any { it.metadata.id == id }) { "Environment variable not found" }
         records.filterNot { it.metadata.id == id }
     }
 
@@ -139,7 +139,7 @@ class LinuxEnvironmentManager(
             ),
             distroId,
         )
-        check(result.isSuccess) { result.stderr.trim().ifBlank { "读取 Linux 环境变量失败" } }
+        check(result.isSuccess) { result.stderr.trim().ifBlank { "Failed to read Linux environment variables" } }
         val records = LinuxEnvironmentProfile.parse(result.stdout)
         if (records.isNotEmpty()) return records
 
@@ -166,7 +166,7 @@ class LinuxEnvironmentManager(
             append("rm -f '$LEGACY_PROFILE_PATH'")
         }
         val result = linuxRuntime.execute(ShellCommand(command), distroId)
-        check(result.isSuccess) { result.stderr.trim().ifBlank { "写入 Linux 环境变量失败" } }
+        check(result.isSuccess) { result.stderr.trim().ifBlank { "Failed to write Linux environment variables" } }
     }
 
     private suspend fun readEffectiveEnvironment(distroId: String): List<EffectiveEnvironmentVariable> {
@@ -188,15 +188,15 @@ class LinuxEnvironmentManager(
 
     private fun normalizeKey(key: String): String {
         val normalized = key.trim().uppercase()
-        require(ENVIRONMENT_KEY.matches(normalized)) { "环境变量名称格式不正确" }
-        require(!isReservedKey(normalized)) { "$normalized 是运行时保留变量，不能修改" }
+        require(ENVIRONMENT_KEY.matches(normalized)) { "Invalid environment variable name" }
+        require(!isReservedKey(normalized)) { "$normalized is a reserved runtime variable and cannot be modified" }
         return normalized
     }
 
     private fun validateValue(value: String, allowEmpty: Boolean = true) {
-        require(allowEmpty || value.isNotEmpty()) { "环境变量值不能为空" }
+        require(allowEmpty || value.isNotEmpty()) { "Environment variable value cannot be empty" }
         require('\u0000' !in value && '\n' !in value && '\r' !in value) {
-            "环境变量值不能包含换行或 NUL 字符"
+            "Environment variable values cannot contain newlines or NUL characters"
         }
     }
 
