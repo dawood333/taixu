@@ -573,7 +573,7 @@ fun AgentSettingsScreen(
             if (visibleSkills.isEmpty()) {
                 item {
                     Text(
-                        text = "没有匹配 \"${skillQuery.trim()}\" 的技能",
+                        text = "No skills match “${skillQuery.trim()}”",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
