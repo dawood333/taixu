@@ -108,8 +108,8 @@ fun DistroManagementScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             RuntimeTopBar(
-                title = "Linux 发行版管理",
-                statusText = "多沙箱并存与动态切换",
+                title = "Linux Distribution Management",
+                statusText = "Multiple sandboxes and runtime switching",
                 onBack = onBack,
             )
         },
@@ -123,7 +123,7 @@ fun DistroManagementScreen(
         ) {
             item {
                 NoticeBanner(
-                    text = "太墟支持多套 Linux 系统并存。所有系统均自动挂载 /workspace 代码工程，/sdcard 外部存储按「存储挂载与共享」页的开关注入，各发行版软件生态与包管理器完全独立隔离。",
+                    text = "TaiXu supports multiple Linux distributions side by side. All distributions automatically mount the /workspace project directory. External /sdcard storage is mounted according to the toggles on Storage Mounts & Sharing. Each distribution has an isolated software ecosystem and package manager.",
                 )
             }
 
@@ -135,7 +135,7 @@ fun DistroManagementScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "已安装沙箱 (${installedDistros.size})",
+                        text = "Installed sandboxes (${installedDistros.size})",
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -151,7 +151,7 @@ fun DistroManagementScreen(
                             tint = MaterialTheme.colorScheme.onPrimary,
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "安装新系统", style = MaterialTheme.typography.labelMedium)
+                        Text(text = "Install a distribution", style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -181,7 +181,7 @@ fun DistroManagementScreen(
         }
     }
 
-    // 安装新系统对话框（旋转后只要安装仍在进行就会重新显示进度）
+    // Install a distribution对话框（旋转后只要安装仍在进行就会重新显示进度）
     if (showInstallDialog || installState.isInstalling) {
         InstallDistroDialog(
             installedIds = installedDistros.map { it.id }.toSet(),
@@ -206,7 +206,7 @@ fun DistroManagementScreen(
         )
     }
 
-    // 重置沙箱确认对话框（带 3 秒倒计时锁）
+    // Reset sandbox确认对话框（带 3 秒倒计时锁）
     distroToReset?.let { target ->
         ResetDistroConfirmDialog(
             distro = target,
@@ -223,7 +223,7 @@ fun DistroManagementScreen(
         )
     }
 
-    // 删除系统确认对话框（带 3 秒倒计时锁）
+    // Delete distribution确认对话框（带 3 秒倒计时锁）
     distroToUninstall?.let { target ->
         DeleteDistroConfirmDialog(
             distro = target,
@@ -260,19 +260,19 @@ private fun ResetDistroConfirmDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "重置 ${distro.displayName} 沙箱？",
+                text = "Reset the ${distro.displayName} sandbox?",
                 style = MaterialTheme.typography.titleMedium,
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "• 将清除自行安装的软件包与系统修改",
+                    text = "• User-installed packages and system changes will be removed",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "• 不会删除 /workspace 中的项目代码",
+                    text = "• Project files in /workspace will not be deleted",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -288,14 +288,14 @@ private fun ResetDistroConfirmDialog(
                 ),
             ) {
                 Text(
-                    text = if (countdown > 0) "确认重置 (${countdown}s)" else "确认重置",
+                    text = if (countdown > 0) "Confirm reset (${countdown}s)" else "Confirm reset",
                     color = if (countdown == 0) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onError.copy(alpha = 0.6f),
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "取消")
+                Text(text = "Cancel")
             }
         },
     )
@@ -320,19 +320,19 @@ private fun DeleteDistroConfirmDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "删除 ${distro.displayName} 系统？",
+                text = "Delete ${distro.displayName}?",
                 style = MaterialTheme.typography.titleMedium,
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "• 将彻底清除该 Linux 发行版与已安装软件",
+                    text = "• This Linux distribution and its installed software will be removed permanently",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "• 不会删除 /workspace 中的项目代码",
+                    text = "• Project files in /workspace will not be deleted",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -348,14 +348,14 @@ private fun DeleteDistroConfirmDialog(
                 ),
             ) {
                 Text(
-                    text = if (countdown > 0) "确认删除 (${countdown}s)" else "确认删除",
+                    text = if (countdown > 0) "Confirm delete (${countdown}s)" else "Confirm delete",
                     color = if (countdown == 0) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onError.copy(alpha = 0.6f),
                 )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "取消")
+                Text(text = "Cancel")
             }
         },
     )
@@ -413,7 +413,7 @@ private fun DistroItemCard(
                             overflow = TextOverflow.Ellipsis,
                         )
                         Text(
-                            text = "标识: ${distro.id} · 包管理: ${distro.packageManager} · 占用: ${formatSize(distro.sizeBytes)}",
+                            text = "ID: ${distro.id} · Package manager: ${distro.packageManager} · Size: ${formatSize(distro.sizeBytes)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -423,7 +423,7 @@ private fun DistroItemCard(
                 }
 
                 if (isActive) {
-                    StatusBadge(text = "主系统", color = successStatusColor())
+                    StatusBadge(text = "Primary", color = successStatusColor())
                 }
             }
 
@@ -436,7 +436,7 @@ private fun DistroItemCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // 按钮 1: 设为主系统 (当前为主系统或仅有 1 个系统时置灰禁用)
+                // 按钮 1: 设为Primary (当前为Primary或仅有 1 个系统时置灰禁用)
                 OutlinedButton(
                     onClick = onSwitchActive,
                     enabled = !isActive && canOperateMulti && !isRestoring && !isDeleting,
@@ -445,13 +445,13 @@ private fun DistroItemCard(
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(
-                        text = "设为主系统",
+                        text = "设为Primary",
                         style = MaterialTheme.typography.labelSmall,
                         maxLines = 1,
                     )
                 }
 
-                // 按钮 2: 重置沙箱 (执行中显示正在还原...并锁死)
+                // 按钮 2: Reset sandbox (执行中显示Restoring...并锁死)
                 OutlinedButton(
                     onClick = onReset,
                     enabled = !isRestoring && !isDeleting,
@@ -466,13 +466,13 @@ private fun DistroItemCard(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "正在还原...", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                        Text(text = "Restoring...", style = MaterialTheme.typography.labelSmall, maxLines = 1)
                     } else {
-                        Text(text = "重置沙箱", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                        Text(text = "Reset sandbox", style = MaterialTheme.typography.labelSmall, maxLines = 1)
                     }
                 }
 
-                // 按钮 3: 删除系统 (仅有 1 个系统时置灰禁用，执行中显示正在删除...并锁死)
+                // 按钮 3: Delete distribution (仅有 1 个系统时置灰禁用，执行中显示正在删除...并锁死)
                 OutlinedButton(
                     onClick = onUninstall,
                     enabled = canOperateMulti && !isRestoring && !isDeleting,
@@ -499,7 +499,7 @@ private fun DistroItemCard(
                         Text(text = "正在删除...", style = MaterialTheme.typography.labelSmall, maxLines = 1)
                     } else {
                         Text(
-                            text = "删除系统",
+                            text = "Delete distribution",
                             style = MaterialTheme.typography.labelSmall,
                             maxLines = 1,
                         )
@@ -507,10 +507,10 @@ private fun DistroItemCard(
                 }
             }
 
-            // 单系统时「设为主系统」按钮会置灰，补充解释避免用户困惑
+            // 单系统时「设为Primary」按钮会置灰，补充解释避免用户困惑
             if (!isActive && !canOperateMulti) {
                 Text(
-                    text = "当前仅有一套系统，无需切换主系统",
+                    text = "当前仅有一套系统，无需切换Primary",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -669,7 +669,7 @@ private fun InstallDistroDialog(
         dismissButton = {
             if (!isInstalling) {
                 TextButton(onClick = onDismiss) {
-                    Text(text = "取消")
+                    Text(text = "Cancel")
                 }
             }
         },
