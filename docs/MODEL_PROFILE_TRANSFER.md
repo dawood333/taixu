@@ -1,39 +1,39 @@
-# 模型档案备份与恢复
+# Model Profile Backup and Restore
 
-模型档案支持通过 JSON 迁移。入口为「设置 → 智能体生态 → 模型档案」顶部导入/导出按钮。
+Model profiles can be migrated using JSON. Open **Settings → Agent Ecosystem → Model Profiles** and use the Import/Export buttons at the top.
 
-## 导入
+## Import
 
-粘贴 JSON 或选择本地文件后，先进入只读预览：显示档案数量、与本机相同 ID 的数量，以及各项新增或更新目标。默认选择「新增副本」，每项分配新 ID，不覆盖现有模型，也不继承已有 Key。选择「更新同 ID 档案」才会更新匹配项；未匹配项新增。改变输入内容会恢复默认新增方式。
+After pasting JSON or selecting a local file, a read-only preview appears first. It shows the number of profiles, how many IDs already exist on this device, and the targets that will be added or updated. **Create copies** is selected by default; each item receives a new ID, does not overwrite existing models, and does not inherit an existing key. Choose **Update profiles with matching IDs** to update matching items; unmatched items are added. Editing the input restores the default copy mode.
 
-支持旧版单档案、数组和 schemaVersion=1 配置包，以及本轮 schemaVersion=2 导出。未来版本、空包、重复 ID、错误字段类型、无效端点或预算会使整批导入失败，预览不会写入任何配置。文件上限为 2 MiB，单次上限 500 项；文件读取和解析均离开 UI 线程执行。外部端点要求 HTTPS，localhost、127.0.0.0/8、::1 可使用 HTTP。
+Supported formats include a legacy single profile, arrays, schemaVersion=1 configuration packages, and schemaVersion=2 exports. Future versions, empty packages, duplicate IDs, invalid field types, invalid endpoints, or budget violations cause the entire import batch to fail. Previewing does not write any configuration. The file limit is 2 MiB and each batch is limited to 500 items. File reading and parsing happen off the UI thread. Remote endpoints must use HTTPS; localhost, 127.0.0.0/8, and ::1 may use HTTP.
 
-v2 在单档案和包内记录版本，新增 `credentialsIncluded`、`compactionKeepRecentTokens`、`compactionReserveTokens`。v1 没有压缩覆盖字段时，更新会保留本机覆盖；v2 的 null 则表示清除该覆盖。模型参数、推理/工具模式、视觉/生图/Responses 能力、缓存开关及每 Key 请求速率都参与往返。
+Version 2 records the version both per profile and in the package, and adds `credentialsIncluded`, `compactionKeepRecentTokens`, and `compactionReserveTokens`. When v1 lacks compaction-override fields, updates preserve local overrides; in v2, null means to clear the override. Model parameters, reasoning/tool modes, vision/image-generation/Responses capabilities, cache toggles, and per-key request rates round-trip through export and import.
 
-未提供 Key 的更新会保留本机 Key。`credentialsIncluded=false` 表示导出方明确省略了 Key 和自定义请求头，此类更新还会保留本机请求头；新增副本不会补入旧凭据。旧版配置没有此标记时，按其原始请求头字段恢复。
+An update that omits a key preserves the local key. `credentialsIncluded=false` means the exporter explicitly omitted keys and custom request headers; updates of this kind also preserve local headers. New copies never inherit old credentials. Legacy configurations without this marker restore their original request-header fields.
 
-## 导出
+## Export
 
-默认不导出 API Key 和任何自定义请求头，避免遗漏自定义认证字段。需要迁移这些内容时显式勾选「包含 API Key 与自定义请求头」，它们会以明文写入 JSON。其他配置字段保持原值，包括端点 URL；用户在 URL、名称等自由文本中填写的敏感内容不会自动识别，应在分享前检查。
+API keys and all custom request headers are excluded by default to avoid accidentally exporting custom authentication fields. To migrate them, explicitly select **Include API keys and custom request headers**; these values are written to JSON in plaintext. Other fields remain unchanged, including endpoint URLs. Sensitive content entered by users in free-text fields such as URLs and names is not automatically detected, so review the file before sharing it.
 
-支持单项或全部导出，复制到剪贴板、保存文件及系统分享。导出使用与导入相同的版本、参数和体积校验，避免生成当前版本无法恢复的包。读不到已声明配置的 Key 时，包含凭据的导出失败，不会静默生成缺失 Key 的备份。生成与文件写入在后台线程执行；无法访问目标文件时不会显示保存成功。
+Export one profile or all profiles, and copy to the clipboard, save to a file, or use system sharing. Export uses the same version, parameter, and size validation as import to avoid producing a package that the current version cannot restore. If a declared key cannot be read, exporting with credentials fails instead of silently creating a backup with a missing key. Generation and file writes run in the background; if the destination cannot be accessed, the UI does not report a successful save.
 
-## 写入一致性
+## Write consistency
 
-`AiProfileWriter` 先为每项创建新的加密凭据引用，准备好凭据后，`AiModelRepository.importBatch` 在一个 Room 事务中提交整个模型批次与活跃状态。提交时检查准备期间是否发生了模型编辑；发生变化则中止，并要求重新预览。已有活跃模型保持活跃；原本没有活跃模型时激活第一项。
+`AiProfileWriter` first creates new encrypted credential references for each item. After the credentials are prepared, `AiModelRepository.importBatch` commits the full model batch and active state in one Room transaction. During commit it checks whether any model was edited while preparation was underway; if so, it aborts and asks the user to preview again. An existing active model stays active; if none was active, the first imported item is activated.
 
-凭据准备或数据库写入失败时清理暂存引用，保留旧配置和旧凭据。数据库提交期间使用不可取消段，提交后的取消不会删除新配置引用的 Key。旧引用只在没有模型继续使用时清理，因此兼容共享旧凭据引用的情况。
+If credential preparation or database writes fail, staged references are cleaned up and the old configuration and credentials are retained. The database commit uses a non-cancellable section, so cancellation after commit does not delete a key referenced by the new configuration. Old references are cleaned up only when no model uses them, including cases where legacy credential references are shared.
 
-Room 与 DataStore 没有跨库事务。进程在暂存阶段或提交后的清理阶段退出可能留下未引用的加密槽；模型配置始终引用旧的有效槽或已经准备好的新槽。
+Room and DataStore do not share a cross-database transaction. If the process exits during staging or post-commit cleanup, an unreferenced encrypted slot may remain. Model configuration still points to an old valid slot or a newly prepared slot.
 
-## 代码与验证
+## Code and validation
 
-- `AiProfileTransferFormat`：有界读取、版本解析和全批次校验，错误消息不回显原始凭据。
-- `AiProfileBackupCodec`：统一导出映射和导入入口；设置与首次启动共用。
-- `AiProfileImportWriter` / `ModelCredentialStore`：批量提交与加密凭据暂存。
-- `AiModelRepository` / `AiModelDao.importBatch`：事务及并发快照校验。
-- `ModelImportDialog` / `ModelExportDialog`：预览、冲突策略、后台 I/O 与错误状态。
+- `AiProfileTransferFormat`: bounded reads, version parsing, and whole-batch validation; error messages never echo raw credentials.
+- `AiProfileBackupCodec`: shared export mapping and import entry point used by Settings and first-run setup.
+- `AiProfileImportWriter` / `ModelCredentialStore`: batch commit and encrypted credential staging.
+- `AiModelRepository` / `AiModelDao.importBatch`: transaction and concurrent-snapshot validation.
+- `ModelImportDialog` / `ModelExportDialog`: preview, conflict policy, background I/O, and error state.
 
-测试覆盖旧格式与新版本、错误包和体积限制、完整参数往返、复制/更新、凭据省略及保留、写入失败、并发编辑、取消、共享引用，并通过真实 Room 触发器验证后续行失败时的整批回滚。
+Tests cover legacy formats and new versions, invalid packages and size limits, full parameter round-trips, copy/update behavior, omitted and preserved credentials, write failures, concurrent edits, cancellation, shared references, and full-batch rollback using real Room triggers when a later row fails.
 
-该文件是模型配置备份，不包含聊天记录、工作区文件、Linux 根文件系统、应用偏好或 OAuth 会话。本轮使用本地文件和系统分享入口；云端备份可建立在独立的数据归档协议之上。
+This file backs up model configuration only. It does not include chat history, workspace files, the Linux root filesystem, app preferences, or OAuth sessions. This implementation uses local files and system sharing; cloud backup can be built on a separate archive protocol.
