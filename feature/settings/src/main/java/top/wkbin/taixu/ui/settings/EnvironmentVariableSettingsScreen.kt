@@ -96,10 +96,10 @@ fun EnvironmentVariableSettingsScreen(
     showDelete?.let { entry ->
         RuntimeAlertDialog(
             onDismissRequest = { deleteKey = null },
-            title = { Text("删除环境变量") },
-            text = { Text("确定删除 ${entry.key}？") },
-            confirmButton = { TextButton(onClick = { viewModel.deleteEnvironmentVariable(entry.id); deleteKey = null }) { Text("删除") } },
-            dismissButton = { TextButton(onClick = { deleteKey = null }) { Text("取消") } },
+            title = { Text("Delete environment variable") },
+            text = { Text("Delete ${entry.key}?") },
+            confirmButton = { TextButton(onClick = { viewModel.deleteEnvironmentVariable(entry.id); deleteKey = null }) { Text("Delete") } },
+            dismissButton = { TextButton(onClick = { deleteKey = null }) { Text("Cancel") } },
         )
     }
 
@@ -107,13 +107,13 @@ fun EnvironmentVariableSettingsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                "环境变量",
+                "Environment Variables",
                 onBack,
                 actions = {
-                    IconButton(onClick = { viewModel.refreshEnvironmentVariables() }, contentDescription = "刷新环境变量", enabled = !loading && runtimeState is RuntimeState.Ready) {
+                    IconButton(onClick = { viewModel.refreshEnvironmentVariables() }, contentDescription = "刷新Environment Variables", enabled = !loading && runtimeState is RuntimeState.Ready) {
                         RuntimeIcon(RuntimeIconName.Refresh)
                     }
-                    IconButton(onClick = { openEnvironmentEditor(null, "", "") }, contentDescription = "添加环境变量", enabled = !loading && runtimeState is RuntimeState.Ready) {
+                    IconButton(onClick = { openEnvironmentEditor(null, "", "") }, contentDescription = "添加Environment Variables", enabled = !loading && runtimeState is RuntimeState.Ready) {
                         RuntimeIcon(RuntimeIconName.Plus)
                     }
                 },
@@ -129,8 +129,8 @@ fun EnvironmentVariableSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Shield,
-                        title = "Agent 隐私遮盖",
-                        subtitle = "仅遮盖发送给 Agent 和写入对话的变量值；本页仍显示明文",
+                        title = "Agent privacy redaction",
+                        subtitle = "Values are redacted only when sent to the Agent or written to conversations; this page still shows them in plain text",
                         trailing = { Switch(checked = privacyMode, onCheckedChange = viewModel::setEnvironmentPrivacyMode) },
                     )
                 }
@@ -146,12 +146,12 @@ fun EnvironmentVariableSettingsScreen(
                         RuntimeIcon(RuntimeIconName.Alert, tint = MaterialTheme.colorScheme.tertiary)
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
-                                "警告 · 修改环境变量可能导致运行异常",
+                                "警告 · 修改Environment Variables可能导致运行异常",
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                             )
                             Text(
-                                "错误覆盖 JAVA_HOME、GRADLE_HOME、LANG 等变量，可能使终端、构建工具或插件无法启动。请只修改你明确了解用途的变量；TaiXu 运行时关键变量会被强制保护。",
+                                "Incorrectly overriding JAVA_HOME, GRADLE_HOME, LANG, or similar variables may prevent the terminal, build tools, or plugins from starting. Change only variables you understand; critical TaiXu runtime variables are protected.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                             )
@@ -161,7 +161,7 @@ fun EnvironmentVariableSettingsScreen(
             }
             item {
                 Text(
-                    "用户变量保存在 $activeDistroId 的 Linux /etc/profile.d 中，并在下一次命令或终端会话启动时生效。值以受限文件权限保存。",
+                    "User variables are stored in Linux /etc/profile.d for $activeDistroId and take effect the next time a command or terminal session starts. Values are stored with restricted file permissions.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -180,8 +180,8 @@ fun EnvironmentVariableSettingsScreen(
             }
             item {
                 SectionHeader(
-                    title = "用户变量",
-                    subtitle = "可编辑的 TaiXu 用户配置",
+                    title = "User variables",
+                    subtitle = "Editable TaiXu user configuration",
                     trailing = { Text(entries.size.toString(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 )
             }
@@ -192,7 +192,7 @@ fun EnvironmentVariableSettingsScreen(
                     }
                 }
             } else if (entries.isEmpty()) {
-                item { RuntimeCard(modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text("暂无用户变量", style = MaterialTheme.typography.titleMedium); Text("点击右上角 + 添加", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } }
+                item { RuntimeCard(modifier = Modifier.fillMaxWidth()) { Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) { Text("暂无User variables", style = MaterialTheme.typography.titleMedium); Text("点击右上角 + 添加", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } } }
             } else {
                 items(entries, key = { it.id }) { entry ->
                     RuntimeCard(
@@ -218,7 +218,7 @@ fun EnvironmentVariableSettingsScreen(
                                     )
                                 }
                                 Text(
-                                    values[entry.key].orEmpty().ifEmpty { "（空值）" },
+                                    values[entry.key].orEmpty().ifEmpty { "(empty)" },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontFamily = FontFamily.Monospace,
@@ -226,16 +226,16 @@ fun EnvironmentVariableSettingsScreen(
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
-                            IconButton(onClick = { openEnvironmentEditor(entry, entry.key, values[entry.key].orEmpty()) }, contentDescription = "编辑 ${entry.key}") { RuntimeIcon(RuntimeIconName.Edit) }
-                            IconButton(onClick = { deleteKey = entry.id }, contentDescription = "删除 ${entry.key}") { RuntimeIcon(RuntimeIconName.Trash, tint = MaterialTheme.colorScheme.error) }
+                            IconButton(onClick = { openEnvironmentEditor(entry, entry.key, values[entry.key].orEmpty()) }, contentDescription = "Edit ${entry.key}") { RuntimeIcon(RuntimeIconName.Edit) }
+                            IconButton(onClick = { deleteKey = entry.id }, contentDescription = "Delete ${entry.key}") { RuntimeIcon(RuntimeIconName.Trash, tint = MaterialTheme.colorScheme.error) }
                         }
                     }
                 }
             }
             item {
                 SectionHeader(
-                    title = "当前有效环境",
-                    subtitle = "新命令实际可见的变量与值",
+                    title = "Effective environment",
+                    subtitle = "Variables and values visible to new commands",
                     trailing = { Text(effectiveEntries.size.toString(), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 )
             }
@@ -260,7 +260,7 @@ fun EnvironmentVariableSettingsScreen(
                             SettingsRow(
                                 icon = RuntimeIconName.Key,
                                 title = entry.key,
-                                subtitle = entry.value.ifEmpty { "（空值）" },
+                                subtitle = entry.value.ifEmpty { "(empty)" },
                                 onClick = {
                                     if (managedEntry == null) {
                                         openEnvironmentEditor(null, entry.key, entry.value)
@@ -291,7 +291,7 @@ private fun EnvironmentVariableEditor(
     var note by androidx.compose.runtime.saveable.rememberSaveable(entry?.id, initialKey) { mutableStateOf(entry?.note.orEmpty()) }
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (entry != null) "编辑环境变量" else if (initialKey.isNotBlank()) "配置环境变量" else "添加环境变量") },
+        title = { Text(if (entry != null) "编辑Environment Variables" else if (initialKey.isNotBlank()) "配置Environment Variables" else "添加Environment Variables") },
         text = {
             Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
@@ -313,6 +313,6 @@ private fun EnvironmentVariableEditor(
             }
         },
         confirmButton = { TextButton(onClick = { onSave(key, value, note) }, enabled = key.isNotBlank() && (entry != null || value.isNotEmpty())) { Text("保存") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
 }
