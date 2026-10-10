@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "id": "qemu-x86-64-compat",
-  "name": "QEMU x86_64 用户态兼容层",
-  "description": "仅包含 ARM64 QEMU x86_64 user-mode 模拟器与最小 x86_64 RootFS 的离线兼容插件。",
+  "name": "QEMU x86_64 User-Mode Compatibility Layer",
+  "description": "Offline compatibility plugin containing only the ARM64 QEMU x86_64 user-mode emulator and a minimal x86_64 RootFS.",
   "dependencies": [],
   "launchType": "command",
   "version": "1.0.0",
