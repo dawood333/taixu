@@ -140,7 +140,7 @@ fun AppearanceSettingsScreen(
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
                 )
                 SettingsGroup {
-                    // 终端配色方案
+                    // Terminal colors方案
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             text = stringResource(R.string.settings_terminal_color_scheme),
@@ -188,7 +188,7 @@ fun AppearanceSettingsScreen(
 
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                    // 终端字体大小
+                    // Terminal font大小
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(
                             Modifier.fillMaxWidth(),
@@ -327,7 +327,7 @@ fun AppearanceSettingsScreen(
                 }
             }
 
-            // 3.5 深浅色模式
+            // 3.5 深Light模式
             item {
                 Text(
                     text = stringResource(R.string.settings_color_mode),
