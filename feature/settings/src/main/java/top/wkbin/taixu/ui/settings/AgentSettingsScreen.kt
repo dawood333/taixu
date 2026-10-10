@@ -306,15 +306,15 @@ fun AgentSettingsScreen(
                 }
             }
 
-            // ---- 模块 2：System prompt与人设自定义 ----
+            // ---- 模块 2：System Prompt & Persona ----
             item {
                 SectionHeader(
-                    title = "System prompt与人设自定义",
-                    subtitle = "定制 Agent 初始人设、环境说明与动态宏变量注入",
+                    title = "System Prompt & Persona",
+                    subtitle = "Customize the Agent's initial persona, environment instructions, and dynamic macro injection",
                 )
             }
             item {
-                AgentBlockTitle("提示词编辑")
+                AgentBlockTitle("Prompt Editor")
             }
             item {
                 SystemPromptCustomCard(
@@ -329,22 +329,22 @@ fun AgentSettingsScreen(
                 )
             }
 
-            // ---- 模块 2：上下文记忆与智能压缩 ----
+            // ---- 模块 2：Context Memory & Smart Compaction ----
             item {
                 SectionHeader(
-                    title = "上下文记忆与智能压缩",
-                    subtitle = "优化长任务 Token 消耗，防止触及模型上下文窗口上限",
+                    title = "Context Memory & Smart Compaction",
+                    subtitle = "Reduce token usage in long tasks and avoid exceeding the model's context window",
                 )
             }
             item {
-                AgentBlockTitle("压缩策略")
+                AgentBlockTitle("Compaction Strategy")
             }
             item {
                 AgentSettingsGroup {
                     AgentToggleRow(
                         icon = RuntimeIconName.Compress,
-                        title = "开启上下文智能压缩 (Context Compaction)",
-                        subtitle = "历史超过 Token 折叠线时自动生成结构化摘要，保留近期原文、任务状态与关键文件足迹",
+                        title = "Enable Context Compaction",
+                        subtitle = "Automatically create a structured summary when history exceeds the token threshold, preserving recent messages, task state, and key file references",
                         checked = compactionEnabled,
                         onCheckedChange = viewModel::setContextCompactionEnabled,
                     )
@@ -372,22 +372,22 @@ fun AgentSettingsScreen(
             // ---- 模块 3：内置子智能体 ----
             item {
                 SectionHeader(
-                    title = "软件研发 Agent (${subagents.count { it.isEnabled }}/${subagents.size} 已Enabled)",
-                    subtitle = "Agency Agents · 9 个研发部门 · MIT 许可 · 完整提示词离线内置",
+                    title = "Software Development Agents (${subagents.count { it.isEnabled }}/${subagents.size} enabled)",
+                    subtitle = "Agency Agents · 9 engineering departments · MIT licensed · Full prompts bundled offline",
                 )
             }
             item {
-                AgentBlockTitle("自动委派策略")
+                AgentBlockTitle("Automatic Delegation")
             }
             item {
                 AgentSettingsGroup {
                     AgentToggleRow(
                         icon = RuntimeIconName.Bot,
-                        title = "自动判断并拆分任务",
+                        title = "Automatically assess and split tasks",
                         subtitle = if (autoSubagentDelegation) {
-                            "复杂且可并行的任务将由主智能体自行决定是否派发"
+                            "The primary Agent decides whether to delegate complex tasks that can run in parallel"
                         } else {
-                            "仅在用户明确要求并行或子智能体协同时派发"
+                            "Delegate only when the user explicitly requests parallel work or subagent collaboration"
                         },
                         checked = autoSubagentDelegation,
                         onCheckedChange = viewModel::setAutoSubagentDelegationEnabled,
@@ -395,15 +395,15 @@ fun AgentSettingsScreen(
                 }
             }
             item {
-                AgentBlockTitle("角色列表")
+                AgentBlockTitle("Roles")
             }
             item {
                 OutlinedTextField(
                     value = subagentQuery,
                     onValueChange = { subagentQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("搜索 Agent") },
-                    placeholder = { Text("名称、角色标识或职责") },
+                    label = { Text("Search Agents") },
+                    placeholder = { Text("Name, role ID, or responsibility") },
                     leadingIcon = { RuntimeIcon(RuntimeIconName.Search, Modifier.size(18.dp)) },
                     singleLine = true,
                 )
@@ -420,7 +420,7 @@ fun AgentSettingsScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         RuntimeIcon(RuntimeIconName.Plus, Modifier.size(16.dp), MaterialTheme.colorScheme.onPrimaryContainer)
-                        Text("新增Subagent Roles", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+                        Text("Add Subagent Role", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -450,8 +450,8 @@ fun AgentSettingsScreen(
                             modelLabel = profile.defaultModelId?.let { modelId ->
                                 models.firstOrNull { it.id == modelId }?.let { model ->
                                     "${model.name} · ${profile.defaultModelVariant ?: model.model.substringBefore(',').trim()}"
-                                } ?: "模型档案已删除"
-                            } ?: "跟随主智能体",
+                                } ?: "Model profile was deleted"
+                            } ?: "Follow primary Agent",
                             onToggle = { enabled -> viewModel.toggleSubagent(profile.id, enabled) },
                             onEdit = {
                                 editingSubagent = profile
@@ -474,23 +474,23 @@ fun AgentSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     SectionHeader(
-                        title = "Skill 专精技能库 (${skills.count { it.isEnabled }}/${skills.size} 已Enabled)",
-                        subtitle = "向 Agent System prompt注入领域专业规范与操作指导",
+                        title = "Specialized Skills (${skills.count { it.isEnabled }}/${skills.size} enabled)",
+                        subtitle = "Inject domain-specific standards and guidance into the Agent system prompt",
                     )
                 }
             }
             item {
-                AgentBlockTitle("技能进化")
+                AgentBlockTitle("Skill Improvement")
             }
             item {
                 AgentSettingsGroup {
                     AgentToggleRow(
                         icon = RuntimeIconName.Sparkles,
-                        title = "对话后建议沉淀或修复技能",
+                        title = "Suggest creating or improving skills after a conversation",
                         subtitle = if (skillEvolutionSuggestions) {
-                            "成功完成一轮含工具调用的工作后，可建议创建新技能或修复既有自定义技能"
+                            "After a successful task that uses tools, suggest creating a new skill or improving an existing custom skill"
                         } else {
-                            "已关闭：对话结束后不再弹出技能进化建议卡片"
+                            "已关闭：对话结束后不再弹出Skill Improvement建议卡片"
                         },
                         checked = skillEvolutionSuggestions,
                         onCheckedChange = viewModel::setSkillEvolutionSuggestions,
@@ -498,13 +498,13 @@ fun AgentSettingsScreen(
                 }
             }
             item {
-                AgentBlockTitle("技能管理")
+                AgentBlockTitle("Skill Management")
             }
             item {
                 OutlinedButton(onClick = { skillArchivePicker.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) }, modifier = Modifier.fillMaxWidth().height(44.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         RuntimeIcon(RuntimeIconName.FolderDownload, Modifier.size(16.dp))
-                        Text("从 ZIP 导入 Skill（支持批量多选）")
+                        Text("Import skills from ZIP (multi-select supported)")
                     }
                 }
             }
@@ -512,11 +512,11 @@ fun AgentSettingsScreen(
                 OutlinedButton(onClick = viewModel::scanSkillDirectories, modifier = Modifier.fillMaxWidth().height(44.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         RuntimeIcon(RuntimeIconName.FolderOpen, Modifier.size(16.dp))
-                        Text("扫描 Skill 目录批量导入")
+                        Text("Scan skill directories and import in bulk")
                     }
                 }
                 Text(
-                    text = "可将 rikkahub、aicode 等工具的 skills 目录整体复制到 attachments/skills 或工作区 skills 目录，重启应用即自动批量导入；运行中复制可点击上方按钮立即扫描，已导入的不会重复注册",
+                    text = "Copy a skills directory from tools such as rikkahub or aicode into attachments/skills or the workspace skills directory. Skills are imported automatically when the app restarts. If the app is already running, tap the button above to scan now; imported skills will not be registered twice.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp, start = 4.dp),
@@ -526,11 +526,11 @@ fun AgentSettingsScreen(
                 OutlinedButton(onClick = { skillDirPicker.launch(null) }, modifier = Modifier.fillMaxWidth().height(44.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         RuntimeIcon(RuntimeIconName.Search, Modifier.size(16.dp))
-                        Text("从自选目录导入（任意位置）")
+                        Text("Import from a selected directory (any location)")
                     }
                 }
                 Text(
-                    text = "在文件管理器中任选一个目录（支持任意深度嵌套，含 Skill 目录内再嵌套 Skill 子目录的情况），自动查找其中所有包含 SKILL.md 的技能文件夹并导入",
+                    text = "Choose any directory in the file manager. Nested folders are supported, including skills nested inside other skill folders. All folders containing SKILL.md are found and imported automatically.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp, start = 4.dp),
@@ -545,7 +545,7 @@ fun AgentSettingsScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         RuntimeIcon(RuntimeIconName.Sparkles, Modifier.size(16.dp), MaterialTheme.colorScheme.onPrimaryContainer)
-                        Text("新增自定义 Skill 技能", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+                        Text("Add Custom Skill", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -555,8 +555,8 @@ fun AgentSettingsScreen(
                     value = skillQuery,
                     onValueChange = { skillQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("搜索 Skill") },
-                    placeholder = { Text("名称、标识、分类或描述") },
+                    label = { Text("Search skills") },
+                    placeholder = { Text("Name, ID, category, or description") },
                     leadingIcon = { RuntimeIcon(RuntimeIconName.Search, Modifier.size(18.dp)) },
                     singleLine = true,
                 )
@@ -582,14 +582,14 @@ fun AgentSettingsScreen(
                 }
             }
 
-            // ---- 模块 4.5：ClawHub 技能生态市场 ----
+            // ---- 模块 4.5：ClawHub Skills Marketplace ----
             item {
                 SectionHeader(
-                    title = "ClawHub 技能生态市场",
+                    title = "ClawHub Skills Marketplace",
                     subtitle = if (isMarketOfflinePreset) {
-                        "离线精选模式：以下为内置精选生态包（远端市场暂未接入）；安装前仍由本地引擎执行静态安全与兼容性审查"
+                        "Offline curated mode: these are bundled curated packages; the remote marketplace is not connected yet. The local engine still performs static security and compatibility checks before installation."
                     } else {
-                        "精选社区标准生态技能包，下载前由本地引擎执行静态安全与兼容性审查"
+                        "Curated community-standard skill packages. The local engine performs static security and compatibility checks before download."
                     },
                 )
             }
@@ -616,13 +616,13 @@ fun AgentSettingsScreen(
             // ---- 模块 5：Plugin 插件生态管理 ----
             item {
                 SectionHeader(
-                    title = "Plugin 插件生态管理 (${plugins.count { it.isEnabled }}/${plugins.size} 运行中)",
-                    subtitle = "沙箱运行时探测、高危操作安全拦截与扩展能力",
+                    title = "Plugin Ecosystem (${plugins.count { it.isEnabled }}/${plugins.size} active)",
+                    subtitle = "Sandbox runtime detection, safeguards for high-risk operations, and extensions",
                 )
             }
 
             item {
-                AgentBlockTitle("已安装插件")
+                AgentBlockTitle("Installed Plugins")
             }
             items(plugins, key = { it.id }) { plugin ->
                 PluginCard(
@@ -648,9 +648,9 @@ fun AgentSettingsScreen(
     skillArchiveMessage?.let { message ->
         RuntimeAlertDialog(
             onDismissRequest = viewModel::clearSkillArchiveMessage,
-            title = { Text(if (!skillArchiveMessageIsError) "Skill 导入完成" else "Skill 导入失败", fontWeight = FontWeight.Bold) },
+            title = { Text(if (!skillArchiveMessageIsError) "Skill import complete" else "Skill import failed", fontWeight = FontWeight.Bold) },
             text = { Text(message) },
-            confirmButton = { TextButton(onClick = viewModel::clearSkillArchiveMessage) { Text("知道了") } },
+            confirmButton = { TextButton(onClick = viewModel::clearSkillArchiveMessage) { Text("Got it") } },
         )
     }
 
@@ -673,7 +673,7 @@ fun AgentSettingsScreen(
                 ) {
                     Text(skill.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    Text("注入系统的指导提示词 (System Prompt)：", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Text("System guidance prompt:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         shape = RoundedCornerShape(8.dp),
@@ -734,8 +734,8 @@ fun AgentSettingsScreen(
     deletingSkill?.let { skill ->
         RuntimeAlertDialog(
             onDismissRequest = { deletingSkill = null },
-            title = { Text("删除 Skill", fontWeight = FontWeight.Bold) },
-            text = { Text("确定删除“${skill.name}”吗？其脚本资源目录将一并清理，删除后不可恢复。") },
+            title = { Text("Delete Skill", fontWeight = FontWeight.Bold) },
+            text = { Text("Delete “${skill.name}”? Its script resources will also be removed. This cannot be undone.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -755,8 +755,8 @@ fun AgentSettingsScreen(
     deletingSubagent?.let { profile ->
         RuntimeAlertDialog(
             onDismissRequest = { deletingSubagent = null },
-            title = { Text("删除子智能体", fontWeight = FontWeight.Bold) },
-            text = { Text("确定删除“${profile.name}”吗？删除后该角色不会再参与任务委派。") },
+            title = { Text("Delete Subagent", fontWeight = FontWeight.Bold) },
+            text = { Text("Delete “${profile.name}”? This role will no longer be available for task delegation.") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -793,7 +793,7 @@ private fun BaseCommandTimeoutSliderRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("base 命令默认超时", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("Default timeout for base commands", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
                 "${sliderMinutes.toInt()} 分钟",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
@@ -801,7 +801,7 @@ private fun BaseCommandTimeoutSliderRow(
             )
         }
         Text(
-            "适用于普通前台命令；模型可为单次命令指定 1–60 分钟，常驻任务应使用 process 工具",
+            "For ordinary foreground commands. The model can set 1–60 minutes for a single command; use the process tool for long-running tasks.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -896,9 +896,9 @@ private fun ApprovalModeSelectorRow(
                 RuntimeIcon(RuntimeIconName.Shield, Modifier.size(18.dp), MaterialTheme.colorScheme.primary)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text("全局工具权限", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("Global Tool Permissions", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                 Text(
-                    "修改后立即同步覆盖所有会话；聊天顶部的单独切换会被下一次全局修改覆盖。",
+                    "Changes apply to all sessions immediately. Per-chat overrides at the top of the chat will be overwritten by the next global change.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -906,9 +906,9 @@ private fun ApprovalModeSelectorRow(
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf(
-                ApprovalMode.REQUEST to "请求批准",
-                ApprovalMode.ASSISTED to "帮我批准",
-                ApprovalMode.FULL_ACCESS to "完全访问",
+                ApprovalMode.REQUEST to "Request approval",
+                ApprovalMode.ASSISTED to "Approve with assistance",
+                ApprovalMode.FULL_ACCESS to "Full access",
             ).forEach { (value, label) ->
                 FilterChip(
                     selected = mode == value,
@@ -939,9 +939,9 @@ private fun RunModeSelectorRow(
                 RuntimeIcon(RuntimeIconName.Code, Modifier.size(18.dp), MaterialTheme.colorScheme.primary)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text("新会话默认运行意图", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text("Default run mode for new sessions", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                 Text(
-                    "仅作为新建会话初始值，已存在会话可在聊天顶部单独切换。",
+                    "This sets the initial mode for new sessions only. Existing sessions can be changed separately at the top of the chat.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -949,8 +949,8 @@ private fun RunModeSelectorRow(
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             listOf(
-                RunMode.BUILD to "构建",
-                RunMode.PLAN to "规划",
+                RunMode.BUILD to "Build",
+                RunMode.PLAN to "Plan",
             ).forEach { (value, label) ->
                 FilterChip(
                     selected = mode == value,
@@ -999,7 +999,7 @@ private fun AgentDepartmentCard(
                     maxLines = 1,
                 )
                 Text(
-                    "$enabledCount/$agentCount 已Enabled",
+                    "$enabledCount/$agentCount enabled",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1062,7 +1062,7 @@ private fun SubagentProfileCard(
 
             Text(profile.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
-                "默认模型：$modelLabel",
+                "Default model: $modelLabel",
                 style = MaterialTheme.typography.labelSmall,
                 color = if (profile.defaultModelId == null) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
             )
@@ -1077,7 +1077,7 @@ private fun SubagentProfileCard(
                     modifier = Modifier
                         .minimumInteractiveComponentSize()
                         .size(36.dp),
-                    contentDescription = "编辑角色",
+                    contentDescription = "Edit role",
                 ) {
                     RuntimeIcon(RuntimeIconName.Edit, Modifier.size(17.dp), MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -1086,7 +1086,7 @@ private fun SubagentProfileCard(
                     modifier = Modifier
                         .minimumInteractiveComponentSize()
                         .size(36.dp),
-                    contentDescription = "删除角色",
+                    contentDescription = "Delete role",
                 ) {
                     RuntimeIcon(RuntimeIconName.Trash, Modifier.size(17.dp), MaterialTheme.colorScheme.error)
                 }
@@ -1123,7 +1123,7 @@ private fun RoundsSliderRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("单回合最大工具轮次上限", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("Maximum tool rounds per turn", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
                 "${sliderVal.toInt()} 轮",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
@@ -1131,7 +1131,7 @@ private fun RoundsSliderRow(
             )
         }
         Text(
-            "防止复杂任务中模型陷入死循环；达到轮次后进入下方的自动续跑检查点",
+            "Prevents the model from looping on complex tasks. When the limit is reached, the automatic continuation checkpoint below is used.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1164,7 +1164,7 @@ private fun AutoContinuationSliderRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("轮次用尽后自动续跑", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("Automatically continue when rounds are exhausted", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
                 if (continuations == 0) "关闭" else "$continuations 次",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
@@ -1173,9 +1173,9 @@ private fun AutoContinuationSliderRow(
         }
         Text(
             if (continuations == 0) {
-                "轮次用尽即停下等待用户确认；适合希望逐段把关的场景"
+                "Stop and wait for confirmation when the round limit is reached; useful when reviewing each stage."
             } else {
-                "轮次用尽时先让模型收束并记录进度，再自动续跑，无需用户点击继续；" +
+                "When the round limit is reached, ask the model to summarize and save progress, then continue automatically without requiring a tap;" +
                     "总预算上限 ${roundsPerSegment * (continuations + 1)} 轮"
             },
             style = MaterialTheme.typography.bodySmall,
@@ -1209,7 +1209,7 @@ private fun ContextBudgetSliderRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("上下文 Token 预算上限", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("Context token budget limit", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
                 "${sliderVal.toInt()} tok",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
@@ -1218,11 +1218,11 @@ private fun ContextBudgetSliderRow(
         }
         Text(
             if (declaredTokens != null) {
-                "当前激活模型已适配上下文上限 ${declaredTokens / 1000}K（显式配置或自动识别），此滑块暂不生效；" +
-                    "仅在模型无法识别且未配置 contextTokens 时，本值才作为兜底预算。"
+                "The active model's context limit is ${declaredTokens / 1000}K (configured explicitly or detected automatically), so this slider has no effect;" +
+                    "this value is used as a fallback only when the model is not recognized and contextTokens is not configured."
             } else {
-                "当前未识别到激活模型上下文上限，本值即实际生效预算；" +
-                    "长会话历史超出预算将自动折叠早期内容。"
+                "The active model's context limit could not be detected, so this value is the effective budget;" +
+                    "Older content in long conversations is automatically compacted when the budget is exceeded."
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1238,7 +1238,7 @@ private fun ContextBudgetSliderRow(
 }
 
 /**
- * 「历史折叠线比例」滑块。
+ * 「History compaction threshold」滑块。
  *
  * 让历史在预算的一部分处就开始折叠，而不是等到预算减预留的硬线才动手——
  * 长会话可借此显著降低单次请求的 input token 量（省费用、降首字延迟）。
@@ -1251,7 +1251,7 @@ private fun ContextFoldingRatioSliderRow(
     onValueChange: (Int) -> Unit,
 ) {
     var sliderVal by remember(currentValue) { mutableFloatStateOf(currentValue.toFloat()) }
-    // 实时预览：按当前比例算出的折叠线，让用户直观看到「拖到多少就按多少折叠」。
+    // 实时预览：按当前比例算出的折叠线，让User直观看到「拖到多少就按多少折叠」。
     // 关键：budget 必须是**实际生效预算**（模型档案 contextTokens 优先，再钳到 MAX_CONTEXT_BUDGET），
     // 并且扣减引擎同款 system/输出/工具 schema 预留，否则设置页会高于真实折叠触发线。
     val previewSystemTokens = ContextWindowPolicy.estimateReservedPromptTokens(
@@ -1276,7 +1276,7 @@ private fun ContextFoldingRatioSliderRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("历史折叠线比例", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("History compaction threshold", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
                 "${sliderVal.toInt()}%",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
@@ -1284,31 +1284,31 @@ private fun ContextFoldingRatioSliderRow(
             )
         }
         Text(
-            "历史在「预算 × 比例」处开始折叠；默认 100%，对齐主流 harness 的" +
+            "History is compacted at “budget × ratio”. The default is 100%, matching common harness behavior;" +
                 " contextWindow - reserveTokens - toolSchemaReserve - systemTokens。" +
-                "调低比例可让历史更早进入摘要、节省 input token；大窗口模型不再被 96K 封顶。" +
-                "走 Nginx/中转时请把 client_max_body_size 调到 20m 以上，否则可能 HTTP 413。",
+                "Lower values summarize history earlier and save input tokens. Models with large context windows are no longer capped at 96K." +
+                "When using Nginx or a proxy, set client_max_body_size to at least 20m to avoid HTTP 413 errors.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
-            "按当前设置，折叠线约为 ${previewLimit / 1000}K tok",
+            "With current settings, the compaction threshold is about ${previewLimit / 1000}K tokens",
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
             color = MaterialTheme.colorScheme.primary,
         )
-        // 说明这个预览数按什么预算折算，避免用户误以为它基于「上下文预算上限」滑块。
+        // 说明这个预览数按什么预算折算，避免User误以为它基于「上下文预算上限」滑块。
         Text(
             if (declaredTokens != null) {
-                "以上按当前生效模型窗口 ${budget / 1000}K 计算" +
-                    "（显式配置或自动适配）" +
+                "Calculated using the active model's context window of ${budget / 1000}K" +
+                    "(explicitly configured or detected automatically)" +
                     (if (declaredTokens > ContextWindowPolicy.MAX_CONTEXT_BUDGET) {
-                        "，引擎钳制到 ${ContextWindowPolicy.MAX_CONTEXT_BUDGET / 1000}K"
+                        "; the engine caps it at ${ContextWindowPolicy.MAX_CONTEXT_BUDGET / 1000}K"
                     } else {
                         ""
                     }) +
-                    "。预览已扣除系统提示/输出/工具 schema 预留。"
+                    ". The preview excludes reserved space for the system prompt, output, and tool schema."
             } else {
-                "以上按上方「上下文预算上限」滑块的值计算（当前未识别到模型上下文上限）。" +
+                "Calculated using the Context Token Budget slider above (the model's context window was not detected)." +
                     "预览已扣除系统提示/输出/工具 schema 预留。"
             },
             style = MaterialTheme.typography.bodySmall,
@@ -1342,7 +1342,7 @@ private fun ToolsPerRoundSliderRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("单轮最大工具调用数", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("Maximum tool calls per turn", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
                 "${sliderVal.toInt()} 个",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
@@ -1350,7 +1350,7 @@ private fun ToolsPerRoundSliderRow(
             )
         }
         Text(
-            "防止模型一次性爆发大量工具调用耗尽上下文或失控循环",
+            "Prevents the model from exhausting context or entering an uncontrolled loop with too many tool calls at once",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1381,7 +1381,7 @@ private fun ConsecutiveFailuresSliderRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("连续失败熔断阈值", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text("Consecutive failure circuit-breaker threshold", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
             Text(
                 "${sliderVal.toInt()} 轮",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace),
@@ -1389,7 +1389,7 @@ private fun ConsecutiveFailuresSliderRow(
             )
         }
         Text(
-            "连续多轮工具调用全部失败时主动终止，避免陷入死循环空转",
+            "Stop execution when tool calls fail across multiple consecutive rounds, preventing endless loops",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1463,7 +1463,7 @@ private fun SkillCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(onClick = onViewPrompt, contentPadding = PaddingValues(0.dp)) {
-                    Text("查看指导词 (Prompt)", style = MaterialTheme.typography.labelMedium)
+                    Text("View prompt", style = MaterialTheme.typography.labelMedium)
                 }
                 Spacer(Modifier.weight(1f))
                 if (skill.isImmutable) {
@@ -1472,7 +1472,7 @@ private fun SkillCard(
                         shape = RoundedCornerShape(4.dp),
                     ) {
                         Text(
-                            "系统核心常驻",
+                            "Core system (always available)",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -1485,7 +1485,7 @@ private fun SkillCard(
                             modifier = Modifier
                                 .minimumInteractiveComponentSize()
                                 .size(32.dp),
-                            contentDescription = "删除 Skill",
+                            contentDescription = "Delete Skill",
                         ) {
                             RuntimeIcon(RuntimeIconName.Trash, Modifier.size(16.dp), MaterialTheme.colorScheme.error)
                         }
@@ -1560,7 +1560,7 @@ private fun ClawHubMarketSkillCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    "作者: ${item.author} · ★ ${item.stars}",
+                    "Author: ${item.author} · ★ ${item.stars}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -1577,7 +1577,7 @@ private fun ClawHubMarketSkillCard(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp)
-                                Text("审查中…", style = MaterialTheme.typography.labelSmall)
+                                Text("Reviewing…", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -1588,7 +1588,7 @@ private fun ClawHubMarketSkillCard(
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                         ) {
-                            Text("已安装", style = MaterialTheme.typography.labelSmall)
+                            Text("Installed", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     else -> {
@@ -1601,7 +1601,7 @@ private fun ClawHubMarketSkillCard(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 RuntimeIcon(name = RuntimeIconName.Shield, modifier = Modifier.size(14.dp))
-                                Text("审查并安装", style = MaterialTheme.typography.labelSmall)
+                                Text("Review & Install", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -1643,7 +1643,7 @@ private fun PluginCard(
                         Text("v${plugin.version}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text(
-                        "作者: ${plugin.author}",
+                        "Author: ${plugin.author}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -1671,7 +1671,7 @@ private fun PluginCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        "权限:",
+                        "Permissions:",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1696,7 +1696,7 @@ private fun PluginCard(
                             shape = RoundedCornerShape(4.dp),
                         ) {
                             Text(
-                                "等 ${plugin.permissions.size} 项权限",
+                                "and ${plugin.permissions.size} more permissions",
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1721,7 +1721,7 @@ private fun AddSkillDialog(
 
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("新增自定义 Skill 技能", fontWeight = FontWeight.Bold) },
+        title = { Text("Add Custom Skill", fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier
@@ -1732,28 +1732,28 @@ private fun AddSkillDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("技能名称（如: Rust 编译专家）") },
+                    label = { Text("Skill name (e.g. Rust build expert)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = desc,
                     onValueChange = { desc = it },
-                    label = { Text("简要描述") },
+                    label = { Text("Short description") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = cmd,
                     onValueChange = { cmd = it },
-                    label = { Text("触发指令（选填，如 /rust）") },
+                    label = { Text("Trigger command (optional, e.g. /rust)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = prompt,
                     onValueChange = { prompt = it },
-                    label = { Text("System prompt规则 (System Prompt)") },
+                    label = { Text("System prompt instructions") },
                     minLines = 4,
                     maxLines = 8,
                     modifier = Modifier.fillMaxWidth(),
@@ -1765,7 +1765,7 @@ private fun AddSkillDialog(
                 onClick = { onConfirm(name, desc, prompt, cmd) },
                 enabled = name.isNotBlank() && prompt.isNotBlank(),
             ) {
-                Text("添加并Enabled")
+                Text("Add & Enable")
             }
         },
         dismissButton = {
@@ -1807,7 +1807,7 @@ private fun SubagentEditorDialog(
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(if (profile == null) "新增Subagent Roles" else "编辑Subagent Roles", fontWeight = FontWeight.Bold)
+            Text(if (profile == null) "Add Subagent Role" else "Edit Subagent Role", fontWeight = FontWeight.Bold)
         },
         text = {
             Column(
@@ -1819,9 +1819,9 @@ private fun SubagentEditorDialog(
                 OutlinedTextField(
                     value = roleId,
                     onValueChange = { roleId = it },
-                    label = { Text("角色标识") },
+                    label = { Text("Role ID") },
                     supportingText = {
-                        Text(if (duplicateId) "该角色标识已存在" else "仅支持英文、数字、下划线和连字符")
+                        Text(if (duplicateId) "该Role ID已存在" else "Only English letters, numbers, underscores, and hyphens are supported")
                     },
                     isError = duplicateId,
                     singleLine = true,
@@ -1830,14 +1830,14 @@ private fun SubagentEditorDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("显示名称") },
+                    label = { Text("Display name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("职责简介") },
+                    label = { Text("Role description") },
                     minLines = 2,
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth(),
@@ -1845,13 +1845,13 @@ private fun SubagentEditorDialog(
                 OutlinedTextField(
                     value = prompt,
                     onValueChange = { prompt = it },
-                    label = { Text("角色指导词") },
+                    label = { Text("Role instructions") },
                     minLines = 5,
                     maxLines = 9,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("默认模型", style = MaterialTheme.typography.labelMedium)
+                    Text("Default model", style = MaterialTheme.typography.labelMedium)
                     Box(Modifier.fillMaxWidth()) {
                         OutlinedButton(
                             onClick = { modelMenuExpanded = true },
@@ -1860,7 +1860,7 @@ private fun SubagentEditorDialog(
                             val selected = models.firstOrNull { it.id == defaultModelId }
                             Text(
                                 selected?.let { "${it.name} · ${defaultModelVariant ?: it.model.substringBefore(',').trim()}" }
-                                    ?: if (defaultModelId == null) "跟随主智能体" else "模型档案已删除",
+                                    ?: if (defaultModelId == null) "Follow primary Agent" else "Model profile was deleted",
                                 modifier = Modifier.weight(1f),
                             )
                             RuntimeIcon(RuntimeIconName.ChevronDown, Modifier.size(18.dp))
@@ -1870,7 +1870,7 @@ private fun SubagentEditorDialog(
                             onDismissRequest = { modelMenuExpanded = false },
                         ) {
                             DropdownMenuItem(
-                                text = { Text("跟随主智能体") },
+                                text = { Text("Follow primary Agent") },
                                 onClick = {
                                     defaultModelId = null
                                     defaultModelVariant = null
@@ -1901,7 +1901,7 @@ private fun SubagentEditorDialog(
                         }
                     }
                     Text(
-                        "任务派发时显式指定的模型仍会优先于此设置",
+                        "A model explicitly specified when delegating a task takes precedence over this setting",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1915,7 +1915,7 @@ private fun SubagentEditorDialog(
                 },
                 enabled = canSave,
             ) {
-                Text(if (profile == null) "添加并Enabled" else "Save")
+                Text(if (profile == null) "Add & Enable" else "Save")
             }
         },
         dismissButton = {
@@ -1970,12 +1970,12 @@ private fun SystemPromptCustomCard(
             if (defaultPromptAsset.isBlank()) {
                 defaultPromptAsset = runCatching {
                     androidContext.assets.open("prompts/system/core.md").bufferedReader().use { it.readText() }
-                }.getOrDefault("（默认System prompt加载失败）")
+                }.getOrDefault("(Failed to load default system prompt)")
             }
         }
         RuntimeAlertDialog(
             onDismissRequest = { showDefaultPromptDialog = false },
-            title = { Text("默认System prompt (core.md)", fontWeight = FontWeight.Bold) },
+            title = { Text("Default system prompt (core.md)", fontWeight = FontWeight.Bold) },
             text = {
                 Column(modifier = Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                     Text(
@@ -1986,7 +1986,7 @@ private fun SystemPromptCustomCard(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showDefaultPromptDialog = false }) { Text("知道了") }
+                TextButton(onClick = { showDefaultPromptDialog = false }) { Text("Got it") }
             },
         )
     }
@@ -2023,7 +2023,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
         "{{system_version}}" to "系统版本",
         "{{battery_level}}" to "电池电量",
         "{{char}}" to "助手名称",
-        "{{user}}" to "用户名称",
+        "{{user}}" to "User名称",
     )
 
     RuntimeCard(
@@ -2047,8 +2047,8 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                 ) {
                     RuntimeIcon(RuntimeIconName.Prompt, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
                     Column {
-                        Text("自定义System prompt (System Prompt)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text("覆盖全局默认 System Prompt，支持动态宏变量注入", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Custom System Prompt", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text("Overrides the global default system prompt and supports dynamic macro injection", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 Switch(
@@ -2063,14 +2063,14 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text("称呼与人设", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text("Names & Persona", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                 TextButton(
                     onClick = { showDefaultPromptDialog = true },
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         RuntimeIcon(RuntimeIconName.Visibility, Modifier.size(12.dp))
-                        Text("查看默认System prompt", style = MaterialTheme.typography.labelSmall)
+                        Text("View default system prompt", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
@@ -2082,8 +2082,8 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                 OutlinedTextField(
                     value = charNameBuffer,
                     onValueChange = { charNameBuffer = it },
-                    label = { Text("模型自称") },
-                    placeholder = { Text("太墟智枢") },
+                    label = { Text("Model's name for itself") },
+                    placeholder = { Text("TaiXu Agent") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodySmall,
@@ -2091,8 +2091,8 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                 OutlinedTextField(
                     value = userNameBuffer,
                     onValueChange = { userNameBuffer = it },
-                    label = { Text("对用户的称呼") },
-                    placeholder = { Text("用户") },
+                    label = { Text("Name for the user") },
+                    placeholder = { Text("User") },
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodySmall,
@@ -2100,7 +2100,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
             }
 
             Text(
-                "修改后立即对所有对话生效（留空恢复默认）；自定义提示词中的 {{char}} / {{user}} 宏变量也将使用这两个值。",
+                "Changes apply to all conversations immediately (leave blank to use defaults). The {{char}} and {{user}} macros in custom prompts use these values.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -2113,7 +2113,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text("提示词模板内容：", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text("Prompt template content:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     TextButton(
                         onClick = {
                             textBuffer = defaultPromptTemplate
@@ -2123,7 +2123,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             RuntimeIcon(RuntimeIconName.Refresh, Modifier.size(12.dp))
-                            Text("Reset模板", style = MaterialTheme.typography.labelSmall)
+                            Text("Reset template", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -2131,14 +2131,14 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
                 OutlinedTextField(
                     value = textBuffer,
                     onValueChange = { textBuffer = it },
-                    placeholder = { Text("在此输入自定义System prompt，支持 {{cur_datetime}} 等宏变量...") },
+                    placeholder = { Text("Enter a custom system prompt here. Macros such as {{cur_datetime}} are supported...") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 5,
                     maxLines = 10,
                     textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                 )
 
-                Text("点击快捷插入动态宏变量：", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Tap to insert a dynamic macro:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
