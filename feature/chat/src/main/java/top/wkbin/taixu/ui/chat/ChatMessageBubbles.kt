@@ -875,7 +875,7 @@ internal fun ThinkingBlock(
                                         } else {
                                             Toast.makeText(
                                                 context,
-                                                result.exceptionOrNull()?.message ?: "离线翻译失败",
+                                                result.exceptionOrNull()?.message ?: "Offline translation failed",
                                                 Toast.LENGTH_SHORT,
                                             ).show()
                                         }
@@ -885,7 +885,7 @@ internal fun ThinkingBlock(
                             }
                         },
                         modifier = Modifier.size(22.dp),
-                        contentDescription = if (showTranslation) "查看英文原文" else "离线翻译思考",
+                        contentDescription = if (showTranslation) "View original English text" else "Translate reasoning offline",
                     ) {
                         if (isTranslating) {
                             CircularProgressIndicator(
@@ -957,7 +957,7 @@ internal fun ThinkingBlock(
                                 tint = MaterialTheme.colorScheme.primary,
                             )
                             Text(
-                                text = "中文译文 (ML Kit 离线生成)",
+                                text = "English translation (generated offline with ML Kit)",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Medium,
@@ -982,7 +982,7 @@ internal fun ThinkingBlock(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = "正在离线翻译思考内容...",
+                            text = "正在Translate reasoning offline内容...",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 11.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1020,16 +1020,16 @@ internal fun ThinkingBlock(
             onDismissRequest = { showMissingModelDialog = false },
             title = {
                 Text(
-                    text = if (isDownloading) "离线翻译模型下载中" else "未下载离线翻译语种包",
+                    text = if (isDownloading) "Downloading offline translation model" else "Offline translation language pack not downloaded",
                     style = MaterialTheme.typography.titleMedium,
                 )
             },
             text = {
                 Text(
                     text = if (isDownloading && downloadingStatus != null) {
-                        "离线翻译语种模型正在后台下载中（${downloadingStatus.stepName}，${downloadingStatus.detailText}）。\n\n下载完成后将自动就绪支持离线翻译，您可前往「智能体设置」查看详细进度。"
+                        "The offline translation model is downloading in the background (${downloadingStatus.stepName}, ${downloadingStatus.detailText}).\n\nOffline translation will be available automatically when the download completes. Visit Agent Settings to view progress."
                     } else {
-                        "本地英语-中文翻译模型（约 60MB）尚未下载。请前往「Agent 设置」完成语种模型下载后方可离线翻译思考流内容。"
+                        "本地英语-中文翻译模型（约 60MB）尚未下载。请前往「Agent 设置」完成语种模型下载后方可Translate reasoning offline流内容。"
                     },
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -1045,12 +1045,12 @@ internal fun ThinkingBlock(
                         }
                     }
                 ) {
-                    Text(if (isDownloading) "查看下载进度" else "前往设置")
+                    Text(if (isDownloading) "View download progress" else "Open settings")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showMissingModelDialog = false }) {
-                    Text(if (isDownloading) "后台继续" else "取消")
+                    Text(if (isDownloading) "Continue in background" else "Cancel")
                 }
             },
         )
@@ -1059,7 +1059,7 @@ internal fun ThinkingBlock(
 
 /**
  * 技能进化建议卡片（对话后技能沉淀/进化）：
- * 创建新技能 / 更新既有技能 / 忽略，动作完成后由上层隐藏卡片。
+ * 创建新技能 / 更新既有技能 / Ignore，动作完成后由上层隐藏卡片。
  */
 @Composable
 internal fun SkillSuggestionCard(
@@ -1088,7 +1088,7 @@ internal fun SkillSuggestionCard(
                     tint = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    if (isUpdate) "技能进化建议 · 修复既有技能" else "技能进化建议 · 沉淀为新技能",
+                    if (isUpdate) "Skill improvement suggestion · Update existing skill" else "Skill improvement suggestion · Create a new skill",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -1112,7 +1112,7 @@ internal fun SkillSuggestionCard(
             }
             if (suggestion.reason.isNotBlank()) {
                 Text(
-                    "依据：" + suggestion.reason,
+                    "Reason: " + suggestion.reason,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
@@ -1130,7 +1130,7 @@ internal fun SkillSuggestionCard(
                         modifier = Modifier.height(32.dp),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
                     ) {
-                        Text("更新技能", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                        Text("Update skill", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                     }
                 }
                 Button(
@@ -1138,14 +1138,14 @@ internal fun SkillSuggestionCard(
                     modifier = Modifier.height(32.dp),
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
                 ) {
-                    Text(if (isUpdate) "另存为新技能" else "创建技能", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+                    Text(if (isUpdate) "Save as new skill" else "Create skill", style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
                 }
                 TextButton(
                     onClick = onDismiss,
                     modifier = Modifier.height(32.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                 ) {
-                    Text("忽略", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
+                    Text("Ignore", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, softWrap = false)
                 }
             }
         }
