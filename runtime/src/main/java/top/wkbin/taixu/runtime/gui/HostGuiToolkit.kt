@@ -62,11 +62,11 @@ class HostGuiToolkit(
                         accessibilityEnabler.ensureEnabled()
                     }
                     if (AccessibilityGestureBridge.isAvailable() && AccessibilityGestureBridge.tap(x, y))
-                        ok(backend, "已Tap ($x,$y)")
+                        ok(backend, "Tapped ($x,$y)")
                     else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "Gesture cancelled" else "Accessibility service is unavailable (privileged self-authorization was attempted)")
                 }
-                GuiBackendId.CMD_INPUT -> shellInput(backend, "cmd input tap $x $y", "已Tap ($x,$y)")
-                GuiBackendId.BIN_INPUT -> shellInput(backend, "/system/bin/input tap $x $y", "已Tap ($x,$y)")
+                GuiBackendId.CMD_INPUT -> shellInput(backend, "cmd input tap $x $y", "Tapped ($x,$y)")
+                GuiBackendId.BIN_INPUT -> shellInput(backend, "/system/bin/input tap $x $y", "Tapped ($x,$y)")
                 else -> fail(backend, "Not applicable")
             }
         }
@@ -77,7 +77,7 @@ class HostGuiToolkit(
                 GuiBackendId.ACCESSIBILITY -> {
                     if (!AccessibilityGestureBridge.isAvailable()) accessibilityEnabler.ensureEnabled()
                     if (AccessibilityGestureBridge.isAvailable() && AccessibilityGestureBridge.doubleTap(x, y, gapMs))
-                        ok(backend, "已Double-tap ($x,$y)")
+                        ok(backend, "Double-tapped ($x,$y)")
                     else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "Gesture cancelled" else "Accessibility service is unavailable (privileged self-authorization was attempted)")
                 }
                 GuiBackendId.CMD_INPUT, GuiBackendId.BIN_INPUT -> {
@@ -86,7 +86,7 @@ class HostGuiToolkit(
                     if (!first.success) return@runTouch fail(backend, first.stderr.ifBlank { "exit=${first.exitCode}" })
                     delay(gapMs.coerceIn(40L, 400L))
                     val second = privilegeManager.executeShellCommand("$prefix tap $x $y")
-                    if (second.success) ok(backend, "已Double-tap ($x,$y)")
+                    if (second.success) ok(backend, "Double-tapped ($x,$y)")
                     else fail(backend, second.stderr.ifBlank { "Second tap failed" })
                 }
                 else -> fail(backend, "Not applicable")
@@ -100,13 +100,13 @@ class HostGuiToolkit(
                 GuiBackendId.ACCESSIBILITY -> {
                     if (!AccessibilityGestureBridge.isAvailable()) accessibilityEnabler.ensureEnabled()
                     if (AccessibilityGestureBridge.isAvailable() && AccessibilityGestureBridge.longPress(x, y, hold))
-                        ok(backend, "已Long press ($x,$y) for ${hold}ms")
+                        ok(backend, "Long-pressed ($x,$y) for ${hold}ms")
                     else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "Gesture cancelled" else "Accessibility service is unavailable (privileged self-authorization was attempted)")
                 }
                 GuiBackendId.CMD_INPUT ->
-                    shellInput(backend, "cmd input swipe $x $y $x $y $hold", "已Long press ($x,$y) for ${hold}ms")
+                    shellInput(backend, "cmd input swipe $x $y $x $y $hold", "Long-pressed ($x,$y) for ${hold}ms")
                 GuiBackendId.BIN_INPUT ->
-                    shellInput(backend, "/system/bin/input swipe $x $y $x $y $hold", "已Long press ($x,$y) for ${hold}ms")
+                    shellInput(backend, "/system/bin/input swipe $x $y $x $y $hold", "Long-pressed ($x,$y) for ${hold}ms")
                 else -> fail(backend, "Not applicable")
             }
         }
@@ -119,13 +119,13 @@ class HostGuiToolkit(
                 GuiBackendId.ACCESSIBILITY -> {
                     if (!AccessibilityGestureBridge.isAvailable()) accessibilityEnabler.ensureEnabled()
                     if (AccessibilityGestureBridge.isAvailable() && AccessibilityGestureBridge.swipe(x1, y1, x2, y2, dur))
-                        ok(backend, "已Swipe ($x1,$y1)→($x2,$y2)")
+                        ok(backend, "Swiped ($x1,$y1)→($x2,$y2)")
                     else fail(backend, if (AccessibilityGestureBridge.isAvailable()) "Gesture cancelled" else "Accessibility service is unavailable (privileged self-authorization was attempted)")
                 }
                 GuiBackendId.CMD_INPUT ->
-                    shellInput(backend, "cmd input swipe $x1 $y1 $x2 $y2 $dur", "已Swipe ($x1,$y1)→($x2,$y2)")
+                    shellInput(backend, "cmd input swipe $x1 $y1 $x2 $y2 $dur", "Swiped ($x1,$y1)→($x2,$y2)")
                 GuiBackendId.BIN_INPUT ->
-                    shellInput(backend, "/system/bin/input swipe $x1 $y1 $x2 $y2 $dur", "已Swipe ($x1,$y1)→($x2,$y2)")
+                    shellInput(backend, "/system/bin/input swipe $x1 $y1 $x2 $y2 $dur", "Swiped ($x1,$y1)→($x2,$y2)")
                 else -> fail(backend, "Not applicable")
             }
         }
