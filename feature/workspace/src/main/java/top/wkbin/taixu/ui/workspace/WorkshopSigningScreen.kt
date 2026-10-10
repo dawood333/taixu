@@ -170,7 +170,7 @@ private fun CreateKeystoreDialog(
     var createError by remember { mutableStateOf<String?>(null) }
     var validityInput by rememberSaveable(draft.validityYears) { mutableStateOf(draft.validityYears.toString()) }
 
-    // 密码不足 6 位时显式标错，而不是静默禁用按钮
+    // Password不足 6 位时显式标错，而不是静默禁用按钮
     val storePasswordInvalid = draft.storePassword.isNotEmpty() && draft.storePassword.length < 6
     val keyPasswordInvalid = draft.keyPassword.isNotEmpty() && draft.keyPassword.length < 6
     val valid = draft.name.isNotBlank() && draft.storePassword.length >= 6 && (draft.keyPassword.isEmpty() || draft.keyPassword.length >= 6)
@@ -185,13 +185,13 @@ private fun CreateKeystoreDialog(
             ) {
                 Text(stringResource(R.string.workshop_signing_create))
                 if (!createError.isNullOrBlank()) {
-                    val displayReason = if (createError == "环境不完整" || createError?.contains("环境") == true) {
-                        "环境不完整"
+                    val displayReason = if (createError == "Environment incomplete" || createError?.contains("环境") == true) {
+                        "Environment incomplete"
                     } else {
                         createError?.replace(Regex("^(生成|创建)签名失败[：:]?\\s*"), "") ?: ""
                     }
                     Text(
-                        text = "（创建签名失败:$displayReason）",
+                        text = "（Failed to create signing key:$displayReason）",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.error,
                         maxLines = 1,
@@ -349,7 +349,7 @@ private fun ImportKeystoreDialog(
                 Text(stringResource(R.string.workshop_signing_import))
                 if (!importError.isNullOrBlank()) {
                     Text(
-                        text = "（导入失败：$importError）",
+                        text = "(Import failed: $importError)",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.error,
                         maxLines = 1,
@@ -427,7 +427,7 @@ private fun SigningField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(if (optional) "$label（可选）" else label) },
+        label = { Text(if (optional) "$label(optional)" else label) },
         singleLine = true,
         isError = isError,
         supportingText = supportingText?.let { hint -> { Text(hint) } },
