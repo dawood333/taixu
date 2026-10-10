@@ -161,11 +161,11 @@ class ProcessShellExecutor(
             buildString {
                 append(kept.toString(Charsets.UTF_8.name()))
                 if (totalBytes > kept.size()) {
-                    append("\n\n[进程输出已截断：共 ")
+                    append("\n\n[Process output truncated: total ")
                     append(totalBytes)
-                    append(" 字节，仅保留前 ")
+                    append(" bytes; retained first ")
                     append(kept.size())
-                    append(" 字节]")
+                    append(" bytes]")
                 }
             }
         }
