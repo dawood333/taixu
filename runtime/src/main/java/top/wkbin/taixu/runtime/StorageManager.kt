@@ -95,12 +95,12 @@ class StorageManager(
     private var plans: Map<String, Plan> = emptyMap()
     private var inspected = false
     private val categoryInfo = linkedMapOf(
-        "projects" to ("项目与个人文件" to "工程、个人目录与项目缓存；源码和导出文件由工作区管理"),
-        "environment" to ("Linux 与开发环境" to "按发行版查看系统、SDK 和共享运行时；通过环境或工具管理卸载"),
-        "plugins" to ("插件与模型数据" to "插件程序、私有数据和模型；重置或卸载请使用所属工具"),
-        "conversations" to ("会话与附件" to "会话数据库、附件和生成文件；删除需检查会话引用"),
-        "cache" to ("缓存与安装资源" to "依赖缓存可按需清理；安装源包、暂存和回滚备份单独保留"),
-        "app_data" to ("应用与诊断" to "配置、Skills、日志和其他数据；推荐清理过期归档日志"),
+        "projects" to ("Projects & Personal Files" to "Projects, personal directories, and project caches; source and exports are managed in Workspace"),
+        "environment" to ("Linux & Development Environments" to "View distributions, SDKs, and shared runtimes; uninstall them through environment or tool management"),
+        "plugins" to ("Plugins & Model Data" to "Plugin binaries, private data, and models; use the owning tool to reset or uninstall them"),
+        "conversations" to ("Sessions & Attachments" to "Session database, attachments, and generated files; check session references before deletion"),
+        "cache" to ("Caches & Installation Assets" to "Dependency caches can be cleaned as needed; installation packages, staging data, and rollback backups are retained separately"),
+        "app_data" to ("App & Diagnostics" to "Configuration, skills, logs, and other data; expired archived logs are the recommended cleanup target"),
     )
 
     suspend fun inspect(): StorageUsage = withContext(Dispatchers.IO) { mutex.withLock { scan() } }
@@ -177,7 +177,7 @@ class StorageManager(
                 id = id, name = info.first, description = info.second, bytes = children.sumOf { it.bytes },
                 cleanable = cleanable.isNotEmpty(),
                 riskLevel = cleanable.maxByOrNull { it.riskLevel.ordinal }?.riskLevel ?: StorageRiskLevel.READONLY,
-                cleanupHint = "仅处理下列可清理项中扫描时已存在且未改变的文件。依赖需重新下载，项目缓存需重新生成；使用中的环境请先停止。",
+                cleanupHint = "Only files identified as cleanable during the scan and unchanged since then are processed. Dependencies must be downloaded again and project caches regenerated; stop active environments first.",
                 entries = children, reclaimableBytes = children.sumOf { it.reclaimableBytes },
             )
         }
@@ -198,85 +198,85 @@ class StorageManager(
                     risk: StorageRiskLevel = StorageRiskLevel.READONLY) {
             add(Rule(storagePath(file), category, name, hint, cleanup, risk))
         }
-        val preserve = "由所属功能管理；不直接批量删除文件"
-        addRule(context.filesDir.parentFile!!, "app_data", "应用私有数据", "包含偏好、WebView、备份配置及其他数据，由所属功能管理")
-        addRule(context.filesDir, "app_data", "应用配置与其他文件", preserve)
-        addRule(pathManager.baseDir, "app_data", "运行时元数据与其他文件", preserve)
-        addRule(context.getDatabasePath("taixu.db").parentFile!!, "conversations", "会话与应用数据库", "通过会话管理删除记录，保留数据库及 WAL/SHM 文件")
+        val preserve = "Managed by the owning feature; files are not deleted in bulk directly"
+        addRule(context.filesDir.parentFile!!, "app_data", "App-private data", "Includes preferences, WebView data, backup configuration, and other data; managed by the owning feature")
+        addRule(context.filesDir, "app_data", "App configuration and other files", preserve)
+        addRule(pathManager.baseDir, "app_data", "Runtime metadata and other files", preserve)
+        addRule(context.getDatabasePath("taixu.db").parentFile!!, "conversations", "Session and app databases", "Delete records through session management; retain database and WAL/SHM files")
         runCatching { context.cacheDir }.getOrNull()?.let {
-            addRule(it, "cache", "应用导入与系统缓存", "可能包含正在导入的文件，由所属功能管理")
+            addRule(it, "cache", "App imports and system caches", "May contain files currently being imported; managed by the owning feature")
         }
         runCatching { context.codeCacheDir }.getOrNull()?.let {
-            addRule(it, "app_data", "应用代码缓存", "由 Android 管理")
+            addRule(it, "app_data", "App code cache", "Managed by Android")
         }
-        addRule(pathManager.cacheDir, "cache", "下载与离线安装归档", "保留离线安装与下载中的文件；应由安装管理确认完成后删除")
-        addRule(File(context.filesDir, "plugins"), "cache", "本地插件源包", "重新安装和插件配方可能依赖源包，请在插件管理中处理")
-        addRule(pathManager.stagingRootfsDir, "cache", "全局安装暂存", "安装事务所有的数据，不参与一键清理")
-        addRule(pathManager.tmpDir, "app_data", "运行临时文件", "可能被 PRoot 和进程使用，不参与一键清理")
-        val logHint = "仅清理超过 7 天且未修改的 .log.gz / .log.数字 归档日志；保留当前日志"
-        addRule(pathManager.logsDir, "app_data", "运行日志", logHint, Cleanup.OLD_LOG, StorageRiskLevel.SAFE)
-        addRule(pathManager.attachmentsDir, "conversations", "会话附件与生成文件", "可能是唯一副本；请在会话或文件管理中核对后删除", risk = StorageRiskLevel.DANGEROUS)
-        addRule(File(pathManager.attachmentsDir, "skills"), "app_data", "自定义 Skills", preserve)
-        addRule(pathManager.workspaceDir, "projects", "工作区其他文件", "包含导出文件和未识别项目；请在工作区管理")
+        addRule(pathManager.cacheDir, "cache", "Downloads and offline installation archives", "Retain offline-installation and in-progress download files; delete only after the installer confirms completion")
+        addRule(File(context.filesDir, "plugins"), "cache", "Local plugin packages", "Reinstallation and plugin recipes may depend on these packages; manage them in Plugin Management")
+        addRule(pathManager.stagingRootfsDir, "cache", "Global installation staging", "Owned by installation transactions; excluded from one-tap cleanup")
+        addRule(pathManager.tmpDir, "app_data", "Runtime temporary files", "May be in use by PRoot or other processes; excluded from one-tap cleanup")
+        val logHint = "Only archived .log.gz / .log.N files older than 7 days and unchanged since then are cleaned; current logs are retained"
+        addRule(pathManager.logsDir, "app_data", "Runtime logs", logHint, Cleanup.OLD_LOG, StorageRiskLevel.SAFE)
+        addRule(pathManager.attachmentsDir, "conversations", "Session attachments and generated files", "May be the only copy; verify in the session or file manager before deleting", risk = StorageRiskLevel.DANGEROUS)
+        addRule(File(pathManager.attachmentsDir, "skills"), "app_data", "Custom skills", preserve)
+        addRule(pathManager.workspaceDir, "projects", "Other workspace files", "Includes exports and unrecognized projects; manage these in Workspace")
         children(pathManager.workspaceDir).filter { it.isDirectory }.forEach { project ->
-            addRule(project, "projects", "项目 ${project.name} · 文件", "源码、依赖和产物；不凭 build/dist/out/target 名称自动删除")
+            addRule(project, "projects", "Project ${project.name} · files", "Source, dependencies, and artifacts; never auto-delete based only on names such as build/dist/out/target")
             // 只识别有工程标志的专用缓存，不推断自定义构建输出路径。
             val gradle = File(project, "settings.gradle").isFile || File(project, "settings.gradle.kts").isFile ||
                 File(project, "build.gradle").isFile || File(project, "build.gradle.kts").isFile
-            if (gradle) addRule(File(project, ".gradle"), "projects", "项目 ${project.name} · Gradle 缓存",
-                "清理项目 .gradle 缓存；下次构建会重新生成。保留 build、dist、out、target 及源码", Cleanup.PROJECT_CACHE, StorageRiskLevel.CAUTION)
-            if (File(project, "pubspec.yaml").isFile) addRule(File(project, ".dart_tool"), "projects", "项目 ${project.name} · Dart 缓存",
-                "清理 .dart_tool；需要重新执行 pub get 和构建", Cleanup.PROJECT_CACHE, StorageRiskLevel.CAUTION)
+            if (gradle) addRule(File(project, ".gradle"), "projects", "Project ${project.name} · Gradle cache",
+                "Clean the project's .gradle cache; it will be regenerated on the next build. Keep build, dist, out, target, and source files", Cleanup.PROJECT_CACHE, StorageRiskLevel.CAUTION)
+            if (File(project, "pubspec.yaml").isFile) addRule(File(project, ".dart_tool"), "projects", "Project ${project.name} · Dart cache",
+                "Clean .dart_tool; run pub get and rebuild afterward", Cleanup.PROJECT_CACHE, StorageRiskLevel.CAUTION)
         }
         children(pathManager.distrosDir).filter { it.isDirectory }.forEach { distro ->
             val id = distro.name
             val rfs = pathManager.rootfsDir(id)
             val home = pathManager.homeDir(id)
             val taixu = pathManager.taixuRootDir(id)
-            addRule(distro, "environment", "$id · 系统与其他环境文件", "包含 Linux 系统和自行安装的软件，大小会随使用变化")
-            addRule(home, "projects", "$id · 个人目录 /root", "独立持久化 home 挂载；包含个人文件、配置和未识别依赖")
-            addRule(File(rfs, "root"), "environment", "$id · 镜像内原始 /root", "该目录被独立 home 挂载覆盖，保留镜像原始数据")
-            addRule(File(rfs, "home"), "projects", "$id · 其他用户目录", preserve)
-            addRule(pathManager.rootfsPreviousDir(id), "cache", "$id · 升级回滚备份", "删除会失去回滚能力；由升级事务确认并处理", risk = StorageRiskLevel.DANGEROUS)
-            addRule(pathManager.stagingRootfsDir(id), "cache", "$id · 安装暂存", "可能正在安装或等待恢复，不参与一键清理")
-            addRule(File(taixu, "imports"), "cache", "$id · 插件安装资源", "可能被配方或安装事务使用，不参与一键清理")
-            addRule(File(taixu, "flutter-cache-arm64"), "cache", "$id · Flutter 安装资源", "由安装管理确认完成后处理")
-            addRule(File(rfs, "tmp"), "app_data", "$id · 临时文件", "进程运行数据，不参与一键清理")
-            addRule(File(rfs, "var/tmp"), "app_data", "$id · 持久临时文件", "可能需要跨重启保留，不参与一键清理")
-            addRule(File(rfs, "var/log"), "app_data", "$id · 系统日志", logHint, Cleanup.OLD_LOG, StorageRiskLevel.SAFE)
+            addRule(distro, "environment", "$id · system and other environment files", "Includes the Linux system and manually installed software; size changes with use")
+            addRule(home, "projects", "$id · personal directory /root", "Separate persistent home mount containing personal files, configuration, and unrecognized dependencies")
+            addRule(File(rfs, "root"), "environment", "$id · original /root inside image", "This directory is covered by a separate home mount; original image data is retained")
+            addRule(File(rfs, "home"), "projects", "$id · other user directories", preserve)
+            addRule(pathManager.rootfsPreviousDir(id), "cache", "$id · upgrade rollback backup", "Deleting this removes rollback capability; handled by the upgrade transaction", risk = StorageRiskLevel.DANGEROUS)
+            addRule(pathManager.stagingRootfsDir(id), "cache", "$id · installation staging", "May be in use by an installation or awaiting recovery; excluded from one-tap cleanup")
+            addRule(File(taixu, "imports"), "cache", "$id · plugin installation assets", "May be used by a recipe or installation transaction; excluded from one-tap cleanup")
+            addRule(File(taixu, "flutter-cache-arm64"), "cache", "$id · Flutter installation assets", "Handled by installation management after completion")
+            addRule(File(rfs, "tmp"), "app_data", "$id · temporary files", "Process runtime data; excluded from one-tap cleanup")
+            addRule(File(rfs, "var/tmp"), "app_data", "$id · persistent temporary files", "May need to persist across restarts; excluded from one-tap cleanup")
+            addRule(File(rfs, "var/log"), "app_data", "$id · system logs", logHint, Cleanup.OLD_LOG, StorageRiskLevel.SAFE)
             listOf(pathManager.taixuToolsDir(id), pathManager.taixuDataDir(id)).forEach { dir ->
                 addRule(dir, "plugins", "$id · ${dir.name}", preserve)
                 children(dir).forEach { plugin ->
-                    addRule(plugin, "plugins", "$id · ${plugin.name} · ${if (dir.name == "data") "数据与模型" else "程序"}",
-                        "请通过插件功能卸载或重置，以维护引用和注册表一致性")
+                    addRule(plugin, "plugins", "$id · ${plugin.name} · ${if (dir.name == "data") "data and models" else "binaries"}",
+                        "Uninstall or reset through Plugin Management to keep references and the registry consistent")
                 }
             }
             listOf(File(taixu, "toolchains"), pathManager.taixuRuntimesDir(id), File(taixu, "compat"), File(rfs, "opt")).forEach { dir ->
                 children(dir).filter { it.name != "taixu" }.forEach { sdk ->
-                    addRule(sdk, "environment", "$id · ${sdk.name}", "开发套件或共享运行时；卸载前需检查插件和项目引用")
+                    addRule(sdk, "environment", "$id · ${sdk.name}", "Development bundle or shared runtime; check plugin and project references before uninstalling")
                 }
             }
             listOf(".rustup", ".nvm", ".sdkman", ".pyenv").forEach {
-                addRule(File(home, it), "environment", "$id · $it", "用户安装的语言环境，由对应版本管理器管理")
+                addRule(File(home, it), "environment", "$id · $it", "User-installed language environment managed by its version manager")
             }
-            addRule(File(home, ".gradle/wrapper/dists"), "environment", "$id · Gradle Wrapper 分发版",
-                "含已解压运行组件和安装标记；按完整版本管理，不能仅删除其中的旧文件")
-            addRule(File(home, ".gradle/caches"), "cache", "$id · Gradle 转换与其他缓存",
-                "部分缓存含完整性元数据，由 Gradle 管理；下载依赖单独列出")
-            addRule(File(home, ".cache/yarn"), "cache", "$id · Yarn 缓存",
-                "可能包含已解压包及完整性标记，请通过 Yarn 管理")
-            val dependencyHint = "仅删除超过 7 天且未修改的缓存文件；需要联网重新下载，离线构建可能受影响。请先停止终端、构建和服务"
+            addRule(File(home, ".gradle/wrapper/dists"), "environment", "$id · Gradle Wrapper distributions",
+                "Contains extracted runtime components and installation markers; manage by complete version, not by deleting individual old files")
+            addRule(File(home, ".gradle/caches"), "cache", "$id · Gradle transforms and other caches",
+                "Some caches contain integrity metadata and are managed by Gradle; downloaded dependencies are listed separately")
+            addRule(File(home, ".cache/yarn"), "cache", "$id · Yarn cache",
+                "May contain extracted packages and integrity markers; manage through Yarn")
+            val dependencyHint = "Only unchanged cache files older than 7 days are deleted. They must be downloaded again, which may affect offline builds. Stop terminal sessions, builds, and services first"
             // 仅归档/下载缓存；不清理 pub 全局激活、npm npx 环境、Go 解压源码或 pnpm store。
             listOf(
-                ".gradle/caches/modules-2/files-2.1" to "Gradle 下载依赖",
-                ".cache/pip" to "Pip 下载缓存",
-                ".npm/_cacache" to "NPM 下载缓存",
-                ".cargo/registry/cache" to "Cargo 下载归档",
-                "go/pkg/mod/cache/download" to "Go 下载缓存",
+                ".gradle/caches/modules-2/files-2.1" to "Gradle downloaded dependencies",
+                ".cache/pip" to "Pip download cache",
+                ".npm/_cacache" to "NPM download cache",
+                ".cargo/registry/cache" to "Cargo download archives",
+                "go/pkg/mod/cache/download" to "Go download cache",
             ).forEach { (relative, name) ->
                 addRule(File(home, relative), "cache", "$id · $name", dependencyHint, Cleanup.DEPENDENCY, StorageRiskLevel.CAUTION)
             }
-            addRule(File(rfs, "var/cache/apt/archives"), "cache", "$id · APT 已下载软件包",
+            addRule(File(rfs, "var/cache/apt/archives"), "cache", "$id · downloaded APT packages",
                 dependencyHint, Cleanup.DEPENDENCY, StorageRiskLevel.CAUTION)
         }
     }
@@ -287,8 +287,8 @@ class StorageManager(
 
     /** lstat inspects the entry itself, including dangling links, without following its target. */
     private fun scanFailureDetails(path: Path, error: IOException?): String = buildString {
-        append("未完整读取：").append(path)
-        append("\n错误：").append(error?.javaClass?.simpleName ?: "未知读取错误")
+        append("Could not read completely: ").append(path)
+        append("\nError: ").append(error?.javaClass?.simpleName ?: "Unknown read error")
         (error as? FileSystemException)?.reason?.takeIf { it.isNotBlank() }?.let {
             append(" · ").append(it)
         }
@@ -296,19 +296,19 @@ class StorageManager(
         // No chmod: a scan must not alter guest permissions or expose app-private files.
         runCatching {
             val stat = Os.lstat(path.toString())
-            append("\n权限：").append(Integer.toOctalString(stat.st_mode and 0xFFF))
+            append("\nPermissions: ").append(Integer.toOctalString(stat.st_mode and 0xFFF))
             append(" · UID：").append(stat.st_uid).append(" · GID：").append(stat.st_gid)
-            append(" · 应用 UID：").append(Process.myUid())
+            append(" · App UID: ").append(Process.myUid())
             if (OsConstants.S_ISLNK(stat.st_mode)) {
-                append("\n链接目标：").append(Os.readlink(path.toString()))
+                append("\nSymlink target: ").append(Os.readlink(path.toString()))
             } else if (OsConstants.S_ISDIR(stat.st_mode) && stat.st_uid == Process.myUid()) {
                 val needed = OsConstants.S_IRUSR or OsConstants.S_IXUSR
                 if (stat.st_mode and needed != needed) {
-                    append("\n该目录的所有者权限缺少读取或进入权限；与共享存储授权不同。")
+                    append("\nThe directory owner's permissions do not allow reading or traversal; this is different from shared-storage authorization.")
                 }
             }
         }.onFailure {
-            append("\n元数据读取失败：").append(it.javaClass.simpleName)
+            append("\nFailed to read metadata: ").append(it.javaClass.simpleName)
             it.message?.let { message -> append(" · ").append(message) }
         }
     }
@@ -376,9 +376,9 @@ class StorageManager(
         withContext(Dispatchers.IO) {
             mutex.withLock {
                 try {
-                    check(inspected) { "请先刷新存储占用并查看清理范围" }
+                    check(inspected) { "Refresh storage usage and review the cleanup scope first" }
                     val selected = plans.values.filter(select)
-                    check(!requireMatch || selected.isNotEmpty()) { "此项不可直接清理或已失效，请刷新后重试" }
+                    check(!requireMatch || selected.isNotEmpty()) { "This item cannot be cleaned directly or is no longer valid. Refresh and try again." }
                     var released = 0L
                     var skipped = 0
                     var failed = 0
@@ -386,7 +386,7 @@ class StorageManager(
                         for (plan in selected) for (target in plan.targets) {
                             currentCoroutineContext().ensureActive()
                             try {
-                                check(target.path.startsWith(plan.rule.root) && safePath(target.path)) { "路径已改变" }
+                                check(target.path.startsWith(plan.rule.root) && safePath(target.path)) { "Path has changed" }
                                 if (!Files.exists(target.path, NOFOLLOW_LINKS)) { skipped++; continue }
                                 val attrs = Files.readAttributes(target.path, BasicFileAttributes::class.java, NOFOLLOW_LINKS)
                                 if (!attrs.isRegularFile || attrs.isSymbolicLink || attrs.size() != target.size ||
@@ -404,11 +404,11 @@ class StorageManager(
                     inspected = false
                     // 部分完成不能伪装成成功，保留明确结果供 UI 呈现。
                     if (failed > 0 || skipped > 0) AppResult.Failure(AppError(ErrorCode.IO,
-                        "已删除 $released 字节；跳过 $skipped 个已改变或不存在的文件，失败 $failed 个。请刷新查看剩余占用"))
+                        "Deleted $released bytes; skipped $skipped changed or missing files; $failed failed. Refresh to view remaining usage"))
                     else AppResult.Success(released)
                 } catch (cancelled: CancellationException) { throw cancelled
                 } catch (error: Exception) {
-                    AppResult.Failure(AppError(ErrorCode.IO, error.message ?: "清理失败", error))
+                    AppResult.Failure(AppError(ErrorCode.IO, error.message ?: "Cleanup failed", error))
                 }
             }
         }
