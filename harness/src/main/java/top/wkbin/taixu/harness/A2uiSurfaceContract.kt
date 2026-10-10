@@ -22,19 +22,19 @@ object A2uiSurfaceContract {
     const val LEGACY_CATALOG_ID = "https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"
 
     private const val TOOL_DESCRIPTION =
-        "把结构化数据渲染为设备上的原生交互界面。内容适合可视化（对比/排行/" +
-            "表单/看板）时用本工具提交，然后一两句话总结，不要在正文重复数据。" +
-            "messages 是 A2UI 消息数组的 JSON 字符串：首条 createSurface（新界面用全新 surfaceId），" +
-            "其后 updateComponents（扁平 components，容器用 children/child 引用子组件 id，恰一个 root），" +
-            "deleteSurface 移除界面。version 固定 v0.9；catalogId 固定为太墟目录；禁止对 messages 二次转义；" +
-            "文本写明文常量不用表达式，不得杜撰组件类型。" +
-            "对比和排行用 Table：columns 是表头字符串数组（最多 6 列），rows 是 {cells: 字符串数组}（最多 12 行），cells 与 columns 等长。" +
-            "其余用 Basic Catalog：Text/Row/Column/List/Card/Tabs/Modal/Divider/Button/" +
+        "Render structured data as a native interactive surface on the device. Use this tool for content suited to visualization (comparisons/rankings/" +
+            "forms/dashboards), then summarize in one or two sentences without repeating the data in the response body." +
+            "messages is a JSON string containing an array of A2UI messages: the first must be createSurface (use a new surfaceId for a new surface)," +
+            "followed by updateComponents (flat components; containers reference child component IDs through children/child; exactly one root)," +
+            "deleteSurface removes a surface. version is fixed at v0.9; catalogId is fixed to the TaiXu catalog. Do not double-escape messages;" +
+            "text must be a literal constant, not an expression. Do not invent component types." +
+            "Use Table for comparisons and rankings: columns is an array of up to 6 header strings; rows is an array of up to 12 objects with a cells string array; cells and columns must have equal lengths." +
+            "For other content, use the Basic Catalog: Text/Row/Column/List/Card/Tabs/Modal/Divider/Button/" +
             "TextField/CheckBox/ChoicePicker/Slider/DateTimeInput/Image/Video/AudioPlayer。" +
-            "用户点击界面等交互会以 [A2UI 界面事件] 消息回传，据此处理或用相同 surfaceId 更新界面。"
+            "User interactions with the surface are returned as [A2UI Surface Event] messages. Handle them accordingly or update the surface using the same surfaceId."
 
     private const val TOOL_SCHEMA_JSON =
-        """{"type":"object","properties":{"surfaceId":{"type":"string","description":"界面唯一 id（字母数字与 _ . : -，≤64 字符）；更新已有界面时必须复用原 id"},"title":{"type":"string","description":"界面短标题（≤80 字符）"},"messages":{"type":"string","description":"A2UI 协议消息数组的 JSON 字符串；不要二次转义，version 固定为 v0.9，catalogId 固定为 $CATALOG_ID。示例：[{\"version\":\"v0.9\",\"createSurface\":{\"surfaceId\":\"s1\",\"catalogId\":\"$CATALOG_ID\"}},{\"version\":\"v0.9\",\"updateComponents\":{\"surfaceId\":\"s1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"t\"]},{\"id\":\"t\",\"component\":\"Text\",\"text\":\"你好\"}]}}]"}},"required":["surfaceId","messages"]}"""
+        """{"type":"object","properties":{"surfaceId":{"type":"string","description":"Unique surface ID (letters, digits, _, ., :, or -; up to 64 characters); reuse the existing ID when updating a surface"},"title":{"type":"string","description":"Short surface title (up to 80 characters)"},"messages":{"type":"string","description":"A2UI 协议消息数组的 JSON 字符串；不要二次转义，version 固定为 v0.9，catalogId 固定为 $CATALOG_ID。示例：[{\"version\":\"v0.9\",\"createSurface\":{\"surfaceId\":\"s1\",\"catalogId\":\"$CATALOG_ID\"}},{\"version\":\"v0.9\",\"updateComponents\":{\"surfaceId\":\"s1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"t\"]},{\"id\":\"t\",\"component\":\"Text\",\"text\":\"你好\"}]}}]"}},"required":["surfaceId","messages"]}"""
 
     /** ProviderClient.TOOLS 直接引用，避免在棘轮基线文件里展开多行定义。 */
     val TOOL_DEFINITION: ApiToolDefinition = ApiToolDefinition(
