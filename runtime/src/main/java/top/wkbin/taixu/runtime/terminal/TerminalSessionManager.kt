@@ -86,7 +86,7 @@ class TerminalSessionManager(
     }
 
     suspend fun createSession(
-        label: String = "会话 ${_handles.value.size + 1}",
+        label: String = "Session ${_handles.value.size + 1}",
         workingDirectory: String = DEFAULT_CWD,
         distributionId: String? = null,
         id: String = UUID.randomUUID().toString(),
@@ -148,7 +148,7 @@ class TerminalSessionManager(
             return existing
         }
         return createSession(
-            label = project.ifBlank { "工作区" },
+            label = project.ifBlank { "Workspace" },
             workingDirectory = workingDirectory,
             distributionId = distributionId,
         )
@@ -167,7 +167,7 @@ class TerminalSessionManager(
         val remaining = _handles.value.filterNot { it.id == id }
         _handles.value = remaining
         if (remaining.isEmpty()) {
-            val fallback = createSession(label = "主终端", workingDirectory = DEFAULT_CWD)
+            val fallback = createSession(label = "Main terminal", workingDirectory = DEFAULT_CWD)
             _activeId.value = fallback.id
         } else if (_activeId.value == id) {
             _activeId.value = remaining.lastOrNull()?.id ?: remaining.firstOrNull()?.id
