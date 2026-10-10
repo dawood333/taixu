@@ -36,8 +36,8 @@ is_aarch64_elf() { test "$(elf_bytes -j 18 -N 2 "$1")" = "b700"; }
 mkdir -p "$TOOL_DIR/bin" "$ANDROID_HOME" "$TOOLCHAIN_ROOT" /opt/taixu/bin /opt/taixu/locks
 need "$CHECKSUMS"
 
-# 构建进程持有本锁的共享端 (flock -s)，装配必须持有独占端：杜绝“边构建边
-# 改写工具链目录”造成的 JDK 目录闪断、半成品状态与运行中 JVM 文件被删。
+# Build processes hold a shared lock (flock -s); installation must hold an exclusive lock to prevent
+# toolchain changes from disrupting the JDK directory, leaving partial installs, or deleting files used by a running JVM.
 command -v flock >/dev/null 2>&1 || {
     echo "missing flock: refusing to mutate the toolchain without a lock" >&2
     exit 8
@@ -49,12 +49,12 @@ flock -x -w 300 9 || {
 }
 
 # Validate every bundled archive before changing the runtime.
-progress 2 "[VERIFY] 正在校验全部离线归档：sha256sum -c checksums/SHA256SUMS"
+progress 2 "[VERIFY] Verifying all offline archives: sha256sum -c checksums/SHA256SUMS"
 (cd "$PAYLOAD" && (sha256sum -c checksums/SHA256SUMS 2>/dev/null || sed 's|^payload/||' checksums/SHA256SUMS | sha256sum -c -))
-progress 6 "[VERIFY] 离线归档校验完成"
+progress 6 "[VERIFY] Offline archive checksums verified"
 
 # JDK 17 ARM64.
-progress 8 "[EXTRACT] 正在解压 JDK 17：jdk-17-aarch64-linux.tar.gz"
+progress 8 "[EXTRACT] Extracting JDK 17: jdk-17-aarch64-linux.tar.gz"
 need "$ARCHIVES/jdk-17-aarch64-linux.tar.gz"
 rm -rf "$JDK_HOME.staging"
 mkdir -p "$JDK_HOME.staging"
@@ -65,9 +65,9 @@ JDK_SOURCE=$(dirname "$(dirname "$JDK_BIN")")
 rm -rf "$JDK_HOME"
 mv "$JDK_SOURCE" "$JDK_HOME"
 rm -rf "$JDK_HOME.staging"
-# 启动器必须是真正的 AArch64 ELF。包装脚本一旦与其 exec 目标形成回环
-# （脚本 → 软链接 → 脚本），PRoot 下每轮 exec 都要过 ptrace 翻译，
-# java 进程只烧 CPU、零输出。在跑 -version 之前先做静态断言。
+# The launcher must be a real AArch64 ELF. If a wrapper script and its exec target form a loop
+# (script → symlink → script), each exec under PRoot incurs ptrace translation;
+# the Java process burns CPU without output. Assert the binary type before running -version.
 is_aarch64_elf "$JDK_HOME/bin/java" || {
     echo "JDK java launcher is not an ARM64 ELF: $JDK_HOME/bin/java" >&2
     exit 7
@@ -77,7 +77,7 @@ is_aarch64_elf "$JDK_HOME/bin/javac" || {
     exit 7
 }
 "$JDK_HOME/bin/java" -version >/dev/null 2>&1
-progress 15 "[COMMAND] JDK 17 安装完成：java -version"
+progress 15 "[COMMAND] JDK 17 installed: java -version"
 
 # ZIP is not a required system package for this offline plugin. Prefer native
 # unzip when available; otherwise use the JDK jar tool installed above.
@@ -95,9 +95,9 @@ extract_zip() {
     fi
 }
 
-# Flutter 工具链自身依赖 unzip 解压引擎缓存（bin/cache/downloads/*.zip）。
-# 精简 rootfs 不含 unzip，且构建 PATH 只保证 /opt/taixu/bin 可见——把基于
-# JDK jar 的常驻兼容层部署到那里，避免 "Missing unzip tool" 中断 Flutter 构建。
+# The Flutter toolchain uses unzip to extract engine-cache archives (bin/cache/downloads/*.zip).
+# The minimal rootfs does not include unzip, and the build PATH guarantees only /opt/taixu/bin is visible.
+# Install the persistent JDK-JAR-based compatibility wrapper there to prevent Flutter builds from failing with "Missing unzip tool".
 if ! command -v unzip >/dev/null 2>&1; then
     printf '%s\n' \
         '#!/bin/sh' \
@@ -116,11 +116,11 @@ if ! command -v unzip >/dev/null 2>&1; then
         "(cd \"\$dest\" && '$JDK_HOME/bin/jar' xf \"\$archive\")" \
         > /opt/taixu/bin/unzip
     chmod 755 /opt/taixu/bin/unzip
-    progress 16 "[COMMAND] unzip 兼容层已部署（基于 JDK jar）：/opt/taixu/bin/unzip"
+    progress 16 "[COMMAND] JDK-JAR-based unzip compatibility wrapper installed: /opt/taixu/bin/unzip"
 fi
 
 # Gradle.
-progress 17 "[EXTRACT] 正在解压 Gradle $GRADLE_VERSION：gradle-$GRADLE_VERSION-bin.zip"
+progress 17 "[EXTRACT] Extracting Gradle $GRADLE_VERSION: gradle-$GRADLE_VERSION-bin.zip"
 need "$ARCHIVES/gradle-8.14.2-bin.zip"
 rm -rf "/opt/gradle-$GRADLE_VERSION.staging"
 mkdir -p "/opt/gradle-$GRADLE_VERSION.staging"
@@ -131,10 +131,10 @@ rm -rf "/opt/gradle-$GRADLE_VERSION"
 mv "$GRADLE_SOURCE" "/opt/gradle-$GRADLE_VERSION"
 rm -rf "/opt/gradle-$GRADLE_VERSION.staging"
 chmod 755 "/opt/gradle-$GRADLE_VERSION/bin/gradle"
-progress 23 "[COMMAND] Gradle $GRADLE_VERSION 安装完成"
+progress 23 "[COMMAND] Gradle $GRADLE_VERSION installed"
 
 # Android Platform 34.
-progress 25 "[EXTRACT] 正在解压 Android Platform 34：platform-34-ext7_r03.zip"
+progress 25 "[EXTRACT] Extracting Android Platform 34: platform-34-ext7_r03.zip"
 need "$ARCHIVES/platform-34-ext7_r03.zip"
 rm -rf /tmp/taixu-android-platform
 mkdir -p /tmp/taixu-android-platform
@@ -145,10 +145,10 @@ rm -rf "$ANDROID_HOME/platforms/android-34"
 mkdir -p "$ANDROID_HOME/platforms"
 mv "$PLATFORM_SOURCE" "$ANDROID_HOME/platforms/android-34"
 rm -rf /tmp/taixu-android-platform
-progress 30 "[COMMAND] Android Platform 34 安装完成"
+progress 30 "[COMMAND] Android Platform 34 installed"
 
 # Java Build-Tools 35 and ARM64 native SDK tools.
-progress 32 "[EXTRACT] 正在解压 Build Tools $BUILD_TOOLS_VERSION：build-tools_r35_linux.zip"
+progress 32 "[EXTRACT] Extracting Build Tools $BUILD_TOOLS_VERSION: build-tools_r35_linux.zip"
 need "$ARCHIVES/build-tools_r35_linux.zip"
 rm -rf /tmp/taixu-build-tools
 mkdir -p /tmp/taixu-build-tools
@@ -169,7 +169,7 @@ find "$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION" -type f |
         fi
     done
 
-progress 38 "[EXTRACT] 正在解压 ARM64 SDK 工具：android-sdk-tools-static-aarch64.zip"
+progress 38 "[EXTRACT] Extracting ARM64 SDK tools: android-sdk-tools-static-aarch64.zip"
 need "$ARCHIVES/android-sdk-tools-static-aarch64.zip"
 rm -rf /tmp/taixu-arm64-tools
 mkdir -p /tmp/taixu-arm64-tools
@@ -187,10 +187,10 @@ for executable in aapt aapt2 aidl zipalign d8 apksigner dexdump split-select llv
     fi
 done
 rm -rf /tmp/taixu-arm64-tools
-progress 45 "[VERIFY] AAPT2 ARM64 校验完成"
+progress 45 "[VERIFY] AAPT2 ARM64 binary verified"
 
 # ARM64 NDK. Find llvm tools dynamically; do not assume an x86 directory name.
-progress 47 "[EXTRACT] 正在解压 Android NDK r29：android-ndk-r29-aarch64.tar.gz"
+progress 47 "[EXTRACT] Extracting Android NDK r29: android-ndk-r29-aarch64.tar.gz"
 need "$ARCHIVES/android-ndk-r29-aarch64.tar.gz"
 rm -rf "$NDK_HOME.staging"
 mkdir -p "$NDK_HOME.staging"
@@ -208,10 +208,10 @@ fi
 rm -rf "$NDK_HOME"
 mv "$NDK_SOURCE" "$NDK_HOME"
 rm -rf "$NDK_HOME.staging"
-progress 61 "[VERIFY] Android NDK r29 ARM64 工具链校验完成"
+progress 61 "[VERIFY] Android NDK r29 ARM64 toolchain verified"
 
 # Linux AArch64 CMake and Ninja.
-progress 63 "[EXTRACT] 正在解压 CMake ARM64：cmake-linux-aarch64.tar.gz"
+progress 63 "[EXTRACT] Extracting CMake ARM64: cmake-linux-aarch64.tar.gz"
 need "$ARCHIVES/cmake-linux-aarch64.tar.gz"
 rm -rf /tmp/taixu-cmake
 mkdir -p /tmp/taixu-cmake
@@ -222,14 +222,14 @@ cp -a "$(dirname "$(dirname "$CMAKE_BIN")")" "$TOOL_DIR/cmake"
 ln -sfn "$TOOL_DIR/cmake/bin/cmake" "$TOOL_DIR/bin/cmake"
 rm -rf /tmp/taixu-cmake
 
-progress 69 "[EXTRACT] 正在解压 Ninja ARM64：ninja-linux-aarch64.zip"
+progress 69 "[EXTRACT] Extracting Ninja ARM64: ninja-linux-aarch64.zip"
 need "$ARCHIVES/ninja-linux-aarch64.zip"
 extract_zip "$ARCHIVES/ninja-linux-aarch64.zip" "$TOOL_DIR/bin"
 chmod +x "$TOOL_DIR/bin/ninja"
-progress 73 "[COMMAND] CMake 与 Ninja 安装完成"
+progress 73 "[COMMAND] CMake and Ninja installed"
 
 # ADB from the Debian/Termux aarch64 package. Extract it without apt/network.
-progress 75 "[EXTRACT] 正在解包 ADB：android-tools_aarch64.deb"
+progress 75 "[EXTRACT] Unpacking ADB: android-tools_aarch64.deb"
 need "$ARCHIVES/android-tools_aarch64.deb"
 if [ -s "$ARCHIVES/android-tools_aarch64.deb" ]; then
     rm -rf /tmp/taixu-adb
@@ -246,17 +246,17 @@ if [ -s "$ARCHIVES/android-tools_aarch64.deb" ]; then
     chmod +x "$TOOL_DIR/bin/adb"
     rm -rf /tmp/taixu-adb
 fi
-progress 80 "[VERIFY] ADB ARM64 校验完成"
+progress 80 "[VERIFY] ADB ARM64 binary verified"
 
-# Flutter 工具的 locateAndroidSdk 只有在 $ANDROID_HOME/platform-tools/adb
-# （或 cmdline-tools/sdkmanager）存在时才认这个 SDK，缺了直接报
+# Flutter's locateAndroidSdk recognizes this SDK only when $ANDROID_HOME/platform-tools/adb
+# (or cmdline-tools/sdkmanager) exists; otherwise it reports an error.
 # "No Android SDK found. Try setting the ANDROID_HOME environment variable"。
-# 套件只装了 build-tools + platform，这里补齐 platform-tools 布局与 licenses。
+# The suite installs only build-tools and platform, so add the platform-tools layout and licenses here.
 mkdir -p "$ANDROID_HOME/platform-tools" "$ANDROID_HOME/licenses"
 if [ -x "$TOOL_DIR/bin/adb" ] && [ ! -e "$ANDROID_HOME/platform-tools/adb" ]; then
     ln -sfn "$TOOL_DIR/bin/adb" "$ANDROID_HOME/platform-tools/adb"
 fi
-# 常规 SDK 许可签名（Android SDK License r8+），Gradle/Flutter 静默检查用。
+# Standard SDK license marker (Android SDK License r8+), used by Gradle/Flutter silent checks.
 if [ ! -f "$ANDROID_HOME/licenses/android-sdk-license" ]; then
     printf '\x89\x50\x41\x59\x0d\x0a\x1a\x0a\xd0\x4a\x87\x95\x6d\x7d\x3c\xcf\x9d\nd56f5187d9450ff8409f4ab7c8ab84e9\n' \
         > "$ANDROID_HOME/licenses/android-sdk-license"
@@ -266,7 +266,7 @@ if [ ! -f "$ANDROID_HOME/licenses/android-sdk-preview-license" ]; then
         > "$ANDROID_HOME/licenses/android-sdk-preview-license"
 fi
 
-progress 82 "[EXTRACT] 正在解压 Flutter Android ARM64 SDK"
+progress 82 "[EXTRACT] Extracting Flutter Android ARM64 SDK"
 need "$ARCHIVES/flutter-linux-arm64-android-only-slim.tar.gz"
 if [ -s "$ARCHIVES/flutter-linux-arm64-android-only-slim.tar.gz" ]; then
     rm -rf /tmp/taixu-flutter
@@ -280,7 +280,7 @@ if [ -s "$ARCHIVES/flutter-linux-arm64-android-only-slim.tar.gz" ]; then
     ln -sfn /opt/flutter/bin/flutter "$TOOL_DIR/bin/flutter"
     ln -sfn /opt/flutter/bin/dart "$TOOL_DIR/bin/dart"
 
-    # 补齐 Flutter Engine Android ARM64 原生 gen_snapshot 路径
+    # Add the native Flutter Engine gen_snapshot path for Android ARM64.
     ENGINE_DIR="/opt/flutter/bin/cache/artifacts/engine"
     if [ -x "$ENGINE_DIR/linux-arm64/gen_snapshot" ]; then
         for mode in release profile; do
@@ -292,14 +292,14 @@ if [ -s "$ARCHIVES/flutter-linux-arm64-android-only-slim.tar.gz" ]; then
         done
     fi
 fi
-progress 85 "[COMMAND] Flutter Android ARM64 SDK 安装完成"
+progress 85 "[COMMAND] Flutter Android ARM64 SDK installed"
 
-# Rust ARM64 独立工具链与 aarch64-linux-android 交叉编译目标库
+# Standalone Rust ARM64 toolchain and aarch64-linux-android cross-compilation target libraries.
 RUST_STANDALONE=$(find "$ARCHIVES" -maxdepth 1 -type f -name 'rust-*-aarch64-unknown-linux-gnu.tar.*' -print -quit 2>/dev/null || true)
 RUST_STD_ANDROID=$(find "$ARCHIVES" -maxdepth 1 -type f -name 'rust-std-*-aarch64-linux-android.tar.*' -print -quit 2>/dev/null || true)
 RUST_HOME="/opt/taixu/toolchains/rust"
 if [ -n "$RUST_STANDALONE" ] && [ -f "$RUST_STANDALONE" ]; then
-    progress 86 "[EXTRACT] 正在解压 Rust ARM64 独立开发工具链：$(basename "$RUST_STANDALONE")"
+    progress 86 "[EXTRACT] Extracting standalone Rust ARM64 toolchain: $(basename "$RUST_STANDALONE")"
     rm -rf /tmp/taixu-rust "$RUST_HOME"
     mkdir -p /tmp/taixu-rust "$RUST_HOME"
     tar -xf "$RUST_STANDALONE" -C /tmp/taixu-rust --strip-components=1 2>/dev/null || tar -xzf "$RUST_STANDALONE" -C /tmp/taixu-rust --strip-components=1
@@ -309,7 +309,7 @@ if [ -n "$RUST_STANDALONE" ] && [ -f "$RUST_STANDALONE" ]; then
     rm -rf /tmp/taixu-rust
 
     if [ -n "$RUST_STD_ANDROID" ] && [ -f "$RUST_STD_ANDROID" ]; then
-        progress 87 "[EXTRACT] 正在配置 Rust aarch64-linux-android 交叉编译目标库：$(basename "$RUST_STD_ANDROID")"
+        progress 87 "[EXTRACT] Configuring Rust aarch64-linux-android cross-compilation target: $(basename "$RUST_STD_ANDROID")"
         mkdir -p /tmp/taixu-rust-android
         tar -xf "$RUST_STD_ANDROID" -C /tmp/taixu-rust-android --strip-components=1 2>/dev/null || tar -xzf "$RUST_STD_ANDROID" -C /tmp/taixu-rust-android --strip-components=1
         if [ -x /tmp/taixu-rust-android/install.sh ]; then
@@ -338,13 +338,13 @@ replace-with = 'tuna'
 [source.tuna]
 registry = "sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/"
 EOF
-        progress 88 "[COMMAND] Rust 编译器与 Android 交叉编译配置完成"
+        progress 88 "[COMMAND] Rust compiler and Android cross-compilation target configured"
     fi
 fi
 
-# Ripgrep (rg) ARM64: 毫秒级极速搜索
+# Ripgrep (rg) ARM64: fast code search.
 if [ -f "$ARCHIVES/ripgrep-15.2.0-aarch64-unknown-linux-musl.tar.gz" ]; then
-    progress 89 "[EXTRACT] 正在解压 Ripgrep 极速代码搜索工具：ripgrep-15.2.0-aarch64-unknown-linux-musl.tar.gz"
+    progress 89 "[EXTRACT] Extracting Ripgrep code search tool: ripgrep-15.2.0-aarch64-unknown-linux-musl.tar.gz"
     rm -rf /tmp/taixu-ripgrep
     mkdir -p /tmp/taixu-ripgrep
     tar -xzf "$ARCHIVES/ripgrep-15.2.0-aarch64-unknown-linux-musl.tar.gz" -C /tmp/taixu-ripgrep
@@ -355,12 +355,12 @@ if [ -f "$ARCHIVES/ripgrep-15.2.0-aarch64-unknown-linux-musl.tar.gz" ]; then
     chmod 755 "$TOOL_DIR/bin/rg"
     ln -sfn "$TOOL_DIR/bin/rg" "/opt/taixu/bin/rg"
     rm -rf /tmp/taixu-ripgrep
-    progress 90 "[COMMAND] Ripgrep (rg) ARM64 安装完成"
+    progress 90 "[COMMAND] Ripgrep (rg) ARM64 installed"
 fi
 
-# JADX 1.5.0 CLI: Java 反编译工具
+# JADX 1.5.0 CLI: Java decompiler.
 if [ -f "$ARCHIVES/jadx-1.5.0.zip" ]; then
-    progress 91 "[EXTRACT] 正在解压 JADX 1.5.0 反编译套件：jadx-1.5.0.zip"
+    progress 91 "[EXTRACT] Extracting JADX 1.5.0 decompiler package: jadx-1.5.0.zip"
     rm -rf "$TOOL_DIR/jadx" /tmp/taixu-jadx
     mkdir -p /tmp/taixu-jadx
     extract_zip "$ARCHIVES/jadx-1.5.0.zip" /tmp/taixu-jadx
@@ -372,23 +372,23 @@ if [ -f "$ARCHIVES/jadx-1.5.0.zip" ]; then
     ln -sfn "$TOOL_DIR/jadx/bin/jadx" "$TOOL_DIR/bin/jadx"
     ln -sfn "$TOOL_DIR/jadx/bin/jadx" "/opt/taixu/bin/jadx"
     rm -rf /tmp/taixu-jadx
-    progress 92 "[COMMAND] JADX 1.5.0 安装完成"
+    progress 92 "[COMMAND] JADX 1.5.0 installed"
 fi
 
-# Apktool 2.10.0: 资源与 Smali 处理
+# Apktool 2.10.0: resource and Smali processing.
 if [ -f "$ARCHIVES/apktool_2.10.0.jar" ]; then
-    progress 93 "[INSTALL] 正在配置 Apktool 2.10.0..."
+    progress 93 "[INSTALL] Configuring Apktool 2.10.0..."
     mkdir -p "$TOOL_DIR/lib"
     cp "$ARCHIVES/apktool_2.10.0.jar" "$TOOL_DIR/lib/apktool.jar"
     printf '#!/usr/bin/env sh\nexec "%s/bin/java" -jar "%s/lib/apktool.jar" "$@"\n' "$JDK_HOME" "$TOOL_DIR" > "$TOOL_DIR/bin/apktool"
     chmod 755 "$TOOL_DIR/bin/apktool"
     ln -sfn "$TOOL_DIR/bin/apktool" "/opt/taixu/bin/apktool"
-    progress 94 "[COMMAND] Apktool 2.10.0 安装完成"
+    progress 94 "[COMMAND] Apktool 2.10.0 installed"
 fi
 
-# dex-tools 2.4 (dex2jar): DEX 转换与字节码工具
+# dex-tools 2.4 (dex2jar): DEX conversion and bytecode tools.
 if [ -f "$ARCHIVES/dex-tools-v2.4.zip" ]; then
-    progress 95 "[EXTRACT] 正在解压 dex-tools 2.4 (dex2jar)：dex-tools-v2.4.zip"
+    progress 95 "[EXTRACT] Extracting dex-tools 2.4 (dex2jar): dex-tools-v2.4.zip"
     rm -rf "$TOOL_DIR/dex-tools" /tmp/taixu-d2j
     mkdir -p /tmp/taixu-d2j
     extract_zip "$ARCHIVES/dex-tools-v2.4.zip" /tmp/taixu-d2j
@@ -407,10 +407,10 @@ if [ -f "$ARCHIVES/dex-tools-v2.4.zip" ]; then
         fi
     done
     rm -rf /tmp/taixu-d2j
-    progress 96 "[COMMAND] dex-tools (d2j-dex2jar) 安装完成"
+    progress 96 "[COMMAND] dex-tools (d2j-dex2jar) installed"
 fi
 
-# Android Build-Tools 35 工具链命令链接（apksigner, zipalign, aapt, aapt2, dexdump, d8, aidl）
+# Android Build Tools 35 command links (apksigner, zipalign, aapt, aapt2, dexdump, d8, aidl).
 for sdk_cmd in aapt aapt2 aidl zipalign apksigner dexdump d8; do
     if [ -f "$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/$sdk_cmd" ]; then
         chmod 755 "$ANDROID_HOME/build-tools/$BUILD_TOOLS_VERSION/$sdk_cmd"
@@ -418,14 +418,14 @@ for sdk_cmd in aapt aapt2 aidl zipalign apksigner dexdump d8; do
     fi
 done
 
-# JDK 核心签名与密钥工具（jarsigner, keytool）
+# JDK signing and key-management tools (jarsigner, keytool).
 for jdk_cmd in jarsigner keytool; do
     if [ -x "$JDK_HOME/bin/$jdk_cmd" ]; then
         ln -sfn "$JDK_HOME/bin/$jdk_cmd" "$TOOL_DIR/bin/$jdk_cmd"
     fi
 done
 
-# NDK LLVM 原生二进制逆向与分析工具（readelf, objdump, nm, strings, c++filt）
+# NDK LLVM native binary reverse-engineering and analysis tools (readelf, objdump, nm, strings, c++filt).
 NDK_BIN_DIR=$(find "$NDK_HOME/toolchains/llvm/prebuilt" \( -type f -o -type l \) -name clang -print -quit 2>/dev/null | xargs -r dirname)
 if [ -n "$NDK_BIN_DIR" ] && [ -d "$NDK_BIN_DIR" ]; then
     for llvm_tool in llvm-readelf llvm-objdump llvm-nm llvm-strings llvm-cxxfilt; do
@@ -444,7 +444,7 @@ if [ -n "$NDK_BIN_DIR" ] && [ -d "$NDK_BIN_DIR" ]; then
     fi
 fi
 
-# uber-apk-signer: 独立一键对齐与签名套件（如果归档存在）
+# uber-apk-signer: standalone one-click alignment and signing suite (if the archive exists).
 UBER_SIGNER_JAR=$(find "$ARCHIVES" -maxdepth 1 -type f -name 'uber-apk-signer*.jar' -print -quit 2>/dev/null || true)
 if [ -n "$UBER_SIGNER_JAR" ] && [ -f "$UBER_SIGNER_JAR" ]; then
     mkdir -p "$TOOL_DIR/lib"
@@ -453,7 +453,7 @@ if [ -n "$UBER_SIGNER_JAR" ] && [ -f "$UBER_SIGNER_JAR" ]; then
     chmod 755 "$TOOL_DIR/bin/uber-apk-signer"
 fi
 
-# 官方原版 smali / baksmali 独立工具（如果归档存在）
+# Official standalone smali / baksmali tools (if the archives exist).
 SMALI_JAR=$(find "$ARCHIVES" -maxdepth 1 -type f -name 'smali*.jar' -print -quit 2>/dev/null || true)
 BAKSMALI_JAR=$(find "$ARCHIVES" -maxdepth 1 -type f -name 'baksmali*.jar' -print -quit 2>/dev/null || true)
 if [ -n "$SMALI_JAR" ] && [ -f "$SMALI_JAR" ]; then
@@ -469,53 +469,53 @@ if [ -n "$BAKSMALI_JAR" ] && [ -f "$BAKSMALI_JAR" ]; then
     chmod 755 "$TOOL_DIR/bin/baksmali"
 fi
 
-# taixu-apk-sign: 内置一键自动化回包对齐与签名命令
+# taixu-apk-sign: built-in one-command APK alignment and signing helper.
 cat << 'EOF' > "$TOOL_DIR/bin/taixu-apk-sign"
 #!/bin/sh
 set -eu
 if [ $# -lt 1 ]; then
-    echo "用法: taixu-apk-sign <输入未签名APK> [输出已签名APK]"
-    echo "示例: taixu-apk-sign app-unsigned.apk app-signed.apk"
+    echo "Usage: taixu-apk-sign <unsigned.apk> [signed.apk]"
+    echo "Example: taixu-apk-sign app-unsigned.apk app-signed.apk"
     exit 1
 fi
 INPUT_APK="$1"
 OUTPUT_APK="${2:-${INPUT_APK%.apk}-signed.apk}"
 if [ ! -f "$INPUT_APK" ]; then
-    echo "错误: 输入文件不存在: $INPUT_APK" >&2
+    echo "Error: input file does not exist: $INPUT_APK" >&2
     exit 2
 fi
 KS_DIR="/root/.android"
 KS_PATH="$KS_DIR/debug.keystore"
 if [ ! -f "$KS_PATH" ]; then
     mkdir -p "$KS_DIR"
-    echo "==> [taixu-apk-sign] 正在生成标准 Android Debug Keystore..."
+    echo "==> [taixu-apk-sign] Generating a standard Android debug keystore..."
     keytool -genkeypair -v -keystore "$KS_PATH" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" >/dev/null 2>&1
 fi
 TMP_ALIGNED="/tmp/taixu-aligned-$$.apk"
-echo "==> [taixu-apk-sign] 正在执行 4-byte 字节对齐 (zipalign)..."
+echo "==> [taixu-apk-sign] Applying 4-byte alignment (zipalign)..."
 zipalign -p -f 4 "$INPUT_APK" "$TMP_ALIGNED"
-echo "==> [taixu-apk-sign] 正在执行 v1/v2/v3 签名 (apksigner)..."
+echo "==> [taixu-apk-sign] Signing with v1/v2/v3 (apksigner)..."
 apksigner sign --ks "$KS_PATH" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out "$OUTPUT_APK" "$TMP_ALIGNED"
 rm -f "$TMP_ALIGNED"
-echo "==> [taixu-apk-sign] 正在验证签名..."
+echo "==> [taixu-apk-sign] Verifying signature..."
 apksigner verify -v "$OUTPUT_APK" | grep -E "Verifies|Signer #" || true
-echo "==> [taixu-apk-sign] ✅ 签名回包完成: $OUTPUT_APK"
+echo "==> [taixu-apk-sign] ✅ APK signing complete: $OUTPUT_APK"
 EOF
 chmod 755 "$TOOL_DIR/bin/taixu-apk-sign"
 
-progress 97 "[COMMAND] 正在创建全局开发、逆向与签名命令链接"
+progress 97 "[COMMAND] Creating global development, reverse-engineering, and signing command links"
 ln -sfn "$JDK_HOME/bin/java" "$TOOL_DIR/bin/java"
 ln -sfn "$JDK_HOME/bin/javac" "$TOOL_DIR/bin/javac"
 ln -sfn "/opt/gradle-$GRADLE_VERSION/bin/gradle" "$TOOL_DIR/bin/gradle"
 for command in java javac gradle cmake ninja adb flutter dart rustc cargo rustdoc apksigner zipalign jarsigner keytool aapt aapt2 dexdump readelf objdump nm strings cxxfilt uber-apk-signer smali baksmali taixu-apk-sign jadx apktool d2j-dex2jar d2j-baksmali d2j-smali rg; do
     if [ "$command" = "adb" ] && [ -f "/opt/taixu/bin/adb" ] && ! [ -L "/opt/taixu/bin/adb" ]; then
-        # 保留 /opt/taixu/bin/adb 智能连接包装脚本
+        # Preserve the smart-connection wrapper at /opt/taixu/bin/adb.
         continue
     fi
     if [ -e "$TOOL_DIR/bin/$command" ]; then ln -sfn "$TOOL_DIR/bin/$command" "/opt/taixu/bin/$command"; fi
 done
 
-# 兼容旧版探针路径与系统标准 PATH
+# Support legacy probe paths and the standard system PATH.
 mkdir -p /usr/local/bin /opt 2>/dev/null || true
 if [ -d "$TOOL_DIR/jadx" ]; then
     rm -rf /opt/jadx
@@ -527,9 +527,9 @@ for common_cmd in jadx apktool rg d2j-dex2jar d2j-baksmali d2j-smali cmake ninja
     fi
 done
 
-# 链路终验：java 命令入口经全部软链解析后必须回到 JDK 的 AArch64 ELF
-# 启动器。任何中间环节被替换成包装脚本（脚本 exec 软链、软链又指回脚本）
-# 都会形成 PRoot 下的无限 exec 回环，这里在离开安装事务前彻底排除。
+# Final chain check: after resolving all symlinks, the java entry point must lead to the JDK's AArch64 ELF
+# launcher. If any link is replaced with a wrapper script (script execs symlink, symlink points back to script),
+# it creates an infinite exec loop under PRoot; rule this out before completing the installation transaction.
 JAVA_CHAIN_TARGETS="$JDK_HOME/bin/java"
 for chain_entry in "$TOOL_DIR/bin/java" "/opt/taixu/bin/java"; do
     resolved=$(readlink -f "$chain_entry" 2>/dev/null || echo "$chain_entry")
@@ -551,7 +551,7 @@ if [ -f "$PAYLOAD/config/gradle.properties" ]; then cp "$PAYLOAD/config/gradle.p
 if [ -f "$PAYLOAD/config/taixu-android-ndk.gradle" ]; then cp "$PAYLOAD/config/taixu-android-ndk.gradle" /root/.gradle/init.d/taixu-android-ndk.gradle; fi
 printf '%s\n' 'android.builder.sdkDownload=false' >> /root/.gradle/gradle.properties
 
-# 持久化环境变量（供终端、PTY与沙箱全生命周期共享）
+# Persistent environment variables shared by the terminal, PTY, and sandbox lifecycle.
 mkdir -p /etc/profile.d
 cat << EOF > /etc/profile.d/taixu-android.sh
 # TaiXu Android development environment (managed by android-suite-offline plugin)
@@ -596,6 +596,6 @@ if [ -f /etc/bash.bashrc ] && ! grep -q "taixu-android" /etc/bash.bashrc 2>/dev/
     echo '. /etc/profile.d/taixu-android.sh 2>/dev/null || true' >> /etc/bash.bashrc
 fi
 
-progress 98 "[VERIFY] 正在执行 Android 全栈开发套件最终验证"
+progress 98 "[VERIFY] Running final verification of the Android full-stack development suite"
 /bin/sh "$PAYLOAD/scripts/verify-android-suite.sh"
-progress 100 "[VERIFY] Android 全栈开发套件验证完成"
+progress 100 "[VERIFY] Android full-stack development suite verification complete"
