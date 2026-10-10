@@ -91,13 +91,13 @@ fun LinuxEnvironmentSettingsScreen(
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RuntimeIcon(RuntimeIconName.Alert, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.error)
-                    Text("运行模式授权未通过")
+                    Text("Runtime authorization failed")
                 }
             },
             text = { Text(errorMsg, style = MaterialTheme.typography.bodyMedium) },
             confirmButton = {
                 TextButton(onClick = { privilegeResultMessage = null }) {
-                    Text("知道了")
+                    Text("Got it")
                 }
             },
         )
@@ -117,7 +117,7 @@ fun LinuxEnvironmentSettingsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { RuntimeTopBar("Linux 容器与存储", onBack) },
+        topBar = { RuntimeTopBar("Linux Containers & Storage", onBack) },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -126,7 +126,7 @@ fun LinuxEnvironmentSettingsScreen(
         ) {
             item {
                 Text(
-                    text = "容器系统与沙箱管理",
+                    text = "Container systems and sandbox management",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -134,54 +134,54 @@ fun LinuxEnvironmentSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Server,
-                        title = "Linux 发行版管理",
-                        subtitle = "多沙箱并存 · 镜像拉取 · 一键切换主系统",
-                        value = "${installedDistros.size} 套系统",
+                        title = "Linux distributions",
+                        subtitle = "Multiple sandboxes · image downloads · switch primary distribution",
+                        value = "${installedDistros.size} distributions",
                         onClick = onOpenDistroManagement,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Storage,
-                        title = "存储管理",
-                        subtitle = "按 Linux、插件、项目与 Skills 分析占用",
+                        title = "Storage management",
+                        subtitle = "Analyze storage used by Linux, plugins, projects, and skills",
                         onClick = onOpenStorageUsage,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.SdCard,
-                        title = "存储挂载与共享",
-                        subtitle = "PRoot 宿主存储映射 (-b /sdcard)",
+                        title = "Storage Mounts & Sharing",
+                        subtitle = "PRoot host storage mapping (-b /sdcard)",
                         onClick = onOpenStorageMounts,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Key,
-                        title = "环境变量",
-                        subtitle = "为终端、Agent 和工具注入用户变量",
+                        title = "Environment variables",
+                        subtitle = "Set user variables for the terminal, Agent, and tools",
                         onClick = onOpenEnvironmentVariables,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Network,
-                        title = "SSH 远程访问",
-                        subtitle = "公钥认证 · 端口与局域网监听 · 随运行时启动",
+                        title = "SSH remote access",
+                        subtitle = "Public-key authentication · port and LAN binding · start with runtime",
                         onClick = onOpenSshSettings,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.FolderOpen,
-                        title = "FTP 远程文件访问",
-                        subtitle = "挂载 Linux 根目录 (/) · FileZilla / 资源管理器直连",
+                        title = "FTP remote file access",
+                        subtitle = "Mount the Linux root directory (/) · connect with FileZilla or File Explorer",
                         onClick = onOpenFtpSettings,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Globe,
-                        title = "太墟智枢 Web 协作台",
+                        title = "TaiXu Agent Web Workspace",
                         subtitle = if (webChatStatus.isRunning) {
-                            "运行中 · ${webChatStatus.accessUrl} (PIN: ${webChatStatus.pinCode})"
+                            "Running · ${webChatStatus.accessUrl} (PIN: ${webChatStatus.pinCode})"
                         } else {
-                            "在同一 Wi-Fi 下使用电脑浏览器访问太墟 Agent 与工作区"
+                            "Access the TaiXu Agent and workspace from a computer browser on the same Wi-Fi network"
                         },
                         value = if (webChatStatus.isRunning) "已开启" else "未开启",
                         onClick = { showWebChatDialog = true },
