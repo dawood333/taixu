@@ -447,7 +447,7 @@ class WorkspaceManager(
 
     /**
      * 该项目根目录是否位于宿主共享存储（/storage/emulated/0）之下。
-     * 共享存储受 Android 11+ "所有文件访问" 权限约束：未授权时系统会过滤
+     * Shared storage is subject to Android 11+ “All files access” permission; without it, the system filters
      * 其他应用的文件（典型表现是只列出文件夹），需要引导用户授权。
      */
     suspend fun usesSharedStorage(projectName: String): Boolean = withContext(Dispatchers.IO) {
@@ -767,7 +767,7 @@ class WorkspaceManager(
     )
 
     /**
-     * APK reverse engineering模板初始化：把安装包导入工程目录并做第一层"解包"。
+     * Initialize an APK reverse-engineering template by importing the package into the project and performing a first-level extraction.
      *
      * 产物结构（以工程名 [name] 为例）：
      * ```
@@ -787,7 +787,7 @@ class WorkspaceManager(
         name: String,
         apkSource: ApkImportSource?,
     ): ImportedApk {
-        requireNotNull(apkSource) { "APK reverse engineering模板必须选择安装包来源（installed app or APK file）" }
+        requireNotNull(apkSource) { "The APK reverse-engineering template requires a package source (installed app or APK file)" }
         projectDir.mkdirs()
 
         // 1. 解析来源并拷贝安装包到工程目录
