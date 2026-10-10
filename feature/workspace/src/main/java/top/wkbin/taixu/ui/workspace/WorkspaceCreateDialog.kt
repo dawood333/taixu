@@ -255,7 +255,7 @@ internal fun CreateProjectDialog(
                     }
 
                     CreateProjectStep.EMPTY_DETAILS -> {
-                        Text("新建Empty project", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text("New empty project", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Text("Enter a name to create an empty folder", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         OutlinedTextField(
                             value = state.projectName,
@@ -422,7 +422,7 @@ internal fun CreateProjectDialog(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            // 逆向工具链就绪状态：避免"建好工程却发现 jadx/apktool 缺失"
+                            // Reverse-engineering toolchain readiness: avoid creating a project before jadx/apktool are available.
                             val reverseToolReady = "android-re" in installedComponentIds && runtimeReady
                             val statusSurfaceColor = when {
                                 reverseToolReady -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
