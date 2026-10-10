@@ -11,7 +11,7 @@ menuToggle?.addEventListener('click', () => {
   nav.classList.toggle('open', open);
   menuToggle.classList.toggle('active', open);
   menuToggle.setAttribute('aria-expanded', String(open));
-  menuToggle.setAttribute('aria-label', open ? '关闭导航' : '打开导航');
+  menuToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
   document.body.style.overflow = open ? 'hidden' : '';
 });
 
