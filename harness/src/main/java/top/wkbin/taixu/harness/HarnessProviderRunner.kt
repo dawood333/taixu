@@ -216,7 +216,7 @@ class HarnessProviderRunner(
                 agentEventLogger.log(
                     sessId,
                     "StreamChunkHandling",
-                    "Streaming delta processing failed（本地异常，禁止网络重发）：${handling.message}",
+                    "Streaming delta processing failed (local error; network retry suppressed): ${handling.message}",
                     handling,
                 )
                 if (streamText.length > 0) {
@@ -288,7 +288,7 @@ class HarnessProviderRunner(
                     agentEventLogger.log(
                         sessId,
                         "ContextOverflowRecovery",
-                        "识别到上下文超限，执行紧急压缩：${contextOverflow.message}",
+                        "Context overflow detected; performing emergency compaction: ${contextOverflow.message}",
                         contextOverflow,
                     )
                     val recovered = recoverFromContextOverflow(sessId, model)
@@ -296,7 +296,7 @@ class HarnessProviderRunner(
                         agentEventLogger.log(
                             sessId,
                             "ContextOverflowRecovery",
-                            "紧急压缩完成：折叠 ${recovered.first} 条，保留 ${recovered.second} 条，重新组装请求重试",
+                            "Emergency compaction complete: folded ${recovered.first} messages, retained ${recovered.second}, rebuilding the request and retrying",
                         )
                         resetStreamBaseline()
                         requestMessages = assembleFor(requestModel)
@@ -312,7 +312,7 @@ class HarnessProviderRunner(
                     agentEventLogger.log(
                         sessId,
                         "ContextOverflowImageStrip",
-                        "紧急压缩后仍超限，剥离 $pendingImages 张图片降级重试",
+                        "Still over the context limit after compaction; removing $pendingImages images and retrying with reduced input",
                         contextOverflow,
                     )
                     resetStreamBaseline()
@@ -336,12 +336,12 @@ class HarnessProviderRunner(
                 agentEventLogger.log(
                     sessId,
                     "ContextOverflowUnrecoverable",
-                    "上下文超限且压缩/剥离图片均无法恢复",
+                    "Context overflow could not be resolved by compaction or removing images",
                     contextOverflow,
                 )
                 return TurnProviderOutcome.Failed(
-                    "上下文超出模型窗口，自动压缩后仍无法恢复。" +
-                        "可以让模型用 compress 工具手动压缩，或切换到更大上下文窗口的模型后重试。",
+                    "Context exceeds the model window and could not be recovered after automatic compaction." +
+                        "Ask the model to compact manually with the compress tool, or switch to a model with a larger context window and try again.",
                 )
             } catch (empty: LlmEmptyResponseException) {
                 // 必须位于 IOException 之前：LlmEmptyResponseException 继承 IOException。
@@ -360,8 +360,8 @@ class HarnessProviderRunner(
                 }
                 metrics.streamRetry()
                 stateMirrors.setThinkingLive(sessId, false)
-                stateMirrors.setStatus(sessId, "模型返回空响应，正在重试（$netRetry/$EMPTY_RESPONSE_MAX_RETRIES）")
-                agentEventLogger.log(sessId, "EmptyModelResponseRetry", "第 $netRetry 次空响应，重试上限 $EMPTY_RESPONSE_MAX_RETRIES")
+                stateMirrors.setStatus(sessId, "Model returned an empty response; retrying ($netRetry/$EMPTY_RESPONSE_MAX_RETRIES)")
+                agentEventLogger.log(sessId, "EmptyModelResponseRetry", "Empty response #$netRetry; retry limit $EMPTY_RESPONSE_MAX_RETRIES")
                 resetStreamBaseline()
                 delay(retryPolicy.delayForRetry(netRetry).milliseconds)
             } catch (io: IOException) {
@@ -384,8 +384,8 @@ class HarnessProviderRunner(
                 agentEventLogger.log(
                     sessId,
                     "NetworkRetry",
-                    "网络中断，第 $netRetry 次失败（重试上限 $retryBudget 次" +
-                        (if (transient) "，瞬态故障不受大上下文降级" else "") + "）：${io.message}",
+                    "Network interruption, failure #$netRetry (retry limit: $retryBudget" +
+                        (if (transient) "; transient failures are not subject to large-context fallback" else "") + "）：${io.message}",
                     io,
                 )
                 if (netRetry > retryBudget) {
@@ -394,7 +394,7 @@ class HarnessProviderRunner(
                 }
                 metrics.streamRetry()
                 stateMirrors.setThinkingLive(sessId, false)
-                stateMirrors.setStatus(sessId, "网络中断，自动重发中（第 $netRetry 次失败，上限 $retryBudget）")
+                stateMirrors.setStatus(sessId, "Network interruption; automatically retrying (failure $netRetry of $retryBudget)")
                 resetStreamBaseline()
                 delay(retryPolicy.delayForRetry(netRetry).milliseconds)
             } catch (throwable: Throwable) {
@@ -413,12 +413,12 @@ class HarnessProviderRunner(
                     requestMessages = requestMessages.map { it.copy(imageUrls = emptyList()) }
                     agentEventLogger.log(
                         sessId, "VisionFallback",
-                        "模型不支持图片输入，已剥离 $pendingImages 张图片降级重试", throwable,
+                        "Model does not support image input; removed $pendingImages images and retrying with reduced input", throwable,
                     )
                     resetStreamBaseline()
                     continue
                 }
-                agentEventLogger.log(sessId, "ModelError", "LLM 调用失败: ${throwable.message}", throwable)
+                agentEventLogger.log(sessId, "ModelError", "LLM call failed: ${throwable.message}", throwable)
                 if (streamText.length > 0) {
                     persistAssistant(
                         sessId,
@@ -472,7 +472,7 @@ class HarnessProviderRunner(
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (throwable: Throwable) {
-            agentEventLogger.log(sessId, "ContextOverflowRecoveryFailed", "紧急压缩失败：${throwable.message}", throwable)
+            agentEventLogger.log(sessId, "ContextOverflowRecoveryFailed", "Emergency compaction failed: ${throwable.message}", throwable)
             null
         }
     }
