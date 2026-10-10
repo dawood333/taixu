@@ -125,7 +125,7 @@ fun ModelEditorScreen(
             initialApiKey = viewModel.readModelApiKey(secretRef)
         }
     }
-    // 保存被端点策略拒绝时留在编辑页并提示，避免静默丢档
+    // Save被端点策略拒绝时留在编辑页并提示，避免静默丢档
     LaunchedEffect(Unit) {
         viewModel.profileSaveError.collect { error ->
             if (!error.isNullOrBlank()) {
@@ -140,12 +140,12 @@ fun ModelEditorScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = if (existing == null) "新增模型档案" else "编辑模型档案",
+                title = if (existing == null) "Add model profile" else "Edit model profile",
                 onBack = onBack,
                 actions = {
                     RuntimeIconButton(
                         onClick = { showImportJsonDialog = true },
-                        contentDescription = "从 JSON 填入",
+                        contentDescription = "Import from JSON",
                     ) {
                         RuntimeIcon(
                             name = RuntimeIconName.Code,
@@ -204,15 +204,15 @@ fun ModelEditorScreen(
                     onSuccess = { list ->
                         val item = list.firstOrNull()
                         if (item != null) {
-                            Toast.makeText(context, "已成功从 JSON 载入配置", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Configuration imported from JSON", Toast.LENGTH_SHORT).show()
                             item
                         } else {
-                            Toast.makeText(context, "未找到模型配置", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "No model profile found", Toast.LENGTH_SHORT).show()
                             null
                         }
                     },
                     onFailure = { err ->
-                        Toast.makeText(context, "解析失败: ${err.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Parsing failed: ${err.message}", Toast.LENGTH_SHORT).show()
                         null
                     }
                 )
@@ -255,7 +255,7 @@ private fun ModelEditorContent(
     val existingModelList = remember(existing?.model) {
         existing?.model?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet().orEmpty()
     }
-    // Set 不能直接进 Bundle：用 listSaver 保存为 List 再还原
+    // Set 不能直接进 Bundle：用 listSaver Save为 List 再还原
     val stringSetSaver = listSaver<Set<String>, String>(save = { it.toList() }, restore = { it.toSet() })
     var selectedModels by rememberSaveable(modelId, providerId, stateSaver = stringSetSaver) {
         mutableStateOf(
@@ -301,7 +301,7 @@ private fun ModelEditorContent(
     }
 
     // 已选模型必须始终出现在候选列表中：否则厂商下架后刷新接口与预设都拿不到该模型，
-    // 它会隐身存在于 selectedModels 里，既看不到也无法取消
+    // 它会隐身存在于 selectedModels 里，既看不到也无法Cancel
     val candidateModels = remember(discovered, provider, selectedModels) {
         (selectedModels + discovered + provider.recommendedModels).distinct().filter { it.isNotBlank() }
     }
@@ -425,11 +425,11 @@ private fun ModelEditorContent(
                     .filter { it !in existingKeys }
                     .toList()
                 if (importedKeys.isEmpty()) {
-                    Toast.makeText(context, "没有解析到新的密钥", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "No new API keys were found", Toast.LENGTH_SHORT).show()
                 } else {
                     keyList = (existingKeys + importedKeys).ifEmpty { listOf("") }
                     revealedKeyIndices = emptySet()
-                    Toast.makeText(context, "已导入 ${importedKeys.size} 个密钥", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Imported ${importedKeys.size} API keys", Toast.LENGTH_SHORT).show()
                     showBatchImportKeysDialog = false
                 }
             },
@@ -515,11 +515,11 @@ private fun ModelEditorContent(
                             ) {
                                 Text(
                                     text = when (provider.group) {
-                                        ProviderGroup.OFFICIAL -> "官方"
-                                        ProviderGroup.CHINA -> "国内"
-                                        ProviderGroup.AGGREGATOR -> "聚合"
-                                        ProviderGroup.LOCAL -> "本地"
-                                        ProviderGroup.CUSTOM -> "自定义"
+                                        ProviderGroup.OFFICIAL -> "Official"
+                                        ProviderGroup.CHINA -> "China"
+                                        ProviderGroup.AGGREGATOR -> "Aggregator"
+                                        ProviderGroup.LOCAL -> "Local"
+                                        ProviderGroup.CUSTOM -> "Custom"
                                     },
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -528,7 +528,7 @@ private fun ModelEditorContent(
                             }
                         }
                         Text(
-                            text = if (provider.group == ProviderGroup.LOCAL) "本地沙箱轻量模型端点" else "OpenAI / Claude 兼容 API",
+                            text = if (provider.group == ProviderGroup.LOCAL) "Local沙箱轻量模型端点" else "OpenAI / Claude-compatible API",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -539,7 +539,7 @@ private fun ModelEditorContent(
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("切换预设", style = MaterialTheme.typography.labelMedium)
+                            Text("Switch preset", style = MaterialTheme.typography.labelMedium)
                             RuntimeIcon(RuntimeIconName.ChevronDown, Modifier.size(14.dp))
                         }
                     }
@@ -562,18 +562,18 @@ private fun ModelEditorContent(
                     ) {
                         RuntimeIcon(RuntimeIconName.Globe, Modifier.size(18.dp), MaterialTheme.colorScheme.primary)
                         Text(
-                            text = "接口与基础连接",
+                            text = "Endpoint & Connection",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
 
-                    // 档案名称
+                    // Profile name
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("档案名称") },
+                        label = { Text("Profile name") },
                         placeholder = { Text(if (selectedModels.isNotEmpty()) selectedModels.first() else provider.name) },
                         singleLine = true,
                         shape = compactFieldShape,
@@ -592,7 +592,7 @@ private fun ModelEditorContent(
                         placeholder = {
                             Text(
                                 if (provider.protocol == ProviderProtocol.ANTHROPIC) {
-                                    "https://api.anthropic.com/v1 或中转站地址"
+                                    "https://api.anthropic.com/v1 or proxy URL"
                                 } else {
                                     "https://api.openai.com/v1"
                                 }
@@ -601,7 +601,7 @@ private fun ModelEditorContent(
                         isError = url.isNotBlank() && !urlValid,
                         supportingText = {
                             if (url.isNotBlank() && !urlValid) {
-                                Text("接口地址需以 http:// 或 https:// 开头")
+                                Text("The endpoint URL must start with http:// or https://")
                             }
                         },
                         singleLine = true,
@@ -650,7 +650,7 @@ private fun ModelEditorContent(
                         ) {
                             RuntimeIcon(RuntimeIconName.Key, Modifier.size(18.dp), MaterialTheme.colorScheme.primary)
                             Text(
-                                text = "API 密钥池",
+                                text = "API key pool",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
@@ -661,7 +661,7 @@ private fun ModelEditorContent(
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                         ) {
                             Text(
-                                text = "${keyList.count { it.isNotBlank() }} 个已配置",
+                                text = "${keyList.count { it.isNotBlank() }} configured",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -767,7 +767,7 @@ private fun ModelEditorContent(
                     }
 
                     Text(
-                        text = "密钥将加密保存在本地 Android Keystore 中，明文不落库。",
+                        text = "密钥将加密Save在Local Android Keystore 中，明文不落库。",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -842,7 +842,7 @@ private fun ModelEditorContent(
                             value = modelSearchQuery,
                             onValueChange = { modelSearchQuery = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("搜索模型名称或 ID") },
+                            placeholder = { Text("搜索Model name或 ID") },
                             singleLine = true,
                             shape = compactFieldShape,
                             colors = fieldColors,
@@ -878,7 +878,7 @@ private fun ModelEditorContent(
                         // 流式布局自动横向换行；限制最大高度，模型过多时区域内部滚动，避免撑爆单 item 导致底部黑屏
                         if (filteredCandidateModels.isEmpty()) {
                             Text(
-                                text = "没有匹配的模型，可清空搜索或在下方手动填写模型 ID",
+                                text = "没有匹配的模型，可清空搜索或在下方手动填写Model ID",
                                 modifier = Modifier.padding(vertical = 8.dp),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -932,12 +932,12 @@ private fun ModelEditorContent(
                         }
                     }
 
-                    // 自定义模型输入
+                    // Custom模型输入
                     OutlinedTextField(
                         value = customModelInput,
                         onValueChange = { customModelInput = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("模型 ID（可选，逗号分隔额外模型）") },
+                        label = { Text("Model ID（可选，逗号分隔额外模型）") },
                         placeholder = { Text("例如：gpt-4.5-preview, claude-3-7-sonnet") },
                         singleLine = true,
                         shape = compactFieldShape,
@@ -1270,12 +1270,12 @@ private fun ModelEditorContent(
                                 onCheckedChange = { pureChatMode = it },
                             )
 
-                            // 自定义请求头
+                            // Custom请求头
                             OutlinedTextField(
                                 value = customHeaders,
                                 onValueChange = { customHeaders = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("自定义 HTTP 请求头（多行 Key: Value）") },
+                                label = { Text("Custom HTTP 请求头（多行 Key: Value）") },
                                 placeholder = { Text("X-Custom-Header: value\nHTTP-Referer: https://taixu.app") },
                                 minLines = 2,
                                 maxLines = 4,
@@ -1311,7 +1311,7 @@ private fun ModelEditorContent(
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             RuntimeIcon(RuntimeIconName.Play, Modifier.size(16.dp), MaterialTheme.colorScheme.primary)
-                            Text("测试连接")
+                            Text("Test connection")
                         }
                     }
                 }
@@ -1340,7 +1340,7 @@ private fun ModelEditorContent(
                 }
 
                 testResult?.let { resultMsg ->
-                    val isSuccess = resultMsg == "连接成功"
+                    val isSuccess = resultMsg == "Connection successful"
                     Surface(
                         shape = RoundedCornerShape(10.dp),
                         color = if (isSuccess) successStatusColor().copy(alpha = 0.15f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
@@ -1369,7 +1369,7 @@ private fun ModelEditorContent(
             }
         }
 
-        // ---- 8. 底部保存按钮 ----
+        // ---- 8. 底部Save按钮 ----
         item {
             val effectiveModels = remember(selectedModels, customModelInput) {
                 val customList = customModelInput.split(",").map { it.trim() }.filter { it.isNotBlank() }
@@ -1380,9 +1380,9 @@ private fun ModelEditorContent(
             val parsedRpmLimit = rpmLimitText.trim().toIntOrNull() ?: 0
 
             val buttonText = if (effectiveModels.size > 1) {
-                "保存已勾选的 ${effectiveModels.size} 个模型"
+                "Save已勾选的 ${effectiveModels.size} 个模型"
             } else {
-                "保存模型档案配置"
+                "Save模型档案配置"
             }
 
             RuntimeButton(
@@ -1565,7 +1565,7 @@ private fun BatchImportKeysDialog(
         },
         dismissButton = {
             RuntimeTextButton(onClick = onDismiss) {
-                Text("取消")
+                Text("Cancel")
             }
         },
     )
@@ -1584,7 +1584,7 @@ private fun QuickImportJsonDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RuntimeIcon(RuntimeIconName.Code, Modifier.size(20.dp), MaterialTheme.colorScheme.primary)
-                Text("从 JSON 填入模型配置", fontWeight = FontWeight.Bold)
+                Text("Import from JSON模型配置", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -1634,7 +1634,7 @@ private fun QuickImportJsonDialog(
         },
         dismissButton = {
             RuntimeTextButton(onClick = onDismiss) {
-                Text("取消")
+                Text("Cancel")
             }
         },
     )
@@ -1712,27 +1712,27 @@ private fun ProviderPickerDialog(
                         onClick = { selectedGroup = null },
                     )
                     ProviderFilterChip(
-                        label = "官方",
+                        label = "Official",
                         selected = selectedGroup == ProviderGroup.OFFICIAL,
                         onClick = { selectedGroup = ProviderGroup.OFFICIAL },
                     )
                     ProviderFilterChip(
-                        label = "国内",
+                        label = "China",
                         selected = selectedGroup == ProviderGroup.CHINA,
                         onClick = { selectedGroup = ProviderGroup.CHINA },
                     )
                     ProviderFilterChip(
-                        label = "聚合",
+                        label = "Aggregator",
                         selected = selectedGroup == ProviderGroup.AGGREGATOR,
                         onClick = { selectedGroup = ProviderGroup.AGGREGATOR },
                     )
                     ProviderFilterChip(
-                        label = "本地",
+                        label = "Local",
                         selected = selectedGroup == ProviderGroup.LOCAL,
                         onClick = { selectedGroup = ProviderGroup.LOCAL },
                     )
                     ProviderFilterChip(
-                        label = "自定义",
+                        label = "Custom",
                         selected = selectedGroup == ProviderGroup.CUSTOM,
                         onClick = { selectedGroup = ProviderGroup.CUSTOM },
                     )
@@ -1821,11 +1821,11 @@ private fun ProviderPickerDialog(
                                             ) {
                                                 Text(
                                                     text = when (option.group) {
-                                                        ProviderGroup.OFFICIAL -> "官方"
-                                                        ProviderGroup.CHINA -> "国内"
-                                                        ProviderGroup.AGGREGATOR -> "聚合"
-                                                        ProviderGroup.LOCAL -> "本地"
-                                                        ProviderGroup.CUSTOM -> "自定义"
+                                                        ProviderGroup.OFFICIAL -> "Official"
+                                                        ProviderGroup.CHINA -> "China"
+                                                        ProviderGroup.AGGREGATOR -> "Aggregator"
+                                                        ProviderGroup.LOCAL -> "Local"
+                                                        ProviderGroup.CUSTOM -> "Custom"
                                                     },
                                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -1834,7 +1834,7 @@ private fun ProviderPickerDialog(
                                             }
                                         }
                                         Text(
-                                            text = option.baseUrl.ifBlank { "需自定义 Base URL" },
+                                            text = option.baseUrl.ifBlank { "需Custom Base URL" },
                                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 1,
