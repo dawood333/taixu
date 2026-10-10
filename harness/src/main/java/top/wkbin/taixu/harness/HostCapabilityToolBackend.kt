@@ -68,7 +68,7 @@ class HostCapabilityToolBackend(
     private suspend fun executeHostUncapped(args: JsonObject, operationId: String?, sessionId: String, metadata: MutableMap<String, String>): Pair<Boolean, String> {
         val action = JsonArgs.requireString(args, "action").trim().lowercase()
 
-        // Logcat 优先走内置无线 ADB，不依赖 Shizuku/Root；不可用时再回退原特权通道。
+        // Logcat 优先走内置无线 ADB，不依赖 Shizuku/Root；Unavailable时再回退原特权通道。
         if (action == "logcat" && embeddedAdbManager != null) {
             val explicitPort = args["port"]?.jsonPrimitive?.content?.trim()?.toIntOrNull()
             val adbResult = embeddedAdbManager.captureLogcat(
@@ -85,16 +85,16 @@ class HostCapabilityToolBackend(
                 return true to "mode wireless-adb · exit ${adbResult.exitCode ?: 0}\n${adbResult.output.trim()}"
             }
             val fallbackManager = privilegeManager ?: return false to adbResult.output.ifBlank {
-                "无线 ADB 未连接；请在开发者控制台开启无线调试并完成一次配对。"
+                "Wireless ADB is not connected. Enable Wireless debugging in Developer Console and complete pairing first."
             }
             val info = fallbackManager.getPrivilegeInfo()
             if (info.mode == ExecutionMode.PROOT || !info.modeActive) {
                 return false to adbResult.output.ifBlank {
-                    "无线 ADB 未连接；请在开发者控制台开启无线调试并完成一次配对。"
+                    "Wireless ADB is not connected. Enable Wireless debugging in Developer Console and complete pairing first."
                 }
             }
         }
-        val manager = privilegeManager ?: return false to "未初始化宿主权限执行器"
+        val manager = privilegeManager ?: return false to "Host privilege executor is not initialized"
         if (VirtualScreenHostActions.handles(action)) {
             return virtualScreenHostActions { metadata["image_payload"] = it }.execute(action, args)
         }
@@ -115,13 +115,13 @@ class HostCapabilityToolBackend(
                     )
                     return true to "mode api · exit 0\n[Android API] settings put system $key = $value"
                 }
-                // API 写入失败（通常是未授权 WRITE_SETTINGS），发事件引导用户授权，然后回退 shell
+                // API 写入失败（通常是Not authorized WRITE_SETTINGS），发事件引导用户授权，然后回退 shell
                 eventBus?.emit(
                     HarnessEvent.PermissionRequired(
                         sessionId = sessionId.ifBlank { "unknown" },
                         timestamp = System.currentTimeMillis(),
                         permission = "WRITE_SETTINGS",
-                        reason = "修改系统设置（如亮度）需要授权「修改系统设置」权限",
+                        reason = "Changing system settings (such as brightness) requires the Modify system settings permission",
                     )
                 )
             }
@@ -131,24 +131,24 @@ class HostCapabilityToolBackend(
             "status" -> {
                 val info = manager.getPrivilegeInfo()
                 true to buildString {
-                    append("当前生效模式：").append(info.mode.title)
-                    append("\n权限状态：").append(if (info.modeActive) "已授权" else "未授权")
-                    append("\nShizuku：").append(if (info.shizukuAvailable) "可用 (shell UID 2000)" else "不可用")
-                    append("\nRoot：").append(if (info.rootAvailable) "可用 (UID 0)" else "不可用或未选择")
+                    append("Effective mode: ").append(info.mode.title)
+                    append("\nPermission status: ").append(if (info.modeActive) "Authorized" else "Not authorized")
+                    append("\nShizuku: ").append(if (info.shizukuAvailable) "Available (shell UID 2000)" else "Unavailable")
+                    append("\nRoot: ").append(if (info.rootAvailable) "Available (UID 0)" else "Unavailable或未选择")
                 }
             }
             "app_list" -> executeCachedApps(args)
             "screen_observe" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val onlyInteractive = args["only_interactive"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
                 val res = gui.observeScreen(onlyInteractive)
                 res.fold(
                     onSuccess = { obs -> true to obs.toAgentSummary() },
-                    onFailure = { err -> false to "感知屏幕失败：${err.message}" }
+                    onFailure = { err -> false to "Screen inspection failed: ${err.message}" }
                 )
             }
             "screen_click" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val x = JsonArgs.requireInt(args, "x")
                 val y = JsonArgs.requireInt(args, "y")
                 val res = gui.click(x, y)
@@ -158,14 +158,14 @@ class HostCapabilityToolBackend(
                 )
             }
             "screen_double_click" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 gui.doubleClick(JsonArgs.requireInt(args, "x"), JsonArgs.requireInt(args, "y")).fold(
                     onSuccess = { true to it },
                     onFailure = { false to it.message.orEmpty() },
                 )
             }
             "screen_long_press" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val duration = JsonArgs.optionalLong(args, "duration_ms", 800L, 200L, 5_000L)
                 gui.longPress(JsonArgs.requireInt(args, "x"), JsonArgs.requireInt(args, "y"), duration).fold(
                     onSuccess = { true to it },
@@ -173,7 +173,7 @@ class HostCapabilityToolBackend(
                 )
             }
             "screen_swipe" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val x1 = JsonArgs.requireInt(args, "x1")
                 val y1 = JsonArgs.requireInt(args, "y1")
                 val x2 = JsonArgs.requireInt(args, "x2")
@@ -186,13 +186,13 @@ class HostCapabilityToolBackend(
                 )
             }
             "screen_scroll" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val direction = when (JsonArgs.requireString(args, "direction").lowercase()) {
                     "up" -> ScrollDirection.UP
                     "down" -> ScrollDirection.DOWN
                     "left" -> ScrollDirection.LEFT
                     "right" -> ScrollDirection.RIGHT
-                    else -> return false to "direction 仅支持 up/down/left/right"
+                    else -> return false to "direction supports only up/down/left/right"
                 }
                 val ratio = args["distance_ratio"]?.jsonPrimitive?.content?.toFloatOrNull()?.coerceIn(0.15f, 0.8f) ?: 0.45f
                 val durationMs = JsonArgs.optionalLong(args, "duration_ms", 350L, 50L, 5_000L)
@@ -202,7 +202,7 @@ class HostCapabilityToolBackend(
                 )
             }
             "screen_input_text", "paste_text" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val text = JsonArgs.requireString(args, "text")
                 val res = gui.inputText(text)
                 res.fold(
@@ -211,7 +211,7 @@ class HostCapabilityToolBackend(
                 )
             }
             "screen_key" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val key = JsonArgs.requireString(args, "key")
                 val res = gui.sendKey(key)
                 res.fold(
@@ -220,7 +220,7 @@ class HostCapabilityToolBackend(
                 )
             }
             "app_launch" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val packageName = requireHostIdentifier(args, "package", PACKAGE_NAME)
                 val res = gui.launchApp(packageName)
                 res.fold(
@@ -229,7 +229,7 @@ class HostCapabilityToolBackend(
                 )
             }
             "screen_capture" -> {
-                val gui = hostGuiController ?: return false to "未初始化 GUI 控制器"
+                val gui = hostGuiController ?: return false to "GUI controller is not initialized"
                 val targetPath = JsonArgs.requireString(args, "path")
                 val res = gui.captureScreenshot(targetPath)
                 res.fold(
@@ -250,7 +250,7 @@ class HostCapabilityToolBackend(
                 }
 
                 // Shizuku 生效时优先 Binder 直调：免 shell 转义、异常结构化。
-                // 仅通道不可用时才回退 shell；远端明确拒绝则直接报告不重试。
+                // 仅通道Unavailable时才回退 shell；远端明确拒绝则直接报告不重试。
                 if (info.mode == ExecutionMode.SHIZUKU && shizukuApis != null) {
                     val userId = JsonArgs.optionalLong(args, "user", 0L, 0L, 999L).toInt()
                     val binderOutcome = when (action) {
