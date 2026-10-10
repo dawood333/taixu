@@ -137,7 +137,7 @@ class WorkspaceBuildRunner(
 ) {
     fun launchPackageInstaller(apkFile: File): Boolean {
         return runCatching {
-            check(apkFile.isFile && apkFile.length() > 0L) { "APK 文件不存在或为空" }
+            check(apkFile.isFile && apkFile.length() > 0L) { "APK file does not exist or is empty" }
             val stagedApk = stageApkForInstall(apkFile)
             val uri = FileProvider.getUriForFile(
                 context,
@@ -163,7 +163,7 @@ class WorkspaceBuildRunner(
             .forEach { it.delete() }
         val staged = File(dir, "${apkFile.nameWithoutExtension}-$now-${apkFile.length()}.apk")
         apkFile.inputStream().use { input -> staged.outputStream().use { output -> input.copyTo(output) } }
-        check(staged.isFile && staged.length() == apkFile.length()) { "APK 临时副本不完整" }
+        check(staged.isFile && staged.length() == apkFile.length()) { "Temporary APK copy is incomplete" }
         return staged
     }
 
@@ -201,11 +201,11 @@ class WorkspaceBuildRunner(
             if (keystore == null) {
                 send(
                     BuildRunProgress(
-                        step = "缺少签名",
+                        step = "Signing key missing",
                         isRunning = false,
                         isSuccess = false,
-                        message = "Release 构建需要签名文件，请先在【工坊设置 - 签名管理】中创建或导入签名",
-                        logOutput = "[TaiXu Build] ❌ Release 构建未选择签名文件\n",
+                        message = "Release builds require a signing key. Create or import one in Workshop Settings → Signing Management.",
+                        logOutput = "[TaiXu Build] ❌ No signing key selected for Release build\n",
                     )
                 )
                 return@channelFlow
@@ -215,11 +215,11 @@ class WorkspaceBuildRunner(
             if (env == null) {
                 send(
                     BuildRunProgress(
-                        step = "签名准备失败",
+                        step = "Signing preparation failed",
                         isRunning = false,
                         isSuccess = false,
-                        message = prepared.errorOrNull()?.message ?: "签名文件准备失败",
-                        logOutput = "[TaiXu Build] ❌ ${prepared.errorOrNull()?.message ?: "签名文件准备失败"}\n",
+                        message = prepared.errorOrNull()?.message ?: "Failed to prepare signing key",
+                        logOutput = "[TaiXu Build] ❌ ${prepared.errorOrNull()?.message ?: "Failed to prepare signing key"}\n",
                     )
                 )
                 return@channelFlow
@@ -285,7 +285,7 @@ class WorkspaceBuildRunner(
                     val excess = logs.length - MAX_LOG_CHARS
                     val cutIdx = logs.indexOf("\n", excess).let { if (it == -1) excess else it + 1 }
                     logs.delete(0, cutIdx)
-                    logs.insert(0, "[...前面日志已丢弃...]\n")
+                    logs.insert(0, "[...earlier log output discarded...]\n")
                 }
             }
         }
@@ -310,7 +310,7 @@ class WorkspaceBuildRunner(
 
         // 心跳：Gradle/JVM/Flutter 在管道(非TTY)下可能长时间无输出（全缓冲或依赖静默下载），
         // 周期性向 UI 推送“仍在构建中”进度，避免用户误以为卡死直到超时。
-        var heartbeatStep = "正在构建，请稍候..."
+        var heartbeatStep = "Building, please wait..."
         var heartbeatProgress = 0.35f
         var dependencyObservation = DependencyObservation()
         // ⚠️ 必须持有心跳 Job 并在 finally 里 cancel：channelFlow 要等所有子协程
@@ -325,11 +325,11 @@ class WorkspaceBuildRunner(
                 val silentForSec = (System.currentTimeMillis() - lastOutputAt) / 1000
                 // 静默超过 15s 时在步骤文案上明示：不是 UI 卡死，是构建进程暂时没有输出
                 val silenceHint = if (silentForSec >= 15) {
-                    "（已 ${silentForSec}s 无新输出：JVM 启动/依赖下载静默期，进程仍在运行）"
+                    "(${silentForSec}s without new output: JVM startup/dependency downloads can be quiet; the process is still running)"
                 } else ""
                 progressChannel.trySend(
                     BuildRunProgress(
-                        step = "$heartbeatStep 已运行 ${(System.currentTimeMillis() - buildStartedAt) / 1000}s$silenceHint",
+                        step = "$heartbeatStep running for ${(System.currentTimeMillis() - buildStartedAt) / 1000}s$silenceHint",
                         progress = heartbeatProgress,
                         isRunning = true,
                         logOutput = snapshotLogs(),
@@ -342,16 +342,16 @@ class WorkspaceBuildRunner(
             }
         }
 
-        log("[TaiXu Build Engine] 开始分析工程: ${project.name} (${project.projectType.displayName})")
-        log("[TaiXu Build] 📄 完整构建日志: ${project.linuxPath}/.taixu/logs/${buildLogFile.name} (宿主路径: ${buildLogFile.absolutePath})")
-        send(BuildRunProgress(step = "正在分析项目环境...", progress = 0.1f, logOutput = snapshotLogs()))
+        log("[TaiXu Build Engine] Analyzing project: ${project.name} (${project.projectType.displayName})")
+        log("[TaiXu Build] 📄 Full build log: ${project.linuxPath}/.taixu/logs/${buildLogFile.name} (host path: ${buildLogFile.absolutePath})")
+        send(BuildRunProgress(step = "Analyzing project environment...", progress = 0.1f, logOutput = snapshotLogs()))
 
         // finally 兜底：任何 return@channelFlow、异常或用户取消都要落盘并关闭日志文件
         try {
         when (project.projectType) {
             ProjectType.ANDROID -> {
-                log("[TaiXu Build] Linux 路径: ${project.linuxPath}")
-                send(BuildRunProgress(step = "正在预检 Android 构建环境...", progress = 0.15f, logOutput = snapshotLogs()))
+                log("[TaiXu Build] Linux path: ${project.linuxPath}")
+                send(BuildRunProgress(step = "Checking the Android build environment...", progress = 0.15f, logOutput = snapshotLogs()))
 
                 // 1. 预检完整 Android 工具链；失败时不启动 Gradle。
                 val qemuEnabled = runtimePreferences.qemuCompatibilityEnabled.first()
@@ -372,7 +372,7 @@ class WorkspaceBuildRunner(
                     }.getOrNull()
                     if (qemuProbe?.isSuccess == true) {
                         useQemuBuild = true
-                        log("[TaiXu Build] ARM64 工具架构不兼容，QEMU x86_64 环境预检通过")
+                        log("ARM64 toolchain is incompatible; QEMU x86_64 environment preflight passed")
                     }
                 }
                 if (!probe.isSuccess && !useQemuBuild) {
@@ -380,11 +380,11 @@ class WorkspaceBuildRunner(
                     // 按实际失败项点名，避免把 cmake/ninja/java 等失败误导成"缺 Gradle"
                     val missing = BuildEnvironmentPreflight.describeFailure(reason)
                     log("[TaiXu Build] ⚠️ 未检测到 Android 构建环境${missing?.let { "：$it" } ?: ""}")
-                    log("[TaiXu Build] 预检原因: $reason")
+                    log("[TaiXu Build] Preflight reason: $reason")
                     log("[TaiXu Build] 💡 提示：请先在【插件与工具中心】中装配【Android & 移动全栈开发套件】")
                     send(
                         BuildRunProgress(
-                            step = "缺少 Android 构建环境",
+                            step = "Android build environment missing",
                             isRunning = false,
                             isSuccess = false,
                             message = "Android 构建前置检查失败：${missing ?: reason.ifBlank { "工具链不完整" }}",
@@ -395,14 +395,14 @@ class WorkspaceBuildRunner(
                     return@channelFlow
                 }
 
-                log("[TaiXu Build] 执行 Gradle 编译 ($androidTask)...")
-                send(BuildRunProgress(step = "正在执行 Gradle 编译 ($androidTask)...", progress = 0.3f, logOutput = snapshotLogs()))
+                log("[TaiXu Build] Running Gradle compilation ($androidTask)...")
+                send(BuildRunProgress(step = "正在Running Gradle compilation ($androidTask)...", progress = 0.3f, logOutput = snapshotLogs()))
 
                 // 构建阶段时长追踪
                 val buildStartTime = System.currentTimeMillis()
                 val stepHistory = mutableListOf<StepDuration>()
                 var lastStepTime = buildStartTime
-                var previousStep = "正在执行 Gradle 构建任务..."
+                var previousStep = "Running Gradle build task..."
                 fun recordStepDuration(newStep: String) {
                     val now = System.currentTimeMillis()
                     val duration = now - lastStepTime
@@ -411,7 +411,7 @@ class WorkspaceBuildRunner(
                     lastStepTime = now
                 }
 
-                heartbeatStep = "正在执行 Gradle 编译 ($androidTask)..."
+                heartbeatStep = "正在Running Gradle compilation ($androidTask)..."
                 heartbeatProgress = 0.35f
                 val buildCmd = if (androidScriptPath.endsWith("taixu-build.sh")) {
                     "/bin/sh $androidScriptPath android \"${project.linuxPath}\" $androidTask"
@@ -419,7 +419,7 @@ class WorkspaceBuildRunner(
                     "/bin/sh $androidScriptPath \"${project.linuxPath}\" $androidTask"
                 } + if (useQemuBuild) " --qemu" else ""
                 var lastEmitTime = System.currentTimeMillis()
-                var currentStep = "正在执行 Gradle 构建任务..."
+                var currentStep = "Running Gradle build task..."
                 var currentProgress = 0.35f
 
                 var outcome = linuxRuntime.execute(
@@ -438,29 +438,29 @@ class WorkspaceBuildRunner(
                             val lower = chunk.lowercase()
                             when {
                                 lower.contains("downloading") || lower.contains("get ") || lower.contains("fetching") -> {
-                                    if (currentStep != "正在拉取依赖资源库...") recordStepDuration("正在拉取依赖资源库...")
-                                    currentStep = "正在拉取依赖资源库..."
+                                    if (currentStep != "Downloading dependencies...") recordStepDuration("Downloading dependencies...")
+                                    currentStep = "Downloading dependencies..."
                                     currentProgress = 0.4f
                                 }
                                 chunk.contains(":compileDebugKotlin") || chunk.contains(":compileReleaseKotlin") -> {
-                                    if (currentStep != "正在编译 Kotlin / Compose 源码...") recordStepDuration("正在编译 Kotlin / Compose 源码...")
-                                    currentStep = "正在编译 Kotlin / Compose 源码..."
+                                    if (currentStep != "Compiling Kotlin / Compose sources...") recordStepDuration("Compiling Kotlin / Compose sources...")
+                                    currentStep = "Compiling Kotlin / Compose sources..."
                                     currentProgress = 0.55f
                                 }
                                 chunk.contains(":compileDebugJavaWithJavac") || chunk.contains(":compileReleaseJavaWithJavac") -> {
-                                    if (currentStep != "正在编译 Java 源码...") recordStepDuration("正在编译 Java 源码...")
-                                    currentStep = "正在编译 Java 源码..."
+                                    if (currentStep != "Compiling Java sources...") recordStepDuration("Compiling Java sources...")
+                                    currentStep = "Compiling Java sources..."
                                     currentProgress = 0.65f
                                 }
                                 chunk.contains(":dexBuilderDebug") || chunk.contains(":mergeExtDexDebug") || chunk.contains(":mergeLibDexDebug") ||
                                     chunk.contains(":dexBuilderRelease") || chunk.contains(":mergeExtDexRelease") || chunk.contains(":mergeLibDexRelease") -> {
-                                    if (currentStep != "正在进行 Dex 字节码转换与优化...") recordStepDuration("正在进行 Dex 字节码转换与优化...")
-                                    currentStep = "正在进行 Dex 字节码转换与优化..."
+                                    if (currentStep != "Converting and optimizing DEX bytecode...") recordStepDuration("Converting and optimizing DEX bytecode...")
+                                    currentStep = "Converting and optimizing DEX bytecode..."
                                     currentProgress = 0.75f
                                 }
                                 chunk.contains(":packageDebug") || chunk.contains(":packageRelease") -> {
-                                    if (currentStep != "正在打包生成 APK...") recordStepDuration("正在打包生成 APK...")
-                                    currentStep = "正在打包生成 APK..."
+                                    if (currentStep != "Packaging APK...") recordStepDuration("Packaging APK...")
+                                    currentStep = "Packaging APK..."
                                     currentProgress = 0.85f
                                 }
                             }
@@ -509,7 +509,7 @@ class WorkspaceBuildRunner(
                             },
                         ))
                     }.getOrElse { error ->
-                        CommandResult(-1, "", error.message ?: "QEMU 兼容环境启动失败", 0L)
+                        CommandResult(-1, "", error.message ?: "Failed to start QEMU compatibility environment", 0L)
                     }
                 }
 
@@ -531,14 +531,14 @@ class WorkspaceBuildRunner(
                         .take(8)
                         .joinToString("\n")
                     val errLog = (diagnostic.ifBlank { rawFailureLog.takeLast(1600) }).takeLast(1600)
-                    log("[TaiXu Build] ❌ Gradle 构建失败，Exit Code: ${outcome.exitCode}")
-                    recordStepDuration("编译失败")
+                    log("[TaiXu Build] ❌ Gradle build failed (exit code ${outcome.exitCode})")
+                    recordStepDuration("Compilation failed")
                     send(
                         BuildRunProgress(
-                            step = "编译失败",
+                            step = "Compilation failed",
                             isRunning = false,
                             isSuccess = false,
-                            message = errLog.ifBlank { "Gradle 构建失败 (exit code ${outcome.exitCode})" },
+                            message = errLog.ifBlank { "Gradle build failed (exit code ${outcome.exitCode})" },
                             logOutput = snapshotLogs(),
                             stepDurations = stepHistory.toList(),
                             totalDurationMs = System.currentTimeMillis() - buildStartTime,
@@ -547,9 +547,9 @@ class WorkspaceBuildRunner(
                     return@channelFlow
                 }
 
-                log("[TaiXu Build] ✅ Gradle 编译完成，耗时: ${outcome.durationMs}ms")
-                log("[TaiXu Build] 检索 APK 产物...")
-                send(BuildRunProgress(step = "编译成功，正在检索 APK 产物...", progress = 0.9f, logOutput = snapshotLogs()))
+                log("[TaiXu Build] ✅ Gradle compilation completed in ${outcome.durationMs}ms")
+                log("[TaiXu Build] Searching for APK artifacts...")
+                send(BuildRunProgress(step = "Compilation succeeded; searching for APK artifacts...", progress = 0.9f, logOutput = snapshotLogs()))
 
                 // 取最新 mtime 的 APK：目录里可能残留历史构建的旧 APK（目录序
                 // firstOrNull 会任意挑），产物校验必须对准本次构建刚写出的文件。
@@ -564,13 +564,13 @@ class WorkspaceBuildRunner(
                     .maxByOrNull { it.lastModified() }
 
                 if (apkFile == null || !apkFile.exists()) {
-                    log("[TaiXu Build] ❌ 未在 outputs 目录找到 APK 产物")
+                    log("[TaiXu Build] ❌ No APK artifact found in the outputs directory")
                     send(
                         BuildRunProgress(
-                            step = "未找到生成的 APK 产物",
+                            step = "Generated APK artifact not found",
                             isRunning = false,
                             isSuccess = false,
-                            message = "构建完成但未在 outputs 目录找到 APK",
+                            message = "Build completed, but no APK was found in the outputs directory",
                             logOutput = snapshotLogs(),
                         )
                     )
@@ -677,7 +677,7 @@ class WorkspaceBuildRunner(
                     // 按实际失败项点名，避免把工具链单项缺失误导成整体环境缺失
                     val missing = BuildEnvironmentPreflight.describeFailure(reason)
                     log("[TaiXu Build] ⚠️ 未检测到 Flutter 构建环境${missing?.let { "：$it" } ?: ""}")
-                    log("[TaiXu Build] 预检原因: $reason")
+                    log("[TaiXu Build] Preflight reason: $reason")
                     log("[TaiXu Build] 💡 提示：请先在【插件与工具中心】中装配【Android & 移动全栈开发套件 (含 Flutter)】")
                     send(
                         BuildRunProgress(
@@ -750,7 +750,7 @@ class WorkspaceBuildRunner(
                             },
                         ))
                     }.getOrElse { error ->
-                        CommandResult(-1, "", error.message ?: "QEMU 兼容环境启动失败", 0L)
+                        CommandResult(-1, "", error.message ?: "Failed to start QEMU compatibility environment", 0L)
                     }
                 }
 
@@ -773,7 +773,7 @@ class WorkspaceBuildRunner(
                     flushLogBuffer()
                     send(
                         BuildRunProgress(
-                            step = "Flutter 编译失败",
+                            step = "Flutter Compilation failed",
                             isRunning = false,
                             isSuccess = false,
                             message = errLog.ifBlank { "Flutter 构建失败 (exit code ${outcome.exitCode})" },
@@ -806,7 +806,7 @@ class WorkspaceBuildRunner(
                             step = "未找到生成的 Flutter APK 产物",
                             isRunning = false,
                             isSuccess = false,
-                            message = "构建完成但未在 outputs 目录找到 APK",
+                            message = "Build completed, but no APK was found in the outputs directory",
                             logOutput = snapshotLogs(),
                         )
                     )
