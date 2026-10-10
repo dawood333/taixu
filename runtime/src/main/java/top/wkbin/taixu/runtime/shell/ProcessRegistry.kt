@@ -95,7 +95,7 @@ class ProcessRegistryImpl(
         val logKeys = setOf(logKey, id)
         logKeys.forEach { key ->
             logs.retain(key)
-            logs.append(key, "[TaiXu] 正在启动服务进程...")
+            logs.append(key, "[TaiXu] Starting service process...")
         }
 
         scope.launch {
@@ -109,7 +109,7 @@ class ProcessRegistryImpl(
                 }
             } catch (_: Exception) {
             } finally {
-                val exitNotice = "[TaiXu] 服务进程已停止"
+                val exitNotice = "[TaiXu] Service process stopped"
                 logKeys.forEach { key ->
                     logs.append(key, exitNotice)
                     logs.release(key)
