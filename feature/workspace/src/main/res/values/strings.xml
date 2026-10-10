@@ -324,4 +324,8 @@
     <!-- Template variable validation -->
     <string name="template_variable_required">%1$s is required</string>
     <string name="template_variable_invalid_format">%1$s has an invalid format</string>
+
+    <!-- Git clone progress -->
+    <string name="workspace_git_clone_in_progress">Cloning repository…</string>
+    <string name="workspace_git_clone_connecting">Connecting to Git repository…</string>
 </resources>
