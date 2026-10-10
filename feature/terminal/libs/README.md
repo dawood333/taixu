@@ -1,5 +1,3 @@
-# Termux TerminalView (GPL-3.0)
+# Terminal Libraries
 
-Pairs with `terminal-emulator-v0.118.0.aar`.
-(已迁移至根目录本地 Maven 仓库 `repo/com/termux/terminal-view/0.118.0/`，避免 AGP 库打包直接依赖 local AAR 报错)
-Source: https://github.com/termux/termux-app/tree/.../terminal-view
+This directory contains libraries used by the terminal feature. Keep third-party license and version information with the corresponding artifacts, and verify that packaged binaries match the supported Android ABI.
