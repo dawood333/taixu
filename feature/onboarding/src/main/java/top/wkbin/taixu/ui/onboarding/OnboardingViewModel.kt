@@ -81,7 +81,7 @@ class OnboardingViewModel(
     val mirror = _mirror.asStateFlow()
     private val _page = MutableStateFlow(0)
     val page = _page.asStateFlow()
-    private val _modelProvider = MutableStateFlow("自定义 OpenAI 兼容接口")
+    private val _modelProvider = MutableStateFlow("Custom OpenAI-compatible endpoint")
     val modelProvider = _modelProvider.asStateFlow()
     private val _modelName = MutableStateFlow("")
     val modelName = _modelName.asStateFlow()
@@ -185,7 +185,7 @@ class OnboardingViewModel(
                     _discoveredModels.value = models
                     models.firstOrNull()?.let { _modelId.value = it }
                 }
-                .onFailure { _modelDiscoveryError.value = it.message ?: "刷新模型失败" }
+                .onFailure { _modelDiscoveryError.value = it.message ?: "Failed to refresh models" }
             _discoveringModels.value = false
         }
     }
@@ -218,7 +218,7 @@ class OnboardingViewModel(
             try {
                 context.contentResolver.openInputStream(uri)?.use { input ->
                     imported.outputStream().use { output -> input.copyTo(output) }
-                } ?: error("无法读取所选文件")
+                } ?: error("Unable to read the selected file")
                 settings.setSelectedDistribution(_distribution.value)
                 settings.setMirrorPolicy(_mirror.value)
                 val result = linuxRuntime.importDistro(
@@ -232,7 +232,7 @@ class OnboardingViewModel(
             } catch (cancellation: CancellationException) {
                 throw cancellation
             } catch (throwable: Throwable) {
-                _importError.value = throwable.message ?: "无法导入所选 RootFS 文件"
+                _importError.value = throwable.message ?: "Unable to import the selected RootFS file"
             } finally {
                 imported.delete()
                 _isImporting.value = false
@@ -292,8 +292,8 @@ class OnboardingViewModel(
 
     fun importProfileFromJson(rawJson: String): Result<AiModelProfileExport> {
         return profileBackupCodec.parseProfiles(rawJson).mapCatching { profiles ->
-            val profile = profiles.firstOrNull() ?: error("导入包中没有模型档案")
-            require(profile.model.isNotBlank() || profile.name.isNotBlank()) { "模型配置缺少模型名称或 ID" }
+            val profile = profiles.firstOrNull() ?: error("The imported bundle contains no model profiles")
+            require(profile.model.isNotBlank() || profile.name.isNotBlank()) { "The model profile is missing a model name or ID" }
 
             _modelProvider.value = profile.provider.ifBlank { "OpenAI" }
             _baseUrl.value = profile.baseUrl
