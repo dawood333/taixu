@@ -65,24 +65,24 @@ internal object HostShellCommandBuilder {
             val tag = args["tag"]?.jsonPrimitive?.content?.trim().orEmpty()
             if (tag.isBlank()) "/system/bin/logcat -d -t $lines"
             else {
-                require(LOGCAT_TAG.matches(tag)) { "logcat tag 格式不合法" }
+                require(LOGCAT_TAG.matches(tag)) { "Invalid logcat tag format" }
                 "/system/bin/logcat -d -t $lines -s ${ShellQuote.of("$tag:*")}"
             }
         }
         else -> throw IllegalArgumentException(
-            "不支持的 host action：$action；可用 status/exec/settings_get/settings_put/package_list/package_disable/package_enable/package_uninstall_user/app_list/app_freeze/app_unfreeze/app_grant_permission/logcat",
+            "Unsupported host action: $action. Supported actions: status/exec/settings_get/settings_put/package_list/package_disable/package_enable/package_uninstall_user/app_list/app_freeze/app_unfreeze/app_grant_permission/logcat",
         )
     }
 
     private fun requireSettingsNamespace(args: JsonObject): String {
         val namespace = JsonArgs.requireString(args, "namespace").trim().lowercase()
-        require(namespace in setOf("system", "secure", "global")) { "namespace 仅支持 system/secure/global" }
+        require(namespace in setOf("system", "secure", "global")) { "namespace supports only system/secure/global" }
         return namespace
     }
 
     private fun requireHostIdentifier(args: JsonObject, key: String, pattern: Regex): String {
         val value = JsonArgs.requireString(args, key).trim()
-        require(pattern.matches(value)) { "$key 格式不合法" }
+        require(pattern.matches(value)) { "Invalid format for $key" }
         return value
     }
 
