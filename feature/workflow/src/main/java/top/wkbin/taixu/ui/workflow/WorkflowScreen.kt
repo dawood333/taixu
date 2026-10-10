@@ -89,7 +89,7 @@ fun WorkflowScreen(
     val approval by viewModel.approvalRequest.collectAsStateWithLifecycle()
     val editorState by viewModel.editorState.collectAsStateWithLifecycle()
     var discardRequested by rememberSaveable { mutableStateOf(false) }
-    // 通知深链：进入页面即定位到指定执行（活跃运行或历史回看）
+    // 通知深链：进入页面即定位到指定执行（活跃Run或历史回看）
     LaunchedEffect(initialExecutionId) {
         if (initialExecutionId != null) viewModel.viewRun(initialExecutionId)
     }
@@ -106,8 +106,8 @@ fun WorkflowScreen(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             RuntimeTopBar(
-                title = activeState?.definition?.name ?: editorState?.definition?.name ?: "太墟工作流",
-                statusText = projectName.takeIf(String::isNotBlank)?.let { "工作区 · $it" },
+                title = activeState?.definition?.name ?: editorState?.definition?.name ?: "TaiXu Workflows",
+                statusText = projectName.takeIf(String::isNotBlank)?.let { "Workspace · $it" },
                 onBack = {
                     when {
                         activeState != null -> viewModel.closeRun()
@@ -206,11 +206,11 @@ fun WorkflowScreen(
     if (discardRequested) {
         RuntimeAlertDialog(
             onDismissRequest = { discardRequested = false },
-            title = { Text("放弃未保存更改？") },
-            text = { Text("当前工作流还有未保存的编辑。") },
-            dismissButton = { RuntimeOutlinedButton(onClick = { discardRequested = false }) { Text("继续编辑") } },
+            title = { Text("Discard unsaved changes?") },
+            text = { Text("This workflow has unsaved changes.") },
+            dismissButton = { RuntimeOutlinedButton(onClick = { discardRequested = false }) { Text("Continue editing") } },
             confirmButton = {
-                RuntimeButton(onClick = { discardRequested = false; viewModel.closeEditor() }) { Text("放弃更改") }
+                RuntimeButton(onClick = { discardRequested = false; viewModel.closeEditor() }) { Text("Discard changes") }
             },
         )
     }
@@ -260,7 +260,7 @@ private fun WorkflowCatalog(
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "把构建、诊断、逆向与 Git 操作编排成可观察、可暂停的 DAG。",
+                    "Orchestrate builds, diagnostics, reverse engineering, and Git operations as observable, pausable DAGs.",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -268,7 +268,7 @@ private fun WorkflowCatalog(
                 Spacer(Modifier.width(12.dp))
                 RuntimeButton(onClick = onCreate, contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
                     RuntimeIcon(RuntimeIconName.Plus, Modifier.size(16.dp))
-                    Text("新建", maxLines = 1)
+                    Text("New", maxLines = 1)
                 }
             }
         }
@@ -280,7 +280,7 @@ private fun WorkflowCatalog(
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
                             Text(
-                                if (backgroundRuns.size == 1) "1 个工作流正在后台运行" else "${backgroundRuns.size} 个工作流正在后台运行",
+                                if (backgroundRuns.size == 1) "1 workflow running in the background" else "${backgroundRuns.size} workflows running in the background",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                             )
@@ -296,7 +296,7 @@ private fun WorkflowCatalog(
                             onClick = { onViewBackgroundRun(backgroundRuns.first().executionId) },
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                         ) {
-                            Text("查看", maxLines = 1)
+                            Text("View", maxLines = 1)
                         }
                     }
                 }
@@ -310,7 +310,7 @@ private fun WorkflowCatalog(
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
                             Text(workflow.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${workflow.category} · ${workflow.nodes.size} 个节点", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${workflow.category} · ${workflow.nodes.size} nodes", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     Text(workflow.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -322,11 +322,11 @@ private fun WorkflowCatalog(
                         }
                         RuntimeOutlinedButton(onClick = { onEdit(workflow) }, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
                             RuntimeIcon(RuntimeIconName.Edit, Modifier.size(16.dp))
-                            Text(if (workflow.isBuiltin) "创建副本" else "编辑", maxLines = 1)
+                            Text(if (workflow.isBuiltin) "Duplicate" else "Edit", maxLines = 1)
                         }
                         RuntimeButton(onClick = { onRun(workflow) }, contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
                             RuntimeIcon(RuntimeIconName.Play, Modifier.size(16.dp))
-                            Text("运行", maxLines = 1)
+                            Text("Run", maxLines = 1)
                         }
                     }
                 }
@@ -335,20 +335,20 @@ private fun WorkflowCatalog(
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "定时计划",
+                    "Schedules",
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
                 )
                     RuntimeOutlinedButton(onClick = onNewSchedule, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
                         RuntimeIcon(RuntimeIconName.Plus, Modifier.size(16.dp))
-                        Text("新建计划", maxLines = 1)
+                        Text("New计划", maxLines = 1)
                     }
                 }
             }
             if (schedules.isEmpty()) {
                 item {
                     Text(
-                        "还没有定时计划。把工作流设为每天定时运行、周期巡检或一次性延时触发；到点即使应用未在运行，系统也会拉起执行。",
+                        "还没有Schedules。把工作流设为每天定时Run、周期巡检或一次性延时触发；到点即使应用未在Run，系统也会拉起执行。",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -376,7 +376,7 @@ private fun WorkflowCatalog(
                         }
                         schedule.lastExecutionId?.let {
                             Text(
-                                "上次触发：${schedule.lastRunAt?.let { last -> java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date(last)) } ?: "—"}",
+                                "Last triggered: ${schedule.lastRunAt?.let { last -> java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date(last)) } ?: "—"}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -387,13 +387,13 @@ private fun WorkflowCatalog(
                             }
                             RuntimeOutlinedButton(onClick = { onEditSchedule(schedule) }, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)) {
                                 RuntimeIcon(RuntimeIconName.Edit, Modifier.size(16.dp))
-                                Text("编辑", maxLines = 1)
+                                Text("Edit", maxLines = 1)
                             }
                         }
                     }
                 }
             }
-        if (history.isNotEmpty()) item { Text("最近运行（最近 ${history.size} 条）", style = MaterialTheme.typography.titleMedium) }
+        if (history.isNotEmpty()) item { Text("最近Run（最近 ${history.size} 条）", style = MaterialTheme.typography.titleMedium) }
         items(history, key = { "history:${it.state.executionId}" }) { entry ->
             val run = entry.state
             RuntimeCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)) {
@@ -409,7 +409,7 @@ private fun WorkflowCatalog(
                         )
                         Text(
                             when {
-                                entry.triggerSource == "SCHEDULE" && entry.scheduleId != null -> "定时计划触发"
+                                entry.triggerSource == "SCHEDULE" && entry.scheduleId != null -> "Schedules触发"
                                 else -> "手动触发"
                             },
                             style = MaterialTheme.typography.labelSmall,
@@ -430,8 +430,8 @@ private fun WorkflowCatalog(
     deleteRequested?.let { workflow ->
         RuntimeAlertDialog(
             onDismissRequest = { deleteRequested = null },
-            title = { Text("删除工作流？") },
-            text = { Text("“${workflow.name}”及其运行历史将被永久删除，无法撤销。") },
+            title = { Text("Delete工作流？") },
+            text = { Text("“${workflow.name}”及其Run历史将被永久Delete，无法撤销。") },
             dismissButton = { RuntimeOutlinedButton(onClick = { deleteRequested = null }) { Text("取消") } },
             confirmButton = {
                 RuntimeButton(
@@ -439,7 +439,7 @@ private fun WorkflowCatalog(
                         deleteRequested = null
                         onDelete(workflow)
                     },
-                ) { Text("删除") }
+                ) { Text("Delete") }
             },
         )
     }
@@ -459,7 +459,7 @@ private fun WorkflowRunView(
                 Column(Modifier.width(320.dp).verticalScroll(rememberScrollState()).padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     RunSummary(state)
                     val node = state.definition.nodes.firstOrNull { it.id == selectedNode }
-                    if (node == null) Text("点选节点查看日志、错误与产物")
+                    if (node == null) Text("点选节点View日志、错误与产物")
                     else {
                         Text(node.title, style = MaterialTheme.typography.titleMedium)
                         WorkflowNodeDetails(state.nodeStates[node.id])
@@ -610,20 +610,20 @@ internal fun statusIcon(status: NodeRunStatus) = when (status) {
 internal fun statusLabel(status: NodeRunStatus) = when (status) {
     NodeRunStatus.IDLE -> "空闲"
     NodeRunStatus.PENDING -> "等待"
-    NodeRunStatus.RUNNING -> "运行中"
+    NodeRunStatus.RUNNING -> "Run中"
     NodeRunStatus.STREAMING -> "输出中"
     NodeRunStatus.WAITING_APPROVAL -> "待确认"
-    NodeRunStatus.SUCCESS -> "成功"
-    NodeRunStatus.FAILED -> "失败"
+    NodeRunStatus.SUCCESS -> "Succeeded"
+    NodeRunStatus.FAILED -> "Failed"
     NodeRunStatus.SKIPPED -> "已跳过"
-    NodeRunStatus.CANCELLED -> "已取消"
+    NodeRunStatus.CANCELLED -> "Cancelled"
 }
 
 private fun runStatusLabel(status: WorkflowRunStatus) = when (status) {
     WorkflowRunStatus.IDLE -> "准备执行"
-    WorkflowRunStatus.RUNNING -> "工作流运行中"
+    WorkflowRunStatus.RUNNING -> "工作流Run中"
     WorkflowRunStatus.WAITING_APPROVAL -> "等待人工确认"
     WorkflowRunStatus.SUCCESS -> "工作流已完成"
-    WorkflowRunStatus.FAILED -> "工作流执行失败"
-    WorkflowRunStatus.CANCELLED -> "工作流已取消"
+    WorkflowRunStatus.FAILED -> "工作流执行Failed"
+    WorkflowRunStatus.CANCELLED -> "工作流Cancelled"
 }
