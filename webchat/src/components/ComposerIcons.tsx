@@ -39,7 +39,7 @@ function DarkSendArrow(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/** 太墟发送按钮图标。 */
+/** TaiXu send button icon. */
 export function ComposerSendIcon({ className }: ComposerIconProps) {
   return (
     <span aria-hidden="true" className={`composer-action-visual${className ? ` ${className}` : ""}`}>
