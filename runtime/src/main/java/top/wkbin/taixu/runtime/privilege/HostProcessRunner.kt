@@ -16,14 +16,14 @@ internal class HostProcessRunner(
 
     fun execute(operationId: String, command: String): ShellExecResult {
         if (command.isBlank() || command.length > MAX_COMMAND_LENGTH) {
-            return ShellExecResult(false, -1, "", "宿主命令为空或超过 $MAX_COMMAND_LENGTH 字符")
+            return ShellExecResult(false, -1, "", "Host command is empty or exceeds $MAX_COMMAND_LENGTH characters")
         }
         val id = operationId.ifBlank { UUID.randomUUID().toString() }
         return try {
             val process = processFactory(command)
             if (running.putIfAbsent(id, process) != null) {
                 stopProcess(process)
-                error("宿主操作 $id 已在执行")
+                error("Host operation $id is already running")
             }
             val stdoutFuture = IO_EXECUTOR.submit<String> { process.inputStream.readBoundedText() }
             val stderrFuture = IO_EXECUTOR.submit<String> { process.errorStream.readBoundedText() }
@@ -36,14 +36,14 @@ internal class HostProcessRunner(
                     val exitCode = process.exitValue()
                     ShellExecResult(exitCode == 0, exitCode, stdout, stderr)
                 } else {
-                    ShellExecResult(false, -1, stdout, stderr.ifBlank { "命令执行超时 (${COMMAND_TIMEOUT_SECONDS}s)" })
+                    ShellExecResult(false, -1, stdout, stderr.ifBlank { "Command timed out (${COMMAND_TIMEOUT_SECONDS}s)" })
                 }
             } finally {
                 running.remove(id, process)
                 if (process.isAlive) stopProcess(process)
             }
         } catch (throwable: Throwable) {
-            ShellExecResult(false, -1, "", "宿主命令执行失败: ${throwable.message ?: throwable::class.java.simpleName}")
+            ShellExecResult(false, -1, "", "Host command failed: ${throwable.message ?: throwable::class.java.simpleName}")
         }
     }
 
@@ -72,7 +72,7 @@ internal class HostProcessRunner(
             if (remaining > 0) output.write(buffer, 0, minOf(count, remaining))
             if (count > remaining) truncated = true
         }
-        return output.toString(Charsets.UTF_8.name()) + if (truncated) "\n[宿主输出已截断]" else ""
+        return output.toString(Charsets.UTF_8.name()) + if (truncated) "\n[Host output truncated]" else ""
     }
 
     private fun Future<String>.awaitOutput(stream: InputStream): String = try {
@@ -80,7 +80,7 @@ internal class HostProcessRunner(
     } catch (_: Throwable) {
         runCatching { stream.close() }
         cancel(true)
-        "[宿主输出读取超时或已取消]"
+        "[Host output read timed out or was cancelled]"
     }
 
     companion object {
