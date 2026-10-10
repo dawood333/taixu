@@ -183,7 +183,7 @@ fun WebChatBridgeDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RuntimeIcon(RuntimeIconName.Globe, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("太墟智枢 Web 协作台")
+                Text("TaiXu Agent Web Workspace")
             }
         },
         text = {
@@ -192,7 +192,7 @@ fun WebChatBridgeDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "在同一 Wi-Fi / 局域网下，通过电脑浏览器连接太墟智枢，同步处理 Agent 任务、对话与 Linux 工作区文件。",
+                    text = "Connect to TaiXu Agent from a computer browser on the same Wi-Fi/LAN to work with Agent tasks, conversations, and Linux workspace files.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
 
@@ -206,7 +206,7 @@ fun WebChatBridgeDialog(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "协作服务状态",
+                                text = "Collaboration service status",
                                 style = MaterialTheme.typography.titleSmall,
                             )
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -225,7 +225,7 @@ fun WebChatBridgeDialog(
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("浏览器访问地址", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Browser URL", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Row(
                                     Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -239,15 +239,15 @@ fun WebChatBridgeDialog(
                                     TextButton(
                                         onClick = {
                                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                            clipboard.setPrimaryClip(ClipData.newPlainText("太墟智枢协作地址", status.accessUrl))
-                                            Toast.makeText(context, "已复制基础链接", Toast.LENGTH_SHORT).show()
+                                            clipboard.setPrimaryClip(ClipData.newPlainText("TaiXu Agent workspace URL", status.accessUrl))
+                                            Toast.makeText(context, "Base URL copied", Toast.LENGTH_SHORT).show()
                                         }
-                                    ) { Text("复制") }
+                                    ) { Text("Copy") }
                                 }
                             }
 
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text("安全配对码 (PIN)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Secure pairing code (PIN)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Row(
                                     Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -262,9 +262,9 @@ fun WebChatBridgeDialog(
                                         onClick = {
                                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                             clipboard.setPrimaryClip(ClipData.newPlainText("PIN", status.pinCode))
-                                            Toast.makeText(context, "已复制配对码", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "已Copy配对码", Toast.LENGTH_SHORT).show()
                                         }
-                                    ) { Text("复制") }
+                                    ) { Text("Copy") }
                                 }
                             }
 
@@ -272,20 +272,20 @@ fun WebChatBridgeDialog(
                             Button(
                                 onClick = {
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    clipboard.setPrimaryClip(ClipData.newPlainText("太墟智枢直连地址", directUrl))
-                                    Toast.makeText(context, "已复制免密直达链接，在电脑浏览器打开即可！", Toast.LENGTH_SHORT).show()
+                                    clipboard.setPrimaryClip(ClipData.newPlainText("TaiXu Agent direct URL", directUrl))
+                                    Toast.makeText(context, "已Copy免密直达链接，在电脑浏览器打开即可！", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                                 shape = RoundedCornerShape(10.dp),
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                     RuntimeIcon(RuntimeIconName.Copy, Modifier.size(16.dp))
-                                    Text("一键复制免密直达链接 (免输PIN)")
+                                    Text("一键Copy免密直达链接 (免输PIN)")
                                 }
                             }
 
                             Text(
-                                text = "💡 提示：确保电脑与手机处于同一 Wi-Fi；当前在线设备：${status.activeConnections} 台",
+                                text = "💡 Ensure your computer and phone are on the same Wi-Fi network. Connected devices: ${status.activeConnections}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -296,7 +296,7 @@ fun WebChatBridgeDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("完成")
+                Text("Done")
             }
         },
     )
