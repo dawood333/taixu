@@ -100,7 +100,7 @@ class VirtualDisplayCoordinator(
     private suspend fun ensureDisplayLocked(sessionId: String, bitrateKbps: Int?): Int? {
         val controller = controller(sessionId)
         if (!ShowerServerManager.ensureServerStarted(context)) {
-            logger.w("虚拟屏 server 启动失败：请检查 Shizuku/Root 特权状态（PRoot 模式不支持虚拟屏）")
+            logger.w("Virtual display server failed to start. Check Shizuku/Root privileges (virtual displays are not supported in PRoot mode).")
             return null
         }
         // Application 的 displayMetrics 在分屏/折叠屏上常常不是物理屏尺寸。
@@ -114,7 +114,7 @@ class VirtualDisplayCoordinator(
             bitrateKbps = bitrateKbps,
         )
         if (!ok) {
-            logger.w("虚拟屏创建失败（session=$sessionId，server 已启动）")
+            logger.w("Failed to create virtual display (session=$sessionId; server started)")
             return null
         }
         return controller.getDisplayId()
@@ -144,7 +144,7 @@ class VirtualDisplayCoordinator(
         timeoutMs: Long = SCREENSHOT_TIMEOUT_MS,
     ): ByteArray? = withContext(Dispatchers.IO) {
         screencapToBytes(sessionId)?.let { return@withContext it }
-        logger.w("虚拟屏截图回退 Binder 通道（session=$sessionId）：screencap 不可用或失败")
+        logger.w("Falling back to Binder for virtual-display screenshots (session=$sessionId): screencap is unavailable or failed")
         controller(sessionId).requestScreenshot(timeoutMs)
     }
 
@@ -163,7 +163,7 @@ class VirtualDisplayCoordinator(
         val file = try {
             File.createTempFile("vs_screenshot_", ".png", dir)
         } catch (e: Exception) {
-            logger.w("创建虚拟屏截图文件失败：${e.message}")
+            logger.w("Failed to create virtual-display screenshot file: ${e.message}")
             return null
         }
         try {
@@ -176,7 +176,7 @@ class VirtualDisplayCoordinator(
             )
             if (!result.success || !file.exists() || file.length() == 0L) {
                 logger.w(
-                    "screencap 截图失败（session=$sessionId, display=$logicalDisplayId, " +
+                    "screencap failed (session=$sessionId, display=$logicalDisplayId, " +
                         "physical=$physicalDisplayId, exit=${result.exitCode}, " +
                         "err=${result.stderr.trim().take(LOG_PREVIEW_LIMIT)}）",
                 )
@@ -186,7 +186,7 @@ class VirtualDisplayCoordinator(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            logger.w("读取虚拟屏截图失败：${e.message}")
+            logger.w("Failed to read virtual-display screenshot: ${e.message}")
             return null
         } finally {
             file.delete()
@@ -213,7 +213,7 @@ class VirtualDisplayCoordinator(
         val dump = runner.run("dumpsys SurfaceFlinger --display-id", ShellIdentity.SHELL)
         if (!dump.success) {
             logger.w(
-                "读取 SurfaceFlinger 显示器列表失败（exit=${dump.exitCode}）：" +
+                "Failed to read SurfaceFlinger display list (exit=${dump.exitCode}): " +
                     dump.stderr.trim().take(LOG_PREVIEW_LIMIT),
             )
             return null
@@ -221,7 +221,7 @@ class VirtualDisplayCoordinator(
         val chosen = physicalDisplayIdForName(dump.stdout, name)
         if (chosen == null) {
             logger.w(
-                "未从 SurfaceFlinger 解析出物理屏 id（logical=$logicalDisplayId）：" +
+                "Could not parse the physical display ID from SurfaceFlinger (logical=$logicalDisplayId): " +
                     dump.stdout.trim().take(LOG_PREVIEW_LIMIT),
             )
             return null
@@ -240,8 +240,8 @@ class VirtualDisplayCoordinator(
     fun reveal(sessionId: String = DEFAULT_SESSION_ID, step: String): String? {
         VirtualDisplayHud.setStep(step)
         if (!Settings.canDrawOverlays(context)) {
-            return "看不到画面：没有「显示在其他应用上层」权限，虚拟屏只在后台跑。" +
-                "请到系统设置里为太墟打开这项权限，然后再让我显示。"
+            return "The screen is not visible: “Display over other apps” permission is missing, so the virtual display runs only in the background." +
+                "Enable this permission for TaiXu in system settings, then ask to show the screen again."
         }
         if (getDisplayId(sessionId) == null || !showOverlay(sessionId)) {
             return "悬浮窗没有弹出来，所以你看不到它正在做什么。"
