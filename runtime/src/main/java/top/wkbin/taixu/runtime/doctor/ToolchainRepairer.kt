@@ -70,13 +70,13 @@ class ToolchainRepairer(
             .distinct()
             .toSet()
         if (bundleIds.isNotEmpty()) {
-            log("==> [1/2] 安装开发套件组件: ${bundleIds.joinToString(", ")}")
+            log("==> [1/2] Installing development bundle components: ${bundleIds.joinToString(", ")}")
             try {
                 installs.installComponents(bundleIds)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
-                log("套件安装失败: ${error.message}")
+                log("Bundle installation failed: ${error.message}")
             }
         }
 
@@ -84,17 +84,17 @@ class ToolchainRepairer(
         val outcome = if (targets.isEmpty()) {
             RepairOutcome(emptyList(), emptyList())
         } else {
-            log("==> [2/2] 安装 apt 工具: ${targets.joinToString(", ") { it.first }}")
+            log("==> [2/2] Installing APT tools: ${targets.joinToString(", ") { it.first }}")
             installs.runExclusive { repairApt(targets) }
         }
         _outcome.value = outcome
         if (outcome.failures.isNotEmpty()) {
-            log("补齐完成，${outcome.failures.size} 项失败（详见上方日志）")
+            log("Toolchain setup finished with ${outcome.failures.size} failures (see logs above)")
         }
         runCatching { inspector.inspect(force = true) }
             .onFailure { error ->
                 if (error is CancellationException) throw error
-                log("补齐后重新检测失败: ${error.message}")
+                log("Post-install verification failed: ${error.message}")
             }
     }
 
@@ -102,18 +102,18 @@ class ToolchainRepairer(
         val aptOpts = BuiltinPluginBundles.bundleAptOptions()
         val installed = mutableListOf<String>()
         val failures = mutableListOf<String>()
-        log("==> [工具链补齐] 执行 PRoot 准备步骤（复用开发套件 PluginBundleScripts）")
+        log("==> [Toolchain setup] Running PRoot preparation (reusing PluginBundleScripts from the development bundle)")
         BuiltinPluginBundles.bundlePreparationSteps().forEach { step ->
             val result = linuxRuntime.execute(ShellCommand(commandLine = step, timeoutMs = STEP_TIMEOUT_MS))
             if (!result.isSuccess) {
-                log("准备步骤告警: ${result.stderr.ifBlank { result.stdout }.takeLast(200)}")
+                log("Preparation warning: ${result.stderr.ifBlank { result.stdout }.takeLast(200)}")
             }
         }
         log("==> apt-get update")
         linuxRuntime.execute(ShellCommand(commandLine = aptUpdateLine(aptOpts), timeoutMs = STEP_TIMEOUT_MS))
         targets.forEach { (probeId, packages) ->
             packages.forEach { pkg ->
-                log("==> 安装 $pkg")
+                log("==> Installing $pkg")
                 val result = linuxRuntime.execute(
                     ShellCommand(commandLine = aptInstallLine(aptOpts, pkg), timeoutMs = INSTALL_TIMEOUT_MS),
                 )
