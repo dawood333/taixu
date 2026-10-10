@@ -52,7 +52,7 @@ import top.wkbin.taixu.core.model.AppUpdateInfo
 import top.wkbin.taixu.core.model.UpdateCheckState
 
 /**
- * 二级子页 4：关于、版本更新与官方社区
+ * Secondary page 4: About, updates, and official community
  */
 @Composable
 fun AboutCommunityScreen(
@@ -71,7 +71,7 @@ fun AboutCommunityScreen(
     val isLoadingReleaseNotes by viewModel.isLoadingReleaseNotes.collectAsStateWithLifecycle()
     val currentVersion = rememberAppVersion()
 
-    // 版本更新弹窗
+    // Version update dialog
     when (val state = updateCheckState) {
         is UpdateCheckState.Success -> {
             if (state.info.hasUpdate) {
@@ -176,7 +176,7 @@ fun AboutCommunityScreen(
                         subtitle = "Automatically check for and install updates from GitHub Releases",
                         value = if (updateCheckState is UpdateCheckState.Checking) "Checking…" else "v$currentVersion",
                         onClick = {
-                            // 检查进行中禁止重复触发
+                            // Prevent repeated triggers while a check is in progress
                             if (updateCheckState !is UpdateCheckState.Checking) {
                                 viewModel.checkForUpdates(currentVersion)
                             }
@@ -405,7 +405,7 @@ private fun joinQqGroup(context: Context, groupId: String = "964382207") {
     runCatching {
         context.startActivity(intent)
     }.onFailure {
-        // 剪贴板兜底
+        // Clipboard fallback
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
         val clip = ClipData.newPlainText("Official TaiXu QQ group", groupId)
         clipboard?.setPrimaryClip(clip)
