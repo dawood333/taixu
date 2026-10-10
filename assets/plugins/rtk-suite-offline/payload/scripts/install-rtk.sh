@@ -10,10 +10,10 @@ progress() { percent="$1"; shift; printf '[TAIXU_PROGRESS:%s] %s\n' "$percent" "
 need "$PAYLOAD/checksums/SHA256SUMS"
 need "$PAYLOAD/bin/rtk"
 
-progress 20 "[VERIFY] 校验 RTK 二进制哈希"
+progress 20 "[VERIFY] Verify RTK binary checksum"
 (cd "$PAYLOAD" && sha256sum -c checksums/SHA256SUMS)
 
-progress 60 "[INSTALL] 部署 RTK 二进制到 /opt/taixu/bin 与工具目录"
+progress 60 "[INSTALL] Install the RTK binary in /opt/taixu/bin and the tool directory"
 mkdir -p "$TOOL_DIR/bin" /opt/taixu/bin /opt/taixu/data/rtk/config/rtk /opt/taixu/data/rtk/data
 cp "$PAYLOAD/bin/rtk" "$TOOL_DIR/bin/rtk"
 chmod 755 "$TOOL_DIR/bin/rtk"
@@ -24,6 +24,6 @@ if [ -f "$PAYLOAD/config/rtk/config.toml" ]; then
     chmod 644 /opt/taixu/data/rtk/config/rtk/config.toml
 fi
 
-progress 90 "[VERIFY] 验证 RTK 命令"
+progress 90 "[VERIFY] Verify the RTK command"
 /bin/sh "$PAYLOAD/scripts/verify-rtk.sh"
-progress 100 "[VERIFY] RTK 终端命令优化插件已就绪"
+progress 100 "[VERIFY] RTK terminal command optimization plugin is ready"
