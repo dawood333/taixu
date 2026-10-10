@@ -15,9 +15,9 @@ class WorkspaceFileService(
     private val pathManager: RuntimePathManager,
     private val workspaceRepository: WorkspaceRepository,
 ) {
-    suspend fun listFiles(projectName: String, relativePath: String = ""): AppResult<List<WorkspaceFileItem>> = ioResult("读取文件列表失败") {
+    suspend fun listFiles(projectName: String, relativePath: String = ""): AppResult<List<WorkspaceFileItem>> = ioResult("Failed to list files") {
         val directory = resolve(projectName, relativePath)
-        check(directory.isDirectory) { "不是目录：${displayPath(projectName, relativePath)}" }
+        check(directory.isDirectory) { "Not a directory: ${displayPath(projectName, relativePath)}" }
         val root = projectRoot(projectName)
         directory.listFiles().orEmpty().map { file ->
             WorkspaceFileItem(
@@ -31,46 +31,46 @@ class WorkspaceFileService(
         }.sortedWith(compareBy<WorkspaceFileItem> { !it.isDirectory }.thenBy { it.name.lowercase() })
     }
 
-    suspend fun readFile(projectName: String, relativePath: String): AppResult<String> = ioResult("读取文件失败") {
+    suspend fun readFile(projectName: String, relativePath: String): AppResult<String> = ioResult("Failed to read file") {
         val file = resolve(projectName, relativePath)
-        check(file.isFile) { "不是文件：${displayPath(projectName, relativePath)}" }
+        check(file.isFile) { "Not a file: ${displayPath(projectName, relativePath)}" }
         check(file.length() <= WorkspaceManager.MAX_FILE_READ_BYTES) {
-            "文件过大（${file.length()} 字节，上限 ${WorkspaceManager.MAX_FILE_READ_BYTES / 1024 / 1024} MB）"
+            "File is too large (${file.length()} bytes; limit ${WorkspaceManager.MAX_FILE_READ_BYTES / 1024 / 1024} MB)"
         }
         file.readText(Charsets.UTF_8)
     }
 
-    suspend fun writeFile(projectName: String, relativePath: String, content: String): AppResult<Unit> = ioResult("保存文件失败") {
+    suspend fun writeFile(projectName: String, relativePath: String, content: String): AppResult<Unit> = ioResult("Failed to save file") {
         require(content.length <= WorkspaceManager.MAX_FILE_WRITE_CHARS) {
-            "内容过长（${content.length} 字符，上限 ${WorkspaceManager.MAX_FILE_WRITE_CHARS}）"
+            "Content is too long (${content.length} characters; limit ${WorkspaceManager.MAX_FILE_WRITE_CHARS})"
         }
         val file = resolve(projectName, relativePath, allowMissing = true)
-        require(!file.isDirectory) { "目标是目录：${displayPath(projectName, relativePath)}" }
+        require(!file.isDirectory) { "Target is a directory: ${displayPath(projectName, relativePath)}" }
         WorkspaceAtomicWriter.write(file) { it.writeText(content, Charsets.UTF_8) }
     }
 
     /** 二进制写入（WebChat 上传等场景）：临时文件 + rename 的原子落盘与 [writeFile] 一致。 */
-    suspend fun writeBytes(projectName: String, relativePath: String, bytes: ByteArray): AppResult<Unit> = ioResult("写入文件失败") {
-        require(bytes.isNotEmpty()) { "内容为空" }
+    suspend fun writeBytes(projectName: String, relativePath: String, bytes: ByteArray): AppResult<Unit> = ioResult("Failed to write file") {
+        require(bytes.isNotEmpty()) { "Content is empty" }
         require(bytes.size <= MAX_UPLOAD_BYTES) {
-            "文件过大（${bytes.size} 字节，上限 ${MAX_UPLOAD_BYTES / 1024 / 1024} MB）"
+            "File is too large (${bytes.size} bytes; limit ${MAX_UPLOAD_BYTES / 1024 / 1024} MB)"
         }
         val file = resolve(projectName, relativePath, allowMissing = true)
-        require(!file.isDirectory) { "目标是目录：${displayPath(projectName, relativePath)}" }
+        require(!file.isDirectory) { "Target is a directory: ${displayPath(projectName, relativePath)}" }
         WorkspaceAtomicWriter.write(file) { it.writeBytes(bytes) }
     }
 
-    suspend fun createFile(projectName: String, relativePath: String): AppResult<Unit> = ioResult("创建文件失败") {
+    suspend fun createFile(projectName: String, relativePath: String): AppResult<Unit> = ioResult("Failed to create file") {
         val file = resolve(projectName, relativePath, allowMissing = true)
-        check(!file.exists()) { "文件已存在：${file.name}" }
+        check(!file.exists()) { "File already exists: ${file.name}" }
         file.parentFile?.mkdirs()
-        check(file.createNewFile()) { "无法创建文件" }
+        check(file.createNewFile()) { "Unable to create file" }
     }
 
-    suspend fun createDirectory(projectName: String, relativePath: String): AppResult<Unit> = ioResult("创建目录失败") {
+    suspend fun createDirectory(projectName: String, relativePath: String): AppResult<Unit> = ioResult("Failed to create directory") {
         val directory = resolve(projectName, relativePath, allowMissing = true)
-        check(!directory.exists()) { "目录已存在：${directory.name}" }
-        check(directory.mkdirs()) { "无法创建目录" }
+        check(!directory.exists()) { "Directory already exists: ${directory.name}" }
+        check(directory.mkdirs()) { "Unable to create directory" }
     }
 
     suspend fun renameItem(projectName: String, oldRelativePath: String, newName: String): AppResult<Unit> = ioResult("重命名失败") {
