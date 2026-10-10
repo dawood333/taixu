@@ -35,7 +35,7 @@ internal fun AddMountDialog(
     val hostRootAllowed = StorageMountBinding.isHostPathAllowed(trimmedHost)
     val hostPathValid = hostPath.isNotBlank() && !hostCharInvalid && hostRootAllowed
 
-    // 与 SettingsViewModel.addCustomMountBinding 的入参归一保持一致：无前导 / 自动补
+    // Keep normalization consistent with SettingsViewModel.addCustomMountBinding: add a leading slash if missing
     val trimmedGuest = guestPath.trim().let { if (it.startsWith("/")) it else "/$it" }
     val guestDuplicate = trimmedGuest in existingGuestPaths
     val guestNormalized = StorageMountBinding.normalizeGuestPath(trimmedGuest)
