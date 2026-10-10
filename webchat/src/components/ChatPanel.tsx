@@ -456,7 +456,7 @@ export function ChatPanel({
                   )}
                   <button
                     type="button"
-                    aria-label={`移除 ${attachment.fileName}`}
+                    aria-label={`Remove ${attachment.fileName}`}
                     onClick={() => setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                   >
                     <Icon name="x" size={12} />
