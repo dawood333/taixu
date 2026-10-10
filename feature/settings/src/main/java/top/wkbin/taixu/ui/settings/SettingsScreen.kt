@@ -41,7 +41,7 @@ import top.wkbin.taixu.ui.components.liquidGlassContent
 import top.wkbin.taixu.ui.theme.LocalLiquidGlassBackdrop
 
 /**
- * 太墟 · 乾坤配置 (TaiXu Settings & Models)
+ * TaiXu · Features配置 (TaiXu Settings & Models)
  */
 @Composable
 fun SettingsScreen(
@@ -65,9 +65,9 @@ fun SettingsScreen(
     val terminalFontSize by viewModel.terminalFontSize.collectAsStateWithLifecycle()
 
     val themeLabel = when (themeMode) {
-        "light" -> "浅色"
-        "dark" -> "曜石"
-        else -> "跟随系统"
+        "light" -> "Light"
+        "dark" -> "Dark"
+        else -> "Follow system"
     }
 
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -78,8 +78,8 @@ fun SettingsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "太墟 · 乾坤",
-                statusText = "系统设置与控制中枢",
+                title = "TaiXu · Features",
+                statusText = "System Settings & Control Center",
             )
         },
         bottomBar = {
@@ -116,7 +116,7 @@ fun SettingsScreen(
                             tint = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = "搜索全局功能与设置选项...",
+                            text = "Search features and settings...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                             modifier = Modifier.weight(1f),
@@ -133,21 +133,21 @@ fun SettingsScreen(
             item { LocalBackupSettingsCard() }
             item {
                 Text(
-                    text = "系统与配置分类",
+                    text = "System & Configuration",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 2.dp),
                 )
             }
 
-            // 1. 智能体与 AI 模型生态
+            // 1. Agents & AI Models生态
             item {
                 SettingsCategoryCard(
                     icon = RuntimeIconName.Brain,
                     accent = MaterialTheme.colorScheme.primary,
-                    title = "智能体与 AI 模型",
-                    subtitle = "模型档案 · 插件工具中心 · 技能与 MCP 生态",
-                    badge = if (models.isEmpty()) "未配置模型" else "${models.size} 个模型 · ${skills.count { it.isEnabled }} 技能",
+                    title = "Agents & AI Models",
+                    subtitle = "Model profiles · Tool center · Skills and MCP",
+                    badge = if (models.isEmpty()) "No model configured" else "${models.size} models · ${skills.count { it.isEnabled }} skills",
                     onClick = onOpenAgentEco,
                 )
             }
@@ -157,33 +157,33 @@ fun SettingsScreen(
                 SettingsCategoryCard(
                     icon = RuntimeIconName.Server,
                     accent = MaterialTheme.colorScheme.tertiary,
-                    title = "Linux 容器与存储",
-                    subtitle = "多发行版管理 · 宿主存储映射 · 运行特权模式",
-                    badge = "${installedDistros.size} 套系统 · ${effectiveExecutionMode.shortLabel}",
+                    title = "Linux Containers & Storage",
+                    subtitle = "Multiple distributions · host storage mapping · privileged execution",
+                    badge = "${installedDistros.size} distributions · ${effectiveExecutionMode.shortLabel}",
                     onClick = onOpenLinuxEnv,
                 )
             }
 
-            // 3. 外观、字号与终端定制
+            // 3. Appearance, Text Size & Terminal
             item {
                 SettingsCategoryCard(
                     icon = RuntimeIconName.Palette,
                     accent = MaterialTheme.colorScheme.secondary,
-                    title = "外观、字号与终端定制",
-                    subtitle = "深浅色主题 · 应用字号缩放 · 终端配色与字体",
+                    title = "Appearance, Text Size & Terminal",
+                    subtitle = "深Light主题 · 应用字号缩放 · 终端配色与字体",
                     badge = "$themeLabel · ${terminalFontSize}sp",
                     onClick = onOpenAppearance,
                 )
             }
 
-            // 4. 系统保活与开发者诊断
+            // 4. Background Persistence & Developer Diagnostics
             item {
                 SettingsCategoryCard(
                     icon = RuntimeIconName.Admin,
                     accent = MaterialTheme.colorScheme.primary,
-                    title = "系统保活与开发者诊断",
-                    subtitle = "后台电池优化白名单 · 调试监控 · PRoot 控制台",
-                    badge = if (developer) "诊断模式已开启" else "运行平稳",
+                    title = "Background Persistence & Developer Diagnostics",
+                    subtitle = "Battery-optimization exemption · debugging monitor · PRoot console",
+                    badge = if (developer) "Diagnostics enabled" else "Running normally",
                     onClick = onOpenSystemDev,
                 )
             }
@@ -192,8 +192,8 @@ fun SettingsScreen(
                 SettingsCategoryCard(
                     icon = RuntimeIconName.Sparkles,
                     accent = MaterialTheme.colorScheme.tertiary,
-                    title = "特色功能",
-                    subtitle = "一句话做 App · AI 圆桌 · 晨报哨兵 · WebChat 大屏 · A2UI 界面",
+                    title = "Featured Features",
+                    subtitle = "Build an app from one sentence · AI roundtable · Morning Sentinel · WebChat · A2UI",
                     badge = "5 项功能",
                     onClick = onOpenFeatureHub,
                 )
