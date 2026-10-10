@@ -36,7 +36,7 @@ object RomAutostartHelper {
         val intents = buildIntents(context, brand)
         for (intent in intents) {
             if (tryStart(context, intent)) {
-                Log.i(TAG, "成功跳转到 ${brand.label} 自启动设置页: ${intent.component}")
+                Log.i(TAG, "Opened ${brand.label} autostart settings: ${intent.component}")
                 return true
             }
         }
@@ -95,7 +95,7 @@ object RomAutostartHelper {
             intentFor("com.meizu.safe", "com.meizu.safe.security.AppSecActivity"),
         )
         RomBrand.SAMSUNG -> listOf(
-            // 三星设备维护 -> 电池 -> 后台使用限制，无直接自启动页，降级到应用详情
+            // Samsung设备维护 -> 电池 -> 后台使用限制，无直接自启动页，降级到应用详情
             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")),
         )
         RomBrand.OTHER -> emptyList()
@@ -111,17 +111,17 @@ object RomAutostartHelper {
         context.startActivity(intent)
         true
     }.getOrElse {
-        Log.w(TAG, "跳转失败: ${intent.component}", it)
+        Log.w(TAG, "Failed to open settings: ${intent.component}", it)
         false
     }
 
     private enum class RomBrand(val label: String) {
-        XIAOMI("小米 / Redmi / POCO"),
-        HUAWEI("华为 / 荣耀"),
-        OPPO("OPPO / realme / 一加"),
+        XIAOMI("Xiaomi / Redmi / POCO"),
+        HUAWEI("Huawei / Honor"),
+        OPPO("OPPO / realme / OnePlus"),
         VIVO("vivo / iQOO"),
-        MEIZU("魅族"),
-        SAMSUNG("三星"),
-        OTHER("其他"),
+        MEIZU("Meizu"),
+        SAMSUNG("Samsung"),
+        OTHER("Other"),
     }
 }
