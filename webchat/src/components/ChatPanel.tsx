@@ -181,7 +181,7 @@ function toolIcon(card: Record<string, unknown>): "terminal" | "search" | "file"
   return "workspace";
 }
 
-/** 从File类Tool调用参数提取 diff 行；无法解析时返回 null，回退到 JSON 展示。 */
+/** Extract diff lines from file-tool arguments; return null and fall back to JSON when parsing fails. */
 function toolDiffRows(card: Record<string, unknown>): DiffRow[] | null {
   const raw = card.arguments;
   let args: Record<string, unknown> | null = null;
@@ -227,9 +227,9 @@ function Message({
   const isCard = Number(message.type) === 2 || rawCard;
   const diffRows = isCard ? toolDiffRows(card) : null;
 
-  // 太墟 Harness 的Tool调用、Tool结果与能力事件。
+  // TaiXu Harness tool calls, results, and capability events.
   if (isCard) {
-    const title = card.toolTitle ?? card.toolName ?? card.displayName ?? card.title ?? card.toolType ?? "Tool运行";
+    const title = card.toolTitle ?? card.toolName ?? card.displayName ?? card.title ?? card.toolType ?? "Tool run";
     const status = card.status ?? (message.isLoading ? "running" : "completed");
     const running = String(status) === "running";
     return (
@@ -419,19 +419,19 @@ export function ChatPanel({
           <article className={`approval-card risk-${approval.riskLevel}`} key={approval.id}>
             <header>
               <Icon name="shield" size={18} />
-              <strong>需要审批</strong>
+              <strong>Approval required</strong>
               <span>{approval.riskLevel.toUpperCase()}</span>
             </header>
             <p className="approval-summary">{approval.summary || approval.toolName}</p>
             <p>{approval.reason}</p>
-            {approval.workspace && <small>工作区：{approval.workspace}</small>}
+            {approval.workspace && <small>Workspace: {approval.workspace}</small>}
             <details>
-              <summary>查看Tool参数</summary>
+              <summary>View tool arguments</summary>
               <pre>{approval.argumentsJson}</pre>
             </details>
             <div className="approval-actions">
-              <button type="button" onClick={() => onResolveApproval(approval.id, false)}>拒绝</button>
-              <button className="approve" type="button" onClick={() => onResolveApproval(approval.id, true)}>批准并继续</button>
+              <button type="button" onClick={() => onResolveApproval(approval.id, false)}>Deny</button>
+              <button className="approve" type="button" onClick={() => onResolveApproval(approval.id, true)}>Approve and continue</button>
             </div>
           </article>
         ))}
@@ -466,7 +466,7 @@ export function ChatPanel({
             </div>
           )}
           {Boolean(quickPhrases.length) && (
-            <div className="phrase-bar" role="toolbar" aria-label="快捷短语">
+            <div className="phrase-bar" role="toolbar" aria-label="Quick phrases">
               {quickPhrases.map((phrase) => (
                 <button
                   className="phrase-chip"
@@ -483,7 +483,7 @@ export function ChatPanel({
           <textarea
             ref={textareaRef}
             rows={1}
-            placeholder="请输入内容"
+            placeholder="Enter a message"
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={handleKeyDown}
@@ -492,20 +492,20 @@ export function ChatPanel({
             <button
               className="composer-icon-button"
               type="button"
-              aria-label="添加Attachment"
-              title="添加Attachment"
+              aria-label="Add attachment"
+              title="Add attachment"
               onClick={() => attachmentInputRef.current?.click()}
             >
               <ComposerAttachmentIcon />
             </button>
             <input ref={attachmentInputRef} type="file" multiple hidden onChange={(event) => void addAttachments(event)} />
-            <span className="composer-hint">Enter 发送 · Shift + Enter 换行</span>
+            <span className="composer-hint">Enter to send · Shift + Enter for a new line</span>
             {activeTaskId ? (
-              <button className="send-button stop" type="button" aria-label="停止" title="停止" onClick={onCancel}>
+              <button className="send-button stop" type="button" aria-label="Stop" title="Stop" onClick={onCancel}>
                 <ComposerStopIcon />
               </button>
             ) : (
-              <button className={`send-button${sending ? " loading" : ""}`} type="submit" aria-label="发送" disabled={!canSend}>
+              <button className={`send-button${sending ? " loading" : ""}`} type="submit" aria-label="Send" disabled={!canSend}>
                 <ComposerSendIcon />
               </button>
             )}
