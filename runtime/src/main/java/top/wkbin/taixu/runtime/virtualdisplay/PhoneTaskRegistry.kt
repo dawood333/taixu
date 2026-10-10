@@ -47,7 +47,7 @@ class PhoneTaskControl(private val job: Job) {
     }
     @Synchronized fun cancel() {
         finish(PhoneTaskState.CANCELLED)
-        job.cancel(CancellationException("用户停止了手机操作任务"))
+        job.cancel(CancellationException("User stopped the phone-control task"))
     }
     @Synchronized fun finish(state: PhoneTaskState) {
         revision++
@@ -62,7 +62,7 @@ class PhoneTaskControl(private val job: Job) {
             state.first { it != PhoneTaskState.PAUSED }
             synchronized(this) {
                 if (mutableState.value == PhoneTaskState.RUNNING) return revision
-                if (mutableState.value != PhoneTaskState.PAUSED) throw CancellationException("手机操作任务已结束")
+                if (mutableState.value != PhoneTaskState.PAUSED) throw CancellationException("Phone-control task has ended")
             }
         }
     }
