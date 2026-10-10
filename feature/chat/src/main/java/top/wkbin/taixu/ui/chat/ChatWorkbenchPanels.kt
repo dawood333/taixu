@@ -193,7 +193,7 @@ internal fun CollapsibleChatWorkbenchStrip(
                 StatusDivider()
                 WorkbenchStatusItem(
                     icon = RuntimeIconName.GitBranch,
-                    label = if (repositoryHighlight) "仓库 •" else stringResource(R.string.chat_repository),
+                    label = if (repositoryHighlight) "Repository •" else stringResource(R.string.chat_repository),
                     tint = if (repositoryHighlight) Color(0xFF2E9E5B) else MaterialTheme.colorScheme.onSurfaceVariant,
                     highlight = repositoryHighlight,
                     onClick = onOpenRepository,
@@ -205,7 +205,7 @@ internal fun CollapsibleChatWorkbenchStrip(
                 StatusDivider()
                 WorkbenchStatusItem(
                     icon = RuntimeIconName.Globe,
-                    label = if (browserHighlight) "浏览器 •" else "浏览器",
+                    label = if (browserHighlight) "Browser •" else "Browser",
                     tint = if (browserHighlight) Color(0xFF3F8FFF) else MaterialTheme.colorScheme.onSurfaceVariant,
                     highlight = browserHighlight,
                     onClick = onOpenBrowser,
