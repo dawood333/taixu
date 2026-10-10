@@ -44,8 +44,8 @@ enum class ProjectType {
         get() = when (this) {
             ANDROID -> "Android"
             FLUTTER -> "Flutter"
-            REVERSE -> "APK 逆向"
-            GENERAL -> "通用"
+            REVERSE -> "APK reverse engineering"
+            GENERAL -> "General"
         }
 }
 
@@ -72,14 +72,14 @@ enum class ProjectTemplate {
 
     val displayName: String
         get() = when (this) {
-            EMPTY -> "空工程 (Empty)"
-            APK_REVERSE -> "APK 逆向"
-            GIT_IMPORT -> "从 Git 导入"
+            EMPTY -> "Empty project"
+            APK_REVERSE -> "APK reverse engineering"
+            GIT_IMPORT -> "Import from Git"
         }
 }
 
 /**
- * APK 逆向模板的安装包来源：
+ * APK reverse engineering模板的安装包来源：
  * - [FromInstalledApp]：从本机已安装应用提取安装包（applicationInfo.sourceDir）；
  * - [FromFileUri]：通过系统文件管理器（SAF OpenDocument）选择 .apk 文件。
  */
@@ -203,16 +203,16 @@ class WorkspaceManager(
     ): AppResult<WorkspaceProject> = withContext(Dispatchers.IO) {
         try {
             val safeName = name.trim()
-            require(isValidProjectName(safeName)) { "名称需以文字或数字开头，只能包含文字、数字、点、下划线和短横线" }
-            require(safeName != "sdcard") { "sdcard 是系统共享空间保留名称" }
-            check(workspaceDao.findByName(safeName) == null) { "项目已存在：$safeName" }
+            require(isValidProjectName(safeName)) { "Name must start with a letter or number and may contain only letters, numbers, dots, underscores, and hyphens" }
+            require(safeName != "sdcard") { "sdcard is reserved for shared system storage" }
+            check(workspaceDao.findByName(safeName) == null) { "Project already exists: $safeName" }
             val resolvedTemplateId = templateId
             val resolvedManifest = resolvedTemplateId.takeIf(String::isNotBlank)?.let(projectTemplateEngine::inspect)
             resolvedManifest?.variables?.firstOrNull { it.name == "projectName" }?.let { variable ->
-                require(!variable.required || safeName.isNotBlank()) { "项目名称不能为空" }
+                require(!variable.required || safeName.isNotBlank()) { "Project name cannot be empty" }
                 if (variable.validationRegex.isNotBlank()) {
                     require(Regex(variable.validationRegex).matches(safeName)) {
-                        variable.description.ifBlank { "项目名称不符合所选模板的格式要求" }
+                        variable.description.ifBlank { "Project name does not match the selected template's requirements" }
                     }
                 }
             }
@@ -221,33 +221,33 @@ class WorkspaceManager(
                 WorkspaceStorage.INTERNAL -> pathManager.workspaceDir
                 WorkspaceStorage.SHARED -> SHARED_STORAGE_ROOT
             }
-            check(base.isDirectory || base.mkdirs()) { "关联空间不可用：${base.absolutePath}" }
+            check(base.isDirectory || base.mkdirs()) { "Linked workspace is unavailable: ${base.absolutePath}" }
             val prefix = if (storage == WorkspaceStorage.INTERNAL) "/workspace/" else "/sdcard/"
             val requested = directoryPath.trim().replace('\\', '/').removePrefix(prefix).trim('/')
             val relative = requested.ifBlank { safeName }
-            require(relative.split('/').none { it.isBlank() || it == "." || it == ".." }) { "关联目录包含无效路径" }
+            require(relative.split('/').none { it.isBlank() || it == "." || it == ".." }) { "Linked directory contains an invalid path" }
             val directory = File(base, relative).canonicalFile
-            check(isInside(base.canonicalFile, directory) && directory != base.canonicalFile) { "关联目录越界" }
+            check(isInside(base.canonicalFile, directory) && directory != base.canonicalFile) { "Linked directory is outside the allowed path" }
             val duplicate = workspaceDao.listAll().any {
                 it.name != safeName && runCatching { File(it.path).canonicalFile == directory }.getOrDefault(false)
             }
-            check(!duplicate) { "该目录已关联其他工程" }
+            check(!duplicate) { "This directory is already linked to another project" }
             val existed = directory.exists()
             if (template == ProjectTemplate.GIT_IMPORT) {
-                require(isValidGitUrl(gitUrl)) { "Git 仓库地址必须是 HTTPS、SSH 或 git@ 地址" }
-                require(!existed || directory.isDirectory) { "Git 导入目标不是目录" }
-                require(!existed || directory.listFiles().orEmpty().isEmpty()) { "Git 导入目标目录必须为空" }
-                if (!existed) require(directory.mkdirs()) { "无法创建 Git 导入目录" }
+                require(isValidGitUrl(gitUrl)) { "Git repository URL must use HTTPS, SSH, or git@ format" }
+                require(!existed || directory.isDirectory) { "Git import target is not a directory" }
+                require(!existed || directory.listFiles().orEmpty().isEmpty()) { "Git import target directory must be empty" }
+                if (!existed) require(directory.mkdirs()) { "Unable to create Git import directory" }
             } else {
-                check((existed && directory.isDirectory) || (!existed && directory.mkdirs())) { "无法创建或访问关联目录" }
+                check((existed && directory.isDirectory) || (!existed && directory.mkdirs())) { "Unable to create or access linked directory" }
                 if (template != ProjectTemplate.EMPTY || templateId.isNotBlank()) {
-                    check(!existed || directory.listFiles().orEmpty().isEmpty()) { "模板目标目录必须为空" }
+                    check(!existed || directory.listFiles().orEmpty().isEmpty()) { "Template target directory must be empty" }
                 }
             }
             File(directory, UNLINKED_MARKER).delete()
 
             // 模板初始化处理
-            // APK 逆向模板：包名无需用户输入，由导入的安装包决定（无则留空）
+            // APK reverse engineering模板：包名无需用户输入，由导入的安装包决定（无则留空）
             val needsPackageName = resolvedManifest?.variables.orEmpty().any {
                 it.name == "packageName" || it.name == "packagePath"
             }
@@ -258,7 +258,7 @@ class WorkspaceManager(
                     .ifBlank { packageName.trim() }
                     .ifBlank { packageDefault }
                     .ifBlank { "com.example.${safeName.lowercase().filter { it.isLetterOrDigit() }}" }
-                require(PACKAGE_NAME.matches(cleanPkg)) { "包名必须是合法的 Java/Kotlin 包名：$cleanPkg" }
+                require(PACKAGE_NAME.matches(cleanPkg)) { "Package name must be a valid Java/Kotlin package name: $cleanPkg" }
                 effectivePackage = cleanPkg
             }
             if (resolvedTemplateId.isNotBlank() && resolvedManifest != null) {
@@ -276,7 +276,7 @@ class WorkspaceManager(
                 }
                 val values = projectTemplateEngine.resolvedValues(resolvedManifest, suppliedValues)
                 val hasScripts = resolvedManifest.hooks.beforeCreate.isNotBlank() || resolvedManifest.hooks.afterCreate.isNotBlank()
-                require(!hasScripts || trustTemplateScripts) { "该模板包含构造脚本，请先查看并明确授权" }
+                require(!hasScripts || trustTemplateScripts) { "This template contains setup scripts. Review and explicitly authorize them first." }
                 if (resolvedManifest.hooks.beforeCreate.isNotBlank()) {
                     executeTemplateHook(
                         resolvedTemplateId,
@@ -328,17 +328,17 @@ class WorkspaceManager(
             )
             val createdEntity = workspaceDao.findByName(safeName)
             if (createdEntity == null) {
-                AppResult.Failure(AppError(ErrorCode.IO, "项目写入后查询失败", null))
+                AppResult.Failure(AppError(ErrorCode.IO, "Failed to query project after writing", null))
             } else {
                 val created = projectFromEntity(createdEntity)
                 if (created == null) {
-                    AppResult.Failure(AppError(ErrorCode.IO, "项目数据转换失败", null))
+                    AppResult.Failure(AppError(ErrorCode.IO, "Failed to convert project data", null))
                 } else {
                     AppResult.Success(created)
                 }
             }
         } catch (throwable: Throwable) {
-            AppResult.Failure(AppError(ErrorCode.IO, throwable.message ?: "创建项目失败", throwable))
+            AppResult.Failure(AppError(ErrorCode.IO, throwable.message ?: "Failed to create project", throwable))
         }
     }
 
@@ -374,8 +374,8 @@ class WorkspaceManager(
         importProject(name, directoryPath, projectType, ProjectImportSource.GITHUB) { directory, cleanupOnFailure ->
             require(isValidGitUrlForTransport(gitUrl, transport)) {
                 when (transport) {
-                    GitTransport.HTTP -> "HTTP 地址必须以 http:// 或 https:// 开头"
-                    GitTransport.SSH -> "SSH 地址必须使用 ssh:// 或 git@host:path 格式"
+                    GitTransport.HTTP -> "HTTP URL must start with http:// or https://"
+                    GitTransport.SSH -> "SSH URL must use ssh:// or git@host:path format"
                 }
             }
             cloneGitRepository(directory, gitUrl, cleanupOnFailure, onProgress)
@@ -385,10 +385,10 @@ class WorkspaceManager(
     /** Compresses all regular project files and exports the ZIP into a SAF-selected local directory. */
     suspend fun exportProject(name: String, targetTreeUri: String): AppResult<String> = withContext(Dispatchers.IO) {
         try {
-            require(isValidProjectName(name)) { "项目名称无效" }
-            val entity = workspaceDao.findByName(name) ?: error("项目不存在：$name")
+            require(isValidProjectName(name)) { "Invalid project name" }
+            val entity = workspaceDao.findByName(name) ?: error("Project not found: $name")
             val projectDir = File(entity.path).canonicalFile
-            check(projectDir.isDirectory) { "项目目录不存在：$name" }
+            check(projectDir.isDirectory) { "Project directory not found: $name" }
 
             val treeUri = Uri.parse(targetTreeUri)
             val parentUri = DocumentsContract.buildDocumentUriUsingTree(
@@ -401,20 +401,20 @@ class WorkspaceManager(
                 parentUri,
                 "application/zip",
                 fileName,
-            ) ?: error("无法在所选目录创建导出文件")
+            ) ?: error("Unable to create the export file in the selected directory")
             val output = context.contentResolver.openOutputStream(outputUri, "w")
-                ?: error("无法写入导出文件")
+                ?: error("Unable to write the export file")
             output.use { stream -> writeProjectZip(projectDir, stream) }
             AppResult.Success(fileName)
         } catch (throwable: Throwable) {
-            AppResult.Failure(AppError(ErrorCode.IO, throwable.message ?: "导出项目失败", throwable))
+            AppResult.Failure(AppError(ErrorCode.IO, throwable.message ?: "Failed to export project", throwable))
         }
     }
 
     suspend fun deleteProject(name: String): AppResult<Unit> = withContext(Dispatchers.IO) {
         try {
-            require(isValidProjectName(name)) { "项目名称无效" }
-            val entity = workspaceDao.findByName(name) ?: error("项目不存在：$name")
+            require(isValidProjectName(name)) { "Invalid project name" }
+            val entity = workspaceDao.findByName(name) ?: error("Project not found: $name")
             val directory = File(entity.path)
             if (entity.ownsDirectory && directory.exists()) {
                 SafeFileTree.delete(directory)
@@ -425,15 +425,15 @@ class WorkspaceManager(
             runCatching { buildScriptRepository?.value?.unbind(name) }
             AppResult.Success(Unit)
         } catch (throwable: Throwable) {
-            AppResult.Failure(AppError(ErrorCode.IO, throwable.message ?: "删除项目失败", throwable))
+            AppResult.Failure(AppError(ErrorCode.IO, throwable.message ?: "Failed to delete project", throwable))
         }
     }
 
     suspend fun linuxWorkingDirectory(name: String): String {
         if (name == "sdcard") return "/sdcard"
-        require(isValidProjectName(name)) { "项目名称无效" }
-        val entity = workspaceDao.findByName(name) ?: error("项目不存在：$name")
-        check(File(entity.path).isDirectory) { "关联目录不存在：$name" }
+        require(isValidProjectName(name)) { "Invalid project name" }
+        val entity = workspaceDao.findByName(name) ?: error("Project not found: $name")
+        check(File(entity.path).isDirectory) { "Linked directory does not exist: $name" }
         return linuxPathFor(File(entity.path))
     }
 
@@ -514,7 +514,7 @@ class WorkspaceManager(
             File(directory, "settings.gradle.kts").exists() ||
                 File(directory, "app/build.gradle.kts").exists() ||
                 File(directory, "build.gradle").exists() -> ProjectType.ANDROID
-            // APK 逆向工程：优先使用导入元数据标记，再兼容 .apk/解包目录
+            // APK reverse engineering工程：优先使用导入元数据标记，再兼容 .apk/解包目录
             File(directory, "apk-info.properties").isFile ||
                 directory.listFiles().orEmpty().any { it.isFile && it.extension.equals("apk", ignoreCase = true) } ||
                 (File(directory, "unpacked").isDirectory && File(directory, "unpacked").listFiles().orEmpty()
@@ -579,7 +579,7 @@ class WorkspaceManager(
         check(result.isSuccess) {
             if (cleanupOnFailure) SafeFileTree.delete(directory)
             val output = (result.stderr + "\n" + result.stdout).trim().takeLast(1200)
-            "Git clone 失败：${output.ifBlank { "请确认 Git 已安装、仓库地址和认证配置可用" }}"
+            "Git clone failed: ${output.ifBlank { "Ensure Git is installed and the repository URL and authentication are valid" }}"
         }
         SafeFileTree.delete(File(directory, ".git/hooks"))
     }
@@ -593,25 +593,25 @@ class WorkspaceManager(
     ): AppResult<WorkspaceProject> {
         return try {
             val safeName = name.trim()
-            require(isValidProjectName(safeName)) { "名称需以文字或数字开头，只能包含文字、数字、点、下划线和短横线" }
-            require(safeName != "sdcard") { "sdcard 是系统共享空间保留名称" }
-            check(workspaceDao.findByName(safeName) == null) { "项目已存在：$safeName" }
+            require(isValidProjectName(safeName)) { "Name must start with a letter or number and may contain only letters, numbers, dots, underscores, and hyphens" }
+            require(safeName != "sdcard") { "sdcard is reserved for shared system storage" }
+            check(workspaceDao.findByName(safeName) == null) { "Project already exists: $safeName" }
             pathManager.workspaceDir.mkdirs()
             val base = pathManager.workspaceDir.canonicalFile
-            check(base.isDirectory || base.mkdirs()) { "内部沙盒目录不可用" }
+            check(base.isDirectory || base.mkdirs()) { "Internal sandbox directory is unavailable" }
             val requested = directoryPath.trim().replace('\\', '/').removePrefix("/workspace/").trim('/')
             val relative = requested.ifBlank { safeName }
-            require(relative.split('/').none { it.isBlank() || it == "." || it == ".." }) { "关联目录包含无效路径" }
+            require(relative.split('/').none { it.isBlank() || it == "." || it == ".." }) { "Linked directory contains an invalid path" }
             val directory = File(base, relative).canonicalFile
-            check(isInside(base, directory) && directory != base) { "关联目录越界" }
+            check(isInside(base, directory) && directory != base) { "Linked directory is outside the allowed path" }
             val duplicate = workspaceDao.listAll().any {
                 runCatching { File(it.path).canonicalFile == directory }.getOrDefault(false)
             }
-            check(!duplicate) { "该目录已关联其他工程" }
+            check(!duplicate) { "This directory is already linked to another project" }
             val existed = directory.exists()
-            require(!existed || directory.isDirectory) { "导入目标不是目录" }
-            require(!existed || directory.listFiles().orEmpty().isEmpty()) { "导入目标目录必须为空" }
-            if (!existed) require(directory.mkdirs()) { "无法创建导入目录" }
+            require(!existed || directory.isDirectory) { "Import target is not a directory" }
+            require(!existed || directory.listFiles().orEmpty().isEmpty()) { "Import target directory must be empty" }
+            if (!existed) require(directory.mkdirs()) { "Unable to create import directory" }
             materialize(directory, !existed)
             writeProjectTypeMetadata(directory, projectType, source)
             workspaceDao.upsert(
@@ -619,33 +619,33 @@ class WorkspaceManager(
             )
             val createdEntity = workspaceDao.findByName(safeName)
             if (createdEntity == null) {
-                AppResult.Failure(AppError(ErrorCode.IO, "项目写入后查询失败", null))
+                AppResult.Failure(AppError(ErrorCode.IO, "Failed to query project after writing", null))
             } else {
                 val created = projectFromEntity(createdEntity)
                 if (created == null) {
-                    AppResult.Failure(AppError(ErrorCode.IO, "项目数据转换失败", null))
+                    AppResult.Failure(AppError(ErrorCode.IO, "Failed to convert project data", null))
                 } else {
                     AppResult.Success(created)
                 }
             }
         } catch (throwable: Throwable) {
-            AppResult.Failure(AppError(ErrorCode.IO, throwable.message ?: "导入项目失败", throwable))
+            AppResult.Failure(AppError(ErrorCode.IO, throwable.message ?: "Failed to import project", throwable))
         }
     }
 
     private fun extractProjectArchive(source: ProjectArchiveSource, directory: File) {
-        require(source.fileName.endsWith(".zip", ignoreCase = true)) { "本地导入目前仅支持 ZIP 项目压缩包" }
+        require(source.fileName.endsWith(".zip", ignoreCase = true)) { "Local import currently supports ZIP project archives only" }
         val input = context.contentResolver.openInputStream(Uri.parse(source.uri))
-            ?: error("无法读取所选项目压缩包（URI 授权可能已过期，请重新选择）")
+            ?: error("Unable to read the selected project archive (URI permission may have expired; select it again)")
         extractProjectArchive(input, source.fileName, directory)
     }
 
     internal fun extractProjectArchive(input: InputStream, fileName: String, directory: File) {
-        require(fileName.endsWith(".zip", ignoreCase = true)) { "本地导入目前仅支持 ZIP 项目压缩包" }
+        require(fileName.endsWith(".zip", ignoreCase = true)) { "Local import currently supports ZIP project archives only" }
         val staging = File(directory, IMPORT_STAGING_DIRECTORY).canonicalFile
-        check(isInside(directory.canonicalFile, staging)) { "导入暂存目录越界" }
+        check(isInside(directory.canonicalFile, staging)) { "Import staging directory is outside the allowed path" }
         SafeFileTree.delete(staging)
-        check(staging.mkdirs()) { "无法创建导入暂存目录" }
+        check(staging.mkdirs()) { "Unable to create import staging directory" }
         var entryCount = 0
         var totalBytes = 0L
         try {
@@ -653,17 +653,17 @@ class WorkspaceManager(
                 while (true) {
                     val entry = zip.nextEntry ?: break
                     entryCount++
-                    require(entryCount <= MAX_ARCHIVE_ENTRIES) { "压缩包文件数量过多" }
+                    require(entryCount <= MAX_ARCHIVE_ENTRIES) { "Archive contains too many files" }
                     val normalizedName = entry.name.replace('\\', '/').trimStart('/')
-                    require(normalizedName.isNotBlank()) { "压缩包包含空路径" }
-                    require(normalizedName.split('/').none { it == ".." }) { "压缩包包含越界路径：${entry.name}" }
+                    require(normalizedName.isNotBlank()) { "Archive contains an empty path" }
+                    require(normalizedName.split('/').none { it == ".." }) { "Archive contains a path traversal entry: ${entry.name}" }
                     val target = File(staging, normalizedName).canonicalFile
-                    require(isInside(staging, target) && target != staging) { "压缩包包含越界路径：${entry.name}" }
+                    require(isInside(staging, target) && target != staging) { "Archive contains a path traversal entry: ${entry.name}" }
                     if (entry.isDirectory) {
-                        check(target.isDirectory || target.mkdirs()) { "无法创建目录：${entry.name}" }
+                        check(target.isDirectory || target.mkdirs()) { "Unable to create directory: ${entry.name}" }
                     } else {
                         check(target.parentFile?.isDirectory == true || target.parentFile?.mkdirs() == true) {
-                            "无法创建目录：${entry.name}"
+                            "Unable to create directory: ${entry.name}"
                         }
                         target.outputStream().buffered().use { output ->
                             val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
@@ -673,8 +673,8 @@ class WorkspaceManager(
                                 if (read < 0) break
                                 entryBytes += read
                                 totalBytes += read
-                                require(entryBytes <= MAX_ARCHIVE_ENTRY_BYTES) { "压缩包单个文件过大：${entry.name}" }
-                                require(totalBytes <= MAX_ARCHIVE_TOTAL_BYTES) { "压缩包解压后体积过大" }
+                                require(entryBytes <= MAX_ARCHIVE_ENTRY_BYTES) { "Archive entry is too large: ${entry.name}" }
+                                require(totalBytes <= MAX_ARCHIVE_TOTAL_BYTES) { "Extracted archive is too large" }
                                 output.write(buffer, 0, read)
                             }
                         }
@@ -682,15 +682,15 @@ class WorkspaceManager(
                     zip.closeEntry()
                 }
             }
-            require(entryCount > 0) { "项目压缩包为空" }
+            require(entryCount > 0) { "Project archive is empty" }
             val meaningful = staging.listFiles().orEmpty().filterNot { it.name == "__MACOSX" }
             val contentRoot = meaningful.singleOrNull()?.takeIf { it.isDirectory } ?: staging
             val children = contentRoot.listFiles().orEmpty().filterNot { it.name == "__MACOSX" }
-            require(children.isNotEmpty()) { "项目压缩包没有可导入的文件" }
+            require(children.isNotEmpty()) { "Project archive contains no importable files" }
             children.forEach { child ->
                 val destination = File(directory, child.name).canonicalFile
-                check(isInside(directory.canonicalFile, destination) && !destination.exists()) { "导入文件冲突：${child.name}" }
-                check(child.renameTo(destination)) { "无法写入导入文件：${child.name}" }
+                check(isInside(directory.canonicalFile, destination) && !destination.exists()) { "Import file conflict: ${child.name}" }
+                check(child.renameTo(destination)) { "Unable to write imported file: ${child.name}" }
             }
         } finally {
             SafeFileTree.delete(staging)
@@ -750,14 +750,14 @@ class WorkspaceManager(
                 ),
             )
             check(result.isSuccess) {
-                "模板脚本执行失败（$stage）：${result.stderr.ifBlank { result.stdout }.takeLast(2_000)}"
+                "Template script failed ($stage): ${result.stderr.ifBlank { result.stdout }.takeLast(2_000)}"
             }
         } finally {
             hookFile.delete()
         }
     }
 
-    // ==================== APK 逆向模板 ====================
+    // ==================== APK reverse engineering模板 ====================
 
     private data class ImportedApk(
         val packageName: String,
@@ -767,7 +767,7 @@ class WorkspaceManager(
     )
 
     /**
-     * APK 逆向模板初始化：把安装包导入工程目录并做第一层"解包"。
+     * APK reverse engineering模板初始化：把安装包导入工程目录并做第一层"解包"。
      *
      * 产物结构（以工程名 [name] 为例）：
      * ```
@@ -787,7 +787,7 @@ class WorkspaceManager(
         name: String,
         apkSource: ApkImportSource?,
     ): ImportedApk {
-        requireNotNull(apkSource) { "APK 逆向模板必须选择安装包来源（已安装应用或 APK 文件）" }
+        requireNotNull(apkSource) { "APK reverse engineering模板必须选择安装包来源（已安装应用或 APK 文件）" }
         projectDir.mkdirs()
 
         // 1. 解析来源并拷贝安装包到工程目录
@@ -800,15 +800,15 @@ class WorkspaceManager(
             is ApkImportSource.FromInstalledApp -> {
                 val info = runCatching {
                     context.packageManager.getApplicationInfo(apkSource.packageName, 0)
-                }.getOrElse { error("无法读取已安装应用信息：${apkSource.packageName}") }
+                }.getOrElse { error("Unable to read installed app information: ${apkSource.packageName}") }
                 val source = File(info.sourceDir)
-                require(source.isFile) { "应用安装包不可读：${source.absolutePath}" }
+                require(source.isFile) { "App package is unreadable: ${source.absolutePath}" }
                 apkFileName = "${apkSource.packageName}.apk"
                 sourceLabel = apkSource.appLabel
                 sourceKind = "installed-app"
                 packageHint = apkSource.packageName
                 apkFile = File(projectDir, apkFileName).canonicalFile
-                check(isInside(projectDir.canonicalFile, apkFile)) { "APK 输出路径越界" }
+                check(isInside(projectDir.canonicalFile, apkFile)) { "APK output path is outside the allowed directory" }
                 source.copyTo(apkFile, overwrite = true)
             }
             is ApkImportSource.FromFileUri -> {
@@ -825,15 +825,15 @@ class WorkspaceManager(
                 sourceKind = "file-uri"
                 packageHint = ""
                 apkFile = File(projectDir, apkFileName).canonicalFile
-                check(isInside(projectDir.canonicalFile, apkFile)) { "APK 输出路径越界" }
+                check(isInside(projectDir.canonicalFile, apkFile)) { "APK output path is outside the allowed directory" }
                 val input = context.contentResolver.openInputStream(uri)
-                    ?: error("无法读取所选 APK 文件（URI 授权可能已过期，请重新选择）")
+                    ?: error("Unable to read the selected APK (URI permission may have expired; select it again)")
                 input.use { source ->
                     apkFile.outputStream().use { output -> source.copyTo(output) }
                 }
             }
         }
-        require(apkFile.isFile && apkFile.length() > 0) { "安装包导入失败：$apkFileName" }
+        require(apkFile.isFile && apkFile.length() > 0) { "Failed to import package: $apkFileName" }
 
         // 2. 标准 ZIP 解包 -> unpacked/
         val unpackedDir = File(projectDir, "unpacked").apply { mkdirs() }
@@ -891,7 +891,7 @@ class WorkspaceManager(
         val entryCount = unpackedDir.walkTopDown().count { it.isFile }
         File(projectDir, "REVERSE.md").writeText(
             """
-            # $name · APK 逆向工程
+            # $name · APK reverse engineering工程
 
             > 来源：$sourceLabel
             > 导入时间：${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}
@@ -958,7 +958,7 @@ class WorkspaceManager(
 
             | 壳级别 | 特征 | 脱壳方案 |
             | :--- | :--- | :--- |
-            | **一代壳**（整体 dex 加密） | jadx 只能看到 stub | **通用脱壳**：FRIDA-DEXDump（`frida -U -f 包名 -l frida-dexdump.js`）、BlackDex / FullDump（免 root 一键）、MT 管理器脱壳插件 |
+            | **一代壳**（整体 dex 加密） | jadx 只能看到 stub | **General脱壳**：FRIDA-DEXDump（`frida -U -f 包名 -l frida-dexdump.js`）、BlackDex / FullDump（免 root 一键）、MT 管理器脱壳插件 |
             | **二代壳**（方法抽取 / 函数抽取） | 方法体运行时回填 | **主动调用脱壳**：FART / Youpk / 反射大师（定制 ROM 或 Xposed 级框架触发每个方法回填后再 dump） |
             | **VMP 壳**（指令虚拟化，如娜迦 chaosvmp） | 代码被虚拟化保护 | 极难整体脱，通常只能**动态调试关键逻辑**（Frida hook / Unidbg 模拟执行） |
 
@@ -989,7 +989,7 @@ class WorkspaceManager(
         return when {
             isInside(internal, canonical) -> "/workspace/${canonical.toRelativeString(internal).replace(File.separatorChar, '/')}"
             isInside(shared, canonical) -> "/sdcard/${canonical.toRelativeString(shared).replace(File.separatorChar, '/')}"
-            else -> error("目录不在可关联空间内")
+            else -> error("Directory is outside the allowed linked workspace")
         }.trimEnd('/')
     }
 
