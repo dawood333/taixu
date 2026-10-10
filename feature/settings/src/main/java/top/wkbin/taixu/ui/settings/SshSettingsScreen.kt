@@ -138,7 +138,7 @@ fun SshSettingsScreen(
                         } else {
                             when (serviceState) {
                                 is SshServiceState.Running -> "Running"
-                                is SshServiceState.Installing -> "安装中"
+                                is SshServiceState.Installing -> "Installing"
                                 is SshServiceState.Starting -> "Starting"
                                 is SshServiceState.Failed -> "Failed"
                                 is SshServiceState.Stopped -> if ((serviceState as SshServiceState.Stopped).installed) "Installed" else "Not installed"
@@ -175,27 +175,27 @@ fun SshSettingsScreen(
             }
 
             item {
-                SectionLabel("登录认证")
+                SectionLabel("Authentication")
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Admin,
-                        title = "登录Username",
-                        subtitle = "PRoot Linux 沙箱管理员账户",
+                        title = "Login username",
+                        subtitle = "Administrator account in the PRoot Linux sandbox",
                         value = "root",
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Key,
-                        title = "登录Password",
-                        subtitle = if (settings.passwordConfigured) "Password已加密Save，可点击修改或清除" else "尚未设置，使用Password登录前必须配置",
-                        value = if (settings.passwordConfigured) "已设置" else "未设置",
+                        title = "Login password",
+                        subtitle = if (settings.passwordConfigured) "Password is encrypted and saved; tap to change or clear it" else "Not set. Configure a password before using password authentication",
+                        value = if (settings.passwordConfigured) "Configured" else "Not set",
                         onClick = { showPasswordDialog = true },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Shield,
-                        title = "允许Password登录",
-                        subtitle = if (settings.passwordAuthEnabled) "连接时输入 root 对应Password" else "Password认证已关闭",
+                        title = "Allow password login",
+                        subtitle = if (settings.passwordAuthEnabled) "Enter the root password when connecting" else "Password authentication is disabled",
                         trailing = {
                             RuntimeSwitch(
                                 checked = settings.passwordAuthEnabled,
@@ -214,7 +214,7 @@ fun SshSettingsScreen(
             }
 
             item {
-                SectionLabel("连接")
+                SectionLabel("Connection")
                 RuntimeCard(
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -227,17 +227,17 @@ fun SshSettingsScreen(
                             color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
-                            text = "首次连接输入 yes 确认服务器指纹，然后输入 root 登录Password",
+                            text = "首次Connection输入 yes 确认服务器指纹，然后输入 root Login password",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         RuntimeOutlinedButton(
-                            onClick = { copyText(context, settings.connectionCommand, "SSH 命令已Copy") },
+                            onClick = { copyText(context, settings.connectionCommand, "SSH command copied") },
                             modifier = Modifier.align(Alignment.End),
                         ) {
                             RuntimeIcon(RuntimeIconName.Copy, Modifier.size(16.dp))
                             Spacer(Modifier.size(6.dp))
-                            Text("Copy命令")
+                            Text("Copy command")
                         }
                     }
                 }
@@ -246,14 +246,14 @@ fun SshSettingsScreen(
             if (vpnActive) {
                 item {
                     NoticeBanner(
-                        text = "检测到手机正处于 VPN 连接中，当前 VPN 会接管本应用流量，同一局域网的电脑连接可能超时。请先关闭 VPN，或将本应用加入 VPN 直连/排除名单。",
+                        text = "检测到手机正处于 VPN Connection中，当前 VPN 会接管本应用流量，同一局域网的电脑Connection可能超时。请先关闭 VPN，或将本应用加入 VPN 直连/排除名单。",
                         isError = true,
                     )
                 }
             }
 
             item {
-                SectionLabel("网络配置")
+                SectionLabel("Network settings")
                 SettingsGroup {
                     Row(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -270,8 +270,8 @@ fun SshSettingsScreen(
                             isError = portText.isNotBlank() && !portValid,
                             supportingText = {
                                 Text(
-                                    if (portText.isNotBlank() && !portValid) "Port需在 1024–65535 范围内"
-                                    else "允许范围：1024–65535",
+                                    if (portText.isNotBlank() && !portValid) "Port must be between 1024 and 65535"
+                                    else "Allowed range: 1024–65535",
                                 )
                             },
                             singleLine = true,
@@ -284,7 +284,7 @@ fun SshSettingsScreen(
             }
 
             item {
-                SectionLabel("公钥登录（可选）")
+                SectionLabel("Public-key authentication (optional)")
                 RuntimeCard(
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -292,7 +292,7 @@ fun SshSettingsScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
-                            "无需公钥也可以使用Password登录。需要免密连接时，每行添加一个 OpenSSH 公钥。",
+                            "无需公钥也可以使用Password登录。需要免密Connection时，每行添加一个 OpenSSH 公钥。",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -314,7 +314,7 @@ fun SshSettingsScreen(
                         ) {
                             RuntimeIcon(RuntimeIconName.Save, Modifier.size(16.dp))
                             Spacer(Modifier.size(6.dp))
-                            Text("Save公钥")
+                            Text("Save public keys")
                         }
                     }
                 }
@@ -322,7 +322,7 @@ fun SshSettingsScreen(
 
             if (logs.isNotEmpty()) {
                 item {
-                    SectionLabel("最近日志")
+                    SectionLabel("Recent logs")
                     RuntimeCard(
                         modifier = Modifier.fillMaxWidth(),
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -368,7 +368,7 @@ private fun PasswordSettingsDialog(
     val matches = password == confirmation
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (passwordConfigured) "修改 SSH 登录Password" else "设置 SSH 登录Password") },
+        title = { Text(if (passwordConfigured) "修改 SSH Login password" else "设置 SSH Login password") },
         text = {
             Column(
                 modifier = Modifier
@@ -377,15 +377,15 @@ private fun PasswordSettingsDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    "Password将通过 Android Keystore 加密Save，并应用到当前 Linux 发行版的 root 账户。",
+                    "The password will be encrypted using Android Keystore and applied to the root account of the current Linux distribution.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it.take(128) },
-                    label = { Text("新Password") },
-                    supportingText = { Text("至少 8 个字符，不能包含冒号") },
+                    label = { Text("New password") },
+                    supportingText = { Text("At least 8 characters; colons are not allowed") },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     singleLine = true,
@@ -394,10 +394,10 @@ private fun PasswordSettingsDialog(
                 OutlinedTextField(
                     value = confirmation,
                     onValueChange = { confirmation = it.take(128) },
-                    label = { Text("再次输入Password") },
+                    label = { Text("Confirm password") },
                     isError = confirmation.isNotEmpty() && !matches,
                     supportingText = {
-                        if (confirmation.isNotEmpty() && !matches) Text("两次输入的Password不一致")
+                        if (confirmation.isNotEmpty() && !matches) Text("The passwords do not match")
                     },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -410,14 +410,14 @@ private fun PasswordSettingsDialog(
             RuntimeButton(
                 onClick = { onSave(password) },
                 enabled = password.length >= 8 && matches && ':' !in password,
-            ) { Text("Save并启用") }
+            ) { Text("Save and enable") }
         },
         dismissButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (passwordConfigured) {
-                    RuntimeTextButton(onClick = onClear) { Text("清除Password") }
+                    RuntimeTextButton(onClick = onClear) { Text("Clear password") }
                 }
-                RuntimeTextButton(onClick = onDismiss) { Text("取消") }
+                RuntimeTextButton(onClick = onDismiss) { Text("Cancel") }
             }
         },
     )
