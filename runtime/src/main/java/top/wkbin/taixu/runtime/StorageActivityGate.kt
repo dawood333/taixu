@@ -8,7 +8,7 @@ internal class StorageActivityGate {
 
     suspend fun <T> activity(block: suspend () -> T): T {
         synchronized(monitor) {
-            check(!cleaning) { "正在清理存储，请稍后再启动任务" }
+            check(!cleaning) { "Storage cleanup is in progress. Start the task later." }
             active++
         }
         try { return block() } finally { synchronized(monitor) { active-- } }
@@ -16,7 +16,7 @@ internal class StorageActivityGate {
 
     suspend fun cleanup(block: suspend () -> Unit) {
         synchronized(monitor) {
-            check(!cleaning && active == 0) { "有命令或构建正在运行，请结束后再清理" }
+            check(!cleaning && active == 0) { "A command or build is running. Finish it before cleaning storage." }
             cleaning = true
         }
         try { block() } finally { synchronized(monitor) { cleaning = false } }
