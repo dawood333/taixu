@@ -185,10 +185,10 @@ private fun CreateKeystoreDialog(
             ) {
                 Text(stringResource(R.string.workshop_signing_create))
                 if (!createError.isNullOrBlank()) {
-                    val displayReason = if (createError == "环境不完整" || createError?.contains("环境") == true) {
+                    val displayReason = if (createError == "Environment incomplete" || createError?.contains("environment", ignoreCase = true) == true) {
                         "Environment incomplete"
                     } else {
-                        createError?.replace(Regex("^(生成|创建)签名失败[：:]?\\s*"), "") ?: ""
+                        createError?.replace(Regex("^(Failed to create signing key|Create signing key failed)[:：]?\\s*", RegexOption.IGNORE_CASE), "") ?: ""
                     }
                     Text(
                         text = "(Failed to create signing key: $displayReason)",
@@ -399,7 +399,7 @@ private fun ImportKeystoreDialog(
                 onClick = {
                     importError = null
                     onConfirm(draft) { errMsg ->
-                        importError = errMsg.replace(Regex("^签名导入失败[：:]?\\s*"), "")
+                        importError = errMsg.replace(Regex("^(Failed to import signing key|Signing key import failed)[:：]?\\s*", RegexOption.IGNORE_CASE), "")
                     }
                 },
                 enabled = valid && !busy,
