@@ -49,11 +49,11 @@ function base64ToBytes(encoded: string): Uint8Array {
 }
 
 function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error ?? "终端操作失败");
+  return error instanceof Error ? error.message : String(error ?? "Terminal operation failed");
 }
 
 interface TerminalPaneProps {
-  /** 面板是否可见（桌面切换 / 移动端分区）。不可见时暂停 fit 但保持会话。 */
+  /** Whether the panel is visible (desktop switching / mobile panes). Pause fitting while hidden but keep the session alive. */
   active: boolean;
 }
 
@@ -69,7 +69,7 @@ export function TerminalPane({ active }: TerminalPaneProps) {
   const activeIdRef = useRef<string | null>(null);
   const resizeTimerRef = useRef<number | null>(null);
 
-  // xterm 实例只建一次；会话切换靠 term.reset() 清屏。
+  // Create the xterm instance once; clear it with term.reset() when switching sessions.
   useEffect(() => {
     const term = new Terminal({
       fontFamily: '"Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace',
@@ -98,7 +98,7 @@ export function TerminalPane({ active }: TerminalPaneProps) {
     };
   }, []);
 
-  // 会话切换：重开 SSE 流。浏览器断开（标签页隐藏/网络闪断）由 EventSource 自动重连。
+  // On session switch, reopen the SSE stream. EventSource reconnects automatically after tab hiding or network interruptions.
   useEffect(() => {
     activeIdRef.current = activeId;
     const term = termRef.current;
@@ -121,7 +121,7 @@ export function TerminalPane({ active }: TerminalPaneProps) {
         const info = JSON.parse((event as MessageEvent).data) as WebTerminalInfo;
         term.resize(info.columns, info.rows);
       } catch {
-        // 元信息解析失败不影响输出流
+        // Metadata parsing errors do not affect the output stream
       }
     });
     source.addEventListener("output", (event) => {
@@ -130,7 +130,7 @@ export function TerminalPane({ active }: TerminalPaneProps) {
     });
     source.addEventListener("exit", () => {
       setLink("closed");
-      setNotice("会话已结束（shell 退出或服务端回收）");
+      setNotice("Session ended (shell exited or was reclaimed by the server)");
     });
     source.onerror = () => {
       setLink(source.readyState === EventSource.CLOSED ? "offline" : "connecting");
@@ -150,12 +150,12 @@ export function TerminalPane({ active }: TerminalPaneProps) {
       fit.fit();
       const { cols, rows } = term;
       if (resizeTimerRef.current !== null) window.clearTimeout(resizeTimerRef.current);
-      // 防抖上报 resize，避免拖拽窗口时请求风暴。
+      // Debounce resize reports to avoid request storms while resizing the window.
       resizeTimerRef.current = window.setTimeout(() => {
         void resizeTerminal(id, cols, rows).catch(() => undefined);
       }, 150);
     } catch {
-      // 容器不可见（display:none）时 fit 会抛错，忽略即可。
+      // Ignore fit errors when the container is hidden (display:none).
     }
   }, []);
 
@@ -211,14 +211,14 @@ export function TerminalPane({ active }: TerminalPaneProps) {
   }
 
   const linkLabel: Record<LinkState, string> = {
-    offline: "未连接",
-    connecting: "连接中",
-    online: "已连接",
-    closed: "已结束",
+    offline: "Disconnected",
+    connecting: "Connecting",
+    online: "Connected",
+    closed: "Ended",
   };
 
   return (
-    <section className={`terminal-pane${active ? "" : " hidden"}`} aria-label="远程终端">
+    <section className={`terminal-pane${active ? "" : " hidden"}`} aria-label="Remote terminal">
       <header className="terminal-toolbar">
         <div className="terminal-tabs">
           {terminals.map((item) => (
@@ -231,17 +231,17 @@ export function TerminalPane({ active }: TerminalPaneProps) {
             >
               <Icon name="terminal" size={13} />
               <span>{item.label}</span>
-              {!item.alive && <em className="terminal-dead">已退出</em>}
+              {!item.alive && <em className="terminal-dead">Exited</em>}
             </button>
           ))}
         </div>
         <div className="terminal-actions">
           <button className="quiet-button" type="button" onClick={() => void handleCreate()}>
-            <Icon name="plus" size={14} /><span>新建</span>
+            <Icon name="plus" size={14} /><span>New</span>
           </button>
           {activeId && (
             <button className="quiet-button danger" type="button" onClick={() => void handleClose(activeId)}>
-              <Icon name="x" size={14} /><span>关闭</span>
+              <Icon name="x" size={14} /><span>Close</span>
             </button>
           )}
           <span className={`terminal-link link-${link}`}>{linkLabel[link]}</span>
@@ -251,9 +251,9 @@ export function TerminalPane({ active }: TerminalPaneProps) {
       <div className="terminal-host" ref={containerRef} />
       {!terminals.length && (
         <div className="terminal-empty">
-          <p>还没有远程终端会话</p>
+          <p>还没有Remote terminal会话</p>
           <button className="primary-small-button" type="button" onClick={() => void handleCreate()}>
-            <Icon name="plus" size={14} /><span>启动第一个终端</span>
+            <Icon name="plus" size={14} /><span>Start the first terminal</span>
           </button>
         </div>
       )}
