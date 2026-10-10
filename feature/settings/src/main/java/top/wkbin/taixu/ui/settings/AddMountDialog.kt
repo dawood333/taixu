@@ -55,7 +55,7 @@ internal fun AddMountDialog(
                     label = { Text("Mount name") },
                     placeholder = { Text("e.g. Photos, project source code") },
                     isError = !nameValid,
-                    supportingText = { if (!nameValid) Text("请输入Mount name") },
+                    supportingText = { if (!nameValid) Text("Enter a mount name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
