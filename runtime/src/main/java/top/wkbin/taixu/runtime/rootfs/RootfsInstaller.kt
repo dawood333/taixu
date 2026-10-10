@@ -71,14 +71,14 @@ class RootfsInstaller(
         } catch (throwable: Throwable) {
             SafeFileTree.delete(pathManager.stagingRootfsDir(distroId))
             logger.e("Failed to install OCI rootfs for $distroId", throwable)
-            failure("OCI RootFS ($distroId) 安装失败", throwable)
+            failure("OCI RootFS installation failed ($distroId)", throwable)
         }
     }
 
     suspend fun importArchive(distroId: String, archive: File): AppResult<File> = withContext(Dispatchers.IO) {
         val safeId = distroId.lowercase().trim()
-        require(safeId.matches(Regex("[a-z0-9][a-z0-9_-]{0,31}"))) { "Linux 发行版 ID 无效" }
-        require(archive.isFile) { "导入文件不存在" }
+        require(safeId.matches(Regex("[a-z0-9][a-z0-9_-]{0,31}"))) { "Invalid Linux distribution ID" }
+        require(archive.isFile) { "Import file does not exist" }
         val staging = prepareStaging(safeId)
         try {
             BufferedInputStream(archive.inputStream()).use { buffered ->
@@ -87,7 +87,7 @@ class RootfsInstaller(
                 buffered.read(magic)
                 buffered.reset()
                 require(!(magic[0] == 'P'.code.toByte() && magic[1] == 'K'.code.toByte())) {
-                    "ZIP 无法可靠保留 Linux 权限与符号链接，请使用 tar、tar.gz、tar.xz 或 tar.zst"
+                    "ZIP cannot reliably preserve Linux permissions and symlinks. Use tar, tar.gz, tar.xz, or tar.zst instead."
                 }
                 val stream = when {
                     magic[0] == 0x1f.toByte() && magic[1] == 0x8b.toByte() -> GZIPInputStream(buffered)
@@ -101,9 +101,9 @@ class RootfsInstaller(
             if (actualRoot != staging) {
                 val normalized = File(staging.parentFile, "rootfs.normalized")
                 SafeFileTree.delete(normalized)
-                check(actualRoot.renameTo(normalized)) { "无法整理导入 RootFS" }
+                check(actualRoot.renameTo(normalized)) { "Unable to organize imported RootFS" }
                 SafeFileTree.delete(staging)
-                check(normalized.renameTo(staging)) { "无法提交导入 RootFS" }
+                check(normalized.renameTo(staging)) { "Unable to commit imported RootFS" }
             }
             rootfsValidator.validate(staging)
             val target = pathManager.rootfsDir(safeId)
@@ -117,7 +117,7 @@ class RootfsInstaller(
         } catch (throwable: Throwable) {
             SafeFileTree.delete(staging)
             logger.e("Failed to import rootfs archive for $safeId", throwable)
-            failure("导入 RootFS（$safeId）失败", throwable)
+            failure("Failed to import RootFS ($safeId)", throwable)
         }
     }
 
@@ -160,7 +160,7 @@ class RootfsInstaller(
                 rollbackPendingUpdate(distroId)
             }
             logger.e("Failed to update OCI rootfs for $distroId", throwable)
-            failure("OCI RootFS ($distroId) 更新失败", throwable)
+            failure("OCI RootFS update failed ($distroId)", throwable)
         }
     }
 
@@ -176,7 +176,7 @@ class RootfsInstaller(
             AppResult.Success(Unit)
         } catch (e: Exception) {
             logger.e("Failed to uninstall distro $safeId", e)
-            AppResult.Failure(AppError(ErrorCode.IO, "卸载系统失败：${e.message}", e))
+            AppResult.Failure(AppError(ErrorCode.IO, "Failed to uninstall distribution: ${e.message}", e))
         }
     }
 
@@ -188,15 +188,15 @@ class RootfsInstaller(
             val broken = File(rootfs.parentFile, "rootfs.broken")
             SafeFileTree.delete(broken)
             if (!rootfs.renameTo(broken)) {
-                throw IllegalStateException("无法移开当前 RootFS（旧版本仍保留在 ${backup.path}）")
+                throw IllegalStateException("Unable to move the current RootFS (the previous version remains at ${backup.path})")
             }
             if (!backup.renameTo(rootfs)) {
                 runCatching { broken.renameTo(rootfs) }
-                throw IllegalStateException("无法恢复旧 RootFS（旧版本仍保留在 ${backup.path}）")
+                throw IllegalStateException("Unable to restore the previous RootFS (the previous version remains at ${backup.path})")
             }
             SafeFileTree.delete(broken)
         } else {
-            check(backup.renameTo(rootfs)) { "无法恢复旧 RootFS（旧版本仍保留在 ${backup.path}）" }
+            check(backup.renameTo(rootfs)) { "Unable to restore the previous RootFS (the previous version remains at ${backup.path})" }
         }
         pendingUpdateBackup = null
         pendingUpdateVersion = null
@@ -253,7 +253,7 @@ class RootfsInstaller(
         } catch (throwable: Throwable) {
             SafeFileTree.delete(pathManager.stagingRootfsDir(distroId))
             logger.e("Failed to reset rootfs for $distroId", throwable)
-            failure("重置沙箱 ($distroId) 失败", throwable)
+            failure("Failed to reset sandbox ($distroId)", throwable)
         }
     }
 
@@ -349,7 +349,7 @@ class RootfsInstaller(
             }
             logger.w(
                 "OCI routes exhausted for ${distribution.id}, falling back to TUNA lxc-images " +
-                    "minimal rootfs (不含 buildpack-deps 工具链)",
+                    "minimal RootFS (does not include the buildpack-deps toolchain)",
                 ociFailure,
             )
             recordedLayers.clear()
@@ -376,13 +376,13 @@ class RootfsInstaller(
         val rootfs = pathManager.rootfsDir(distroId)
         val backup = pathManager.rootfsPreviousDir(distroId)
         SafeFileTree.delete(backup)
-        if (rootfs.exists() && !rootfs.renameTo(backup)) error("无法暂存旧 RootFS")
+        if (rootfs.exists() && !rootfs.renameTo(backup)) error("Unable to stage the previous RootFS")
         if (!staging.renameTo(rootfs)) {
             if (!backup.renameTo(rootfs)) {
-                logger.e("RootFS: 启用新版本失败，且恢复旧版本也失败（旧版本保留在 ${backup.path}）")
-                error("无法启用新 RootFS，且恢复失败（旧版本保留在 ${backup.path}）")
+                logger.e("RootFS: failed to activate the new version and failed to restore the previous version (previous version remains at ${backup.path})")
+                error("Unable to activate the new RootFS and restore failed (previous version remains at ${backup.path})")
             }
-            error("无法启用新 RootFS")
+            error("Unable to activate the new RootFS")
         }
         if (retainBackup) pendingUpdateBackup = backup else SafeFileTree.delete(backup)
     }
