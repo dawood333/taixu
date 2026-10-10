@@ -57,7 +57,7 @@ data class CcSwitchUiState(
     val upgradingAgent: CcAgentState? = null,
     val installLogs: List<String> = emptyList(),
     val showLogDialog: Boolean = false,
-    val logAgentTitle: String = "安装日志",
+    val logAgentTitle: String = "Installation log",
 ) {
     val loopbackUrl: String get() = "http://127.0.0.1:$servicePort"
     val lanUrl: String? get() = deviceLanIp?.let { "http://$it:$servicePort" }
@@ -106,7 +106,7 @@ class CcSwitchViewModel(
     private val _upgradingAgent = MutableStateFlow<CcAgentState?>(null)
     private val _installLogs = MutableStateFlow<List<String>>(emptyList())
     private val _showLogDialog = MutableStateFlow(false)
-    private val _logAgentTitle = MutableStateFlow("Agent 安装日志")
+    private val _logAgentTitle = MutableStateFlow("Agent Installation log")
 
     val uiState: StateFlow<CcSwitchUiState> = combine(
         linuxRuntime.activeDistroId,
@@ -326,7 +326,7 @@ class CcSwitchViewModel(
             linuxRuntime.execute(ShellCommand(commandLine = cmd, timeoutMs = 5000L))
             _webPassword.value = newPassword
             withContext(Dispatchers.Main.immediate) {
-                _successMessage.value = "Web 访问密码已重置为：$newPassword（重启中枢生效）"
+                _successMessage.value = "Web password reset to $newPassword (takes effect after restarting the hub)"
             }
         }
     }
@@ -512,10 +512,10 @@ EOF
                 withContext(Dispatchers.Main.immediate) {
                     _isDaemonRunning.value = running
                     if (running) {
-                        _successMessage.value = "CC-Switch 守护进程已启动，端口 19870"
+                        _successMessage.value = "CC-Switch daemon started on port 19870"
                     } else {
                         val lastLog = toolManager.getServiceLogs(toolId).takeLast(10).joinToString("\n").trim()
-                        _errorMessage.value = if (lastLog.isNotBlank()) "中枢启动后未保持运行，最新日志：\n$lastLog" else "中枢启动失败，端口未正常监听"
+                        _errorMessage.value = if (lastLog.isNotBlank()) "The hub did not stay running after startup. Latest log:\n$lastLog" else "Hub startup failed; the port is not listening"
                     }
                 }
                 if (running) {
@@ -524,7 +524,7 @@ EOF
             } catch (e: Exception) {
                 logger.w("Failed to start cc-switch daemon: ${e.message}", e)
                 withContext(Dispatchers.Main.immediate) {
-                    _errorMessage.value = "启动中枢守护进程失败：${e.message}"
+                    _errorMessage.value = "Failed to start the hub daemon: ${e.message}"
                 }
             } finally {
                 _isOperating.value = false
@@ -544,15 +544,15 @@ EOF
                     _isDaemonRunning.value = running
                     if (!running) {
                         _daemonStatus.value = null
-                        _successMessage.value = "CC-Switch 守护进程已停止"
+                        _successMessage.value = "CC-Switch daemon stopped"
                     } else {
-                        _errorMessage.value = "守护进程未能停止，端口可能仍被占用"
+                        _errorMessage.value = "The daemon could not be stopped; the port may still be in use"
                     }
                 }
             } catch (e: Exception) {
                 logger.w("Failed to stop cc-switch daemon: ${e.message}", e)
                 withContext(Dispatchers.Main.immediate) {
-                    _errorMessage.value = "停止中枢守护进程失败：${e.message}"
+                    _errorMessage.value = "Failed to stop the hub daemon: ${e.message}"
                 }
             } finally {
                 _isOperating.value = false
@@ -571,10 +571,10 @@ EOF
                 withContext(Dispatchers.Main.immediate) {
                     _isDaemonRunning.value = running
                     if (running) {
-                        _successMessage.value = "CC-Switch 守护进程已重启"
+                        _successMessage.value = "CC-Switch daemon restarted"
                     } else {
                         val lastLog = toolManager.getServiceLogs(toolId).takeLast(10).joinToString("\n").trim()
-                        _errorMessage.value = if (lastLog.isNotBlank()) "中枢重启后未保持运行，最新日志：\n$lastLog" else "中枢重启失败，端口未正常监听"
+                        _errorMessage.value = if (lastLog.isNotBlank()) "The hub did not stay running after restart. Latest log:\n$lastLog" else "Hub restart failed; the port is not listening"
                     }
                 }
                 if (running) {
@@ -583,7 +583,7 @@ EOF
             } catch (e: Exception) {
                 logger.w("Failed to restart cc-switch daemon: ${e.message}", e)
                 withContext(Dispatchers.Main.immediate) {
-                    _errorMessage.value = "重启失败：${e.message}"
+                    _errorMessage.value = "Restart failed: ${e.message}"
                 }
             } finally {
                 _isOperating.value = false
@@ -626,9 +626,9 @@ EOF
                             )
                         } else it
                     }
-                    _successMessage.value = "已将 ${agent.type.displayName} 切换至 ${provider.name}"
+                    _successMessage.value = "Switched ${agent.type.displayName} to ${provider.name}"
                 } else {
-                    _errorMessage.value = "切换 Provider 失败：${res.exceptionOrNull()?.message}"
+                    _errorMessage.value = "Failed to switch provider: ${res.exceptionOrNull()?.message}"
                 }
             } finally {
                 _isOperating.value = false
@@ -657,9 +657,9 @@ EOF
                 val saveRes = ccSwitchClient.saveProvider(profile)
                 if (saveRes.isSuccess) {
                     _providers.value = _providers.value.filterNot { it.id == profile.id } + profile
-                    _successMessage.value = "已从太墟模型库同步：${model.name}"
+                    _successMessage.value = "Synced from the TaiXu model catalog: ${model.name}"
                 } else {
-                    _errorMessage.value = "同步到 CC-Switch 失败：${saveRes.exceptionOrNull()?.message}"
+                    _errorMessage.value = "Failed to sync to CC-Switch: ${saveRes.exceptionOrNull()?.message}"
                 }
             } finally {
                 _isOperating.value = false
@@ -685,7 +685,7 @@ EOF
         _installingAgentType.value = agent.type
         _errorMessage.value = null
         _successMessage.value = null
-        _logAgentTitle.value = "${agent.type.displayName} 安装与部署"
+        _logAgentTitle.value = "Install and deploy ${agent.type.displayName}"
         _showLogDialog.value = true
 
         val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -696,7 +696,7 @@ EOF
             }
         }
 
-        _installLogs.value = listOf("[${timeFormatter.format(Date())}] [*] 准备安装/升级 ${agent.type.displayName} (目标版本: ${targetVersion ?: "最新版本"})...")
+        _installLogs.value = listOf("[${timeFormatter.format(Date())}] [*] Preparing to install/update ${agent.type.displayName} (target version: ${targetVersion ?: "latest"})...")
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -712,18 +712,18 @@ EOF
                 )
 
                 if (isNodeTool) {
-                    log("[*] [步骤 1/3] 检查沙箱内 Node.js / npm 运行时环境...")
+                    log("[*] [Step 1/3] Checking the Node.js / npm runtime in the sandbox...")
                     val hasNode = linuxRuntime.execute(
                         ShellCommand("command -v npm >/dev/null 2>&1 || [ -x /opt/taixu/bin/npm ] || [ -x /usr/local/bin/npm ]")
                     ).isSuccess
                     if (!hasNode) {
-                        log("[!] 沙箱内未检测到可用 npm，正在通过太墟依赖管理器自动解析...")
+                        log("[!] No usable npm found in the sandbox. Resolving it with the TaiXu dependency manager...")
                         val depRes = dependencyManager.acquire(
                             RuntimeRequirement(RuntimeName.NODE),
                             "cc-switch",
                         )
                         if (depRes is AppResult.Failure) {
-                            log("[!] 依赖管理器未命中预置包，降级使用 apt-get 安装 nodejs & npm (请耐心等待)...")
+                            log("[!] No bundled package matched; falling back to apt-get to install nodejs and npm (please wait)...")
                             val aptRes = linuxRuntime.execute(
                                 ShellCommand(
                                     commandLine = "apt-get update -y && apt-get install -y nodejs npm curl",
@@ -733,25 +733,25 @@ EOF
                                 ),
                             )
                             if (!aptRes.isSuccess) {
-                                log("[-] apt-get 安装 nodejs 失败，返回码: ${aptRes.exitCode}")
+                                log("[-] apt-get failed to install nodejs (exit code: ${aptRes.exitCode})")
                             }
                         } else {
-                            log("[+] Node.js 运行时依赖装载完成")
+                            log("[+] Node.js runtime dependencies loaded")
                         }
                     } else {
-                        log("[+] Node.js / npm 运行时环境已就绪")
+                        log("[+] Node.js / npm runtime is ready")
                     }
                 } else if (agent.type == CcAgentType.HERMES) {
-                    log("[*] [步骤 1/3] 检查沙箱内 Python3 运行时环境...")
+                    log("[*] [Step 1/3] Checking the Python 3 runtime in the sandbox...")
                     val hasPython = linuxRuntime.execute(ShellCommand("command -v python3 >/dev/null 2>&1")).isSuccess
                     if (!hasPython) {
-                        log("[!] 正在装载 Python 运行时依赖...")
+                        log("[!] Loading Python runtime dependencies...")
                         dependencyManager.acquire(
                             RuntimeRequirement(RuntimeName.PYTHON),
                             "cc-switch",
                         )
                     } else {
-                        log("[+] Python3 运行时环境已就绪")
+                        log("[+] Python 3 runtime is ready")
                     }
                 }
 
@@ -769,7 +769,7 @@ EOF
 
                 val installScript = if (agent.type == CcAgentType.HERMES) {
                     val pkg = if (targetVersion.isNullOrBlank()) "hermes-agent" else "hermes-agent==$targetVersion"
-                    log("[*] [步骤 2/3] 执行 pip 安装: $pkg...")
+                    log("[*] [Step 2/3] Installing with pip: $pkg...")
                     """
                     export PATH="/opt/taixu/bin:/usr/local/bin:/root/.local/bin:${'$'}PATH"
                     pip install --break-system-packages $pkg -i https://pypi.tuna.tsinghua.edu.cn/simple || pip install --break-system-packages $pkg
@@ -795,13 +795,13 @@ export PATH="/opt/taixu/bin:/usr/local/bin:/root/.local/bin:${'$'}PATH"
 EOF
                         printf 'exec "%s" "${'$'}@"\n' "${'$'}real_bin" >> "/opt/taixu/bin/hermes"
                         chmod 755 "/opt/taixu/bin/hermes" 2>/dev/null || true
-                        echo "[+] 已建立可执行包装器: /opt/taixu/bin/hermes -> ${'$'}real_bin"
+                        echo "[+] Created executable wrapper: /opt/taixu/bin/hermes -> ${'$'}real_bin"
                     fi
                     """.trimIndent()
                 } else {
                     val verSuffix = if (targetVersion.isNullOrBlank()) "" else "@$targetVersion"
-                    log("[*] [步骤 2/3] 执行 npm 全局安装: $npmPackage$verSuffix...")
-                    log("[*] 正在从国内加速镜像 (https://registry.npmmirror.com) 下载与构建...")
+                    log("[*] [Step 2/3] Installing npm package globally: $npmPackage$verSuffix...")
+                    log("[*] Downloading and building from the configured mirror (https://registry.npmmirror.com)...")
                     """
                     export PATH="/opt/taixu/bin:/usr/local/bin:/root/.local/bin:${'$'}PATH"
                     NPM_PREFIX="${'$'}(npm config get prefix 2>/dev/null || true)"
@@ -867,7 +867,7 @@ export PATH="/opt/taixu/bin:/usr/local/bin:/root/.local/bin:${'$'}PATH"
 EOF
                         printf 'exec node "%s" "$@"\n' "${'$'}entry_file" >> "/usr/local/bin/${agent.type.defaultExecutable}"
                         chmod 755 "/usr/local/bin/${agent.type.defaultExecutable}" 2>/dev/null || true
-                        echo "[+] 确认主入口包装器: /opt/taixu/bin/${agent.type.defaultExecutable} -> ${'$'}entry_file"
+                        echo "[+] Verified main executable wrapper: /opt/taixu/bin/${agent.type.defaultExecutable} -> ${'$'}entry_file"
                     fi
                     """.trimIndent()
                 }
@@ -885,7 +885,7 @@ EOF
                 )
 
                 // 3. 严格在沙箱内校验可执行文件是否生成
-                log("[*] [步骤 3/3] 验证沙箱可执行文件路径与版本...")
+                log("[*] [Step 3/3] Verifying the executable path and version in the sandbox...")
                 val verifyScript = """
                     export PATH="/opt/taixu/bin:/usr/local/bin:/root/.local/bin:${'$'}PATH"
                     NPM_PREFIX="${'$'}(npm config get prefix 2>/dev/null || true)"
@@ -968,7 +968,7 @@ EOF
 
                 if (verifyRes.isSuccess && verifyRes.stdout.isNotBlank()) {
                     val binPath = verifyRes.stdout.trim().lines().firstOrNull { it.isNotBlank() } ?: verifyRes.stdout.trim()
-                    log("[+] 检测到可执行命令路径: $binPath")
+                    log("[+] Found executable command at: $binPath")
                     val verRes = linuxRuntime.execute(
                         ShellCommand(
                             commandLine = """
@@ -991,23 +991,23 @@ EOF
                         ),
                     )
                     val rawVer = verRes.stdout.trim().lines().firstOrNull { it.isNotBlank() }
-                    val cleanVer = rawVer?.let { Regex("""[0-9]+(\.[0-9]+)+""").find(it)?.value } ?: rawVer ?: targetVersion ?: "已安装"
-                    log("[+] 版本检测结果: $cleanVer")
-                    log("[+] [SUCCESS] ${agent.type.displayName} 安装成功！可随时在终端中运行 '${agent.type.defaultExecutable}'")
+                    val cleanVer = rawVer?.let { Regex("""[0-9]+(\.[0-9]+)+""").find(it)?.value } ?: rawVer ?: targetVersion ?: "Installed"
+                    log("[+] Version detected: $cleanVer")
+                    log("[+] [SUCCESS] ${agent.type.displayName} installed successfully. Run '${agent.type.defaultExecutable}' in the terminal at any time.")
                     withContext(Dispatchers.Main.immediate) {
-                        _successMessage.value = "${agent.type.displayName} 安装成功！当前版本：$cleanVer"
+                        _successMessage.value = "${agent.type.displayName} installed successfully. Current version: $cleanVer"
                     }
                 } else {
-                    log("[-] 验证失败：沙箱中未找到可执行命令 '${agent.type.defaultExecutable}'")
+                    log("[-] Verification failed: executable '${agent.type.defaultExecutable}' was not found in the sandbox")
                     if (cmdRes.stderr.isNotBlank()) {
-                        log("[-] 进程错误输出 (stderr):\n${cmdRes.stderr.trim()}")
+                        log("[-] Process stderr:\n${cmdRes.stderr.trim()}")
                     }
                     val lastErr = cmdRes.stderr.ifBlank { cmdRes.stdout }.lines()
                         .filter { it.isNotBlank() }
                         .takeLast(3)
                         .joinToString("; ")
                     withContext(Dispatchers.Main.immediate) {
-                        _errorMessage.value = "安装未完成：${lastErr.ifBlank { "未在沙箱中生成 ${agent.type.defaultExecutable} 命令，请点击下方查看日志排查" }}"
+                        _errorMessage.value = "Installation incomplete: ${lastErr.ifBlank { "The ${agent.type.defaultExecutable} command was not created in the sandbox. View the log below for troubleshooting." }}"
                     }
                 }
 
@@ -1015,10 +1015,10 @@ EOF
                 fetchDaemonData()
             } catch (e: Exception) {
                 logger.w("Install agent failed: ${e.message}", e)
-                log("[-] 安装过程发生异常: ${e.message}")
+                log("[-] Installation error: ${e.message}")
                 log(e.stackTraceToString())
                 withContext(Dispatchers.Main.immediate) {
-                    _errorMessage.value = "操作失败：${e.message}"
+                    _errorMessage.value = "Operation failed: ${e.message}"
                 }
             } finally {
                 _installingAgentType.value = null
