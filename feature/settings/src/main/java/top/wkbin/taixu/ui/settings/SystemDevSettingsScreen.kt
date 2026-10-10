@@ -107,7 +107,7 @@ fun SystemDevSettingsScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { RuntimeTopBar("保活与诊断", onBack) },
+        topBar = { RuntimeTopBar("Background Persistence & Diagnostics", onBack) },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -116,7 +116,7 @@ fun SystemDevSettingsScreen(
         ) {
             item {
                 Text(
-                    text = "进程保活与唤醒",
+                    text = "Keep processes alive & wake",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -124,29 +124,29 @@ fun SystemDevSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Shield,
-                        title = "厂商后台防杀与权限向导",
-                        subtitle = "自启动、电池无限制、多任务加锁等 OEM 专属配置指引",
-                        value = "查看向导",
+                        title = "OEM background restrictions & permissions guide",
+                        subtitle = "OEM-specific setup for autostart, unrestricted battery use, and locking apps in recents",
+                        value = "Open guide",
                         onClick = onOpenPermissionGuide,
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Battery,
-                        title = "电池优化与后台保活",
-                        subtitle = "豁免系统电池限制，防止 Agent 息屏被冻结",
-                        value = if (batteryExempted) "已豁免" else "未豁免",
+                        title = "Battery optimization & background persistence",
+                        subtitle = "Exempt from battery restrictions to prevent the Agent from being frozen when the screen is off",
+                        value = if (batteryExempted) "Exempted" else "Not exempted",
                         onClick = { showBatteryDialog = true },
                     )
                     if (isRestrictiveRom) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         SettingsRow(
                             icon = RuntimeIconName.Cpu,
-                            title = "$romLabel 快捷自启动跳转",
-                            subtitle = "一键直达厂商系统自启动管理设置项",
-                            value = "前往开启",
+                            title = "$romLabel autostart shortcut",
+                            subtitle = "Open the OEM autostart settings directly",
+                            value = "Enable",
                             onClick = {
                                 runCatching { RomAutostartHelper.openAutostartSettings(context) }.onFailure {
-                                    Toast.makeText(context, "无法跳转厂商设置，请在系统设置的应用管理中手动配置", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "Could not open OEM settings. Configure this manually in system Settings → Apps.", Toast.LENGTH_LONG).show()
                                 }
                             },
                         )
@@ -154,14 +154,14 @@ fun SystemDevSettingsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Speed,
-                        title = "Android 12 子进程限制",
-                        subtitle = "解除 Phantom Process 最多 32 个的后台限制",
+                        title = "Android 12 child-process limits",
+                        subtitle = "Remove the background limit of 32 phantom processes",
                         value = when {
-                            phantomBusy && phantomStatus == null -> "检测中"
-                            phantomStatus?.state == PhantomProcessLimitState.REMOVED -> "已解除"
+                            phantomBusy && phantomStatus == null -> "Checking"
+                            phantomStatus?.state == PhantomProcessLimitState.REMOVED -> "Removed"
                             phantomStatus?.state == PhantomProcessLimitState.ACTIVE -> "未解除"
-                            phantomStatus?.state == PhantomProcessLimitState.UNSUPPORTED -> "无需处理"
-                            else -> "待检测"
+                            phantomStatus?.state == PhantomProcessLimitState.UNSUPPORTED -> "Not required"
+                            else -> "Pending check"
                         },
                         onClick = {
                             showPhantomProcessDialog = true
@@ -173,7 +173,7 @@ fun SystemDevSettingsScreen(
 
             item {
                 Text(
-                    text = "Android 系统调试与日志",
+                    text = "Android Debugging & Logs",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -292,7 +292,7 @@ private fun BatteryOptimizationDialog(
                         },
                     ) {
                         Text(
-                            if (exempted) "已豁免电池优化" else "未豁免 · 后台可能被冻结",
+                            if (exempted) "Exempted电池优化" else "Not exempted · 后台可能被冻结",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = if (exempted) {
                                 MaterialTheme.colorScheme.onPrimaryContainer
@@ -374,9 +374,9 @@ private fun PhantomProcessLimitDialog(
 
     val state = status?.state
     val statusText = when (state) {
-        PhantomProcessLimitState.REMOVED -> "已解除限制"
+        PhantomProcessLimitState.REMOVED -> "Removed限制"
         PhantomProcessLimitState.ACTIVE -> "限制仍生效"
-        PhantomProcessLimitState.UNSUPPORTED -> "当前系统无需处理"
+        PhantomProcessLimitState.UNSUPPORTED -> "当前系统Not required"
         PhantomProcessLimitState.UNAVAILABLE -> "暂时无法检测"
         null -> if (busy) "正在检测" else "尚未检测"
     }
@@ -389,7 +389,7 @@ private fun PhantomProcessLimitDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RuntimeIcon(RuntimeIconName.Speed, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("Android 12 子进程限制", fontWeight = FontWeight.Bold)
+                Text("Android 12 child-process limits", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -483,7 +483,7 @@ private fun PhantomProcessLimitDialog(
                         OutlinedButton(
                             onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                clipboard?.setPrimaryClip(ClipData.newPlainText("Android 12 子进程限制命令", adbCommand))
+                                clipboard?.setPrimaryClip(ClipData.newPlainText("Android 12 child-process limits命令", adbCommand))
                                 Toast.makeText(context, "命令已复制", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.fillMaxWidth(),
