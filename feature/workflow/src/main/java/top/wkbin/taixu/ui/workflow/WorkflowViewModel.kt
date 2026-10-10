@@ -426,18 +426,18 @@ private fun WorkflowNodeType.defaultTitle(): String = when (this) {
     WorkflowNodeType.CONDITION_BRANCH -> "Conditional branch"
     WorkflowNodeType.HUMAN_APPROVAL -> "Human approval"
     WorkflowNodeType.HOST_ACTION -> "Host action"
-    WorkflowNodeType.DELAY -> "延时等待"
-    WorkflowNodeType.SET_VARIABLE -> "设置变量"
-    WorkflowNodeType.TERMINAL_OUTPUT -> "输出结果"
+    WorkflowNodeType.DELAY -> "Delay"
+    WorkflowNodeType.SET_VARIABLE -> "Set variable"
+    WorkflowNodeType.TERMINAL_OUTPUT -> "Output result"
 }
 
 private fun WorkflowNodeType.defaultConfig(): Map<String, String> = when (this) {
     WorkflowNodeType.AGENT_INFERENCE -> mapOf(
-        "prompt" to "请分析以下上游结果并给出明确结论：\n\${previous.output}",
+        "prompt" to "Analyze the upstream results below and provide a clear conclusion:\n\${previous.output}",
     )
     WorkflowNodeType.SUBAGENT_DELEGATE -> mapOf(
-        "taskName" to "工作流子任务",
-        "prompt" to "请Done以下任务并返回结果：\n\${previous.output}",
+        "taskName" to "Workflow subtask",
+        "prompt" to "Complete the following task and return the result:\n\${previous.output}",
         "role" to "",
         "writePaths" to "",
     )
