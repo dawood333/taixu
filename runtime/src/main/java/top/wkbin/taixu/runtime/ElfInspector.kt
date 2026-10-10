@@ -7,9 +7,9 @@ import java.io.RandomAccessFile
 class ElfInspector() {
 
     fun inspect(file: File): ElfInfo {
-        require(file.isFile) { "ELF 文件不存在：${file.absolutePath}" }
+        require(file.isFile) { "ELF file does not exist: ${file.absolutePath}" }
         RandomAccessFile(file, "r").use { input ->
-            require(input.length() >= ELF64_HEADER_SIZE) { "ELF 文件不完整：${file.absolutePath}" }
+            require(input.length() >= ELF64_HEADER_SIZE) { "Incomplete ELF file: ${file.absolutePath}" }
             val header = ByteArray(ELF64_HEADER_SIZE)
             input.readFully(header)
             require(
@@ -17,12 +17,12 @@ class ElfInspector() {
                     header[1] == 'E'.code.toByte() &&
                     header[2] == 'L'.code.toByte() &&
                     header[3] == 'F'.code.toByte(),
-            ) { "不是有效 ELF 文件：${file.absolutePath}" }
+            ) { "Invalid ELF file: ${file.absolutePath}" }
             require(header[EI_CLASS].toInt() == ELFCLASS64) {
-                "仅支持 64 位 ELF：${file.absolutePath}"
+                "Only 64-bit ELF files are supported: ${file.absolutePath}"
             }
             require(header[EI_DATA].toInt() == ELFDATA2LSB) {
-                "仅支持小端 ELF：${file.absolutePath}"
+                "Only little-endian ELF files are supported: ${file.absolutePath}"
             }
 
             val machine = header.u16(EMACHINE_OFFSET)
@@ -30,14 +30,14 @@ class ElfInspector() {
             val programHeaderSize = header.u16(PHENTSIZE_OFFSET)
             val programHeaderCount = header.u16(PHNUM_OFFSET)
             require(programHeaderSize >= ELF64_PROGRAM_HEADER_SIZE || programHeaderCount == 0) {
-                "ELF Program Header 不完整：${file.absolutePath}"
+                "Incomplete ELF program header: ${file.absolutePath}"
             }
 
             var interpreter: String? = null
             repeat(programHeaderCount) { index ->
                 val offset = programHeaderOffset + index.toLong() * programHeaderSize
                 require(offset >= 0 && offset + ELF64_PROGRAM_HEADER_SIZE <= input.length()) {
-                    "ELF Program Header 越界：${file.absolutePath}"
+                    "ELF program header is out of bounds: ${file.absolutePath}"
                 }
                 input.seek(offset)
                 val programHeader = ByteArray(ELF64_PROGRAM_HEADER_SIZE)
@@ -46,12 +46,12 @@ class ElfInspector() {
                     val interpreterOffset = programHeader.u64(POFFSET_OFFSET)
                     val interpreterSize = programHeader.u64(PFILESZ_OFFSET)
                     require(interpreterSize in 2..MAX_INTERPRETER_BYTES.toLong()) {
-                        "ELF 解释器字段无效：${file.absolutePath}"
+                        "Invalid ELF interpreter field: ${file.absolutePath}"
                     }
                     require(
                         interpreterOffset >= 0 &&
                             interpreterOffset + interpreterSize <= input.length(),
-                    ) { "ELF 解释器字段越界：${file.absolutePath}" }
+                    ) { "ELF interpreter field is out of bounds: ${file.absolutePath}" }
                     input.seek(interpreterOffset)
                     val bytes = ByteArray(interpreterSize.toInt())
                     input.readFully(bytes)
@@ -64,7 +64,7 @@ class ElfInspector() {
 
     fun requireAarch64(file: File): ElfInfo = inspect(file).also { info ->
         require(info.machine == EM_AARCH64) {
-            "ELF 架构不是 ARM64（machine=${info.machine}）：${file.absolutePath}"
+            "ELF architecture is not ARM64 (machine=${info.machine}): ${file.absolutePath}"
         }
     }
 
