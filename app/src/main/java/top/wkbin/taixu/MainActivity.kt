@@ -156,7 +156,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // 启动时静默检查更新
+                // Silently check for updates at startup
                 var updateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
                 var downloadProgress by remember { mutableStateOf<Float?>(null) }
                 var isDownloading by remember { mutableStateOf(false) }
@@ -251,7 +251,7 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                                 if (downloadFailed) {
-                                    // 下载失败必须可见：不再静默停止
+                                    // Download failures must be visible; do not stop silently
                                     Text(
                                         text = stringResource(R.string.taixu_update_download_failed),
                                         style = MaterialTheme.typography.labelMedium,
@@ -278,7 +278,7 @@ class MainActivity : AppCompatActivity() {
                                                 appUpdateManager.installApk(apkFile)
                                                 updateInfo = null
                                             }.onFailure {
-                                                // 下载失败：在更新对话框内给出可见的错误文案（跟随现有 UI 模式）
+                                                // Show download errors in the update dialog, following the existing UI pattern
                                                 downloadFailed = true
                                             }
                                         }
