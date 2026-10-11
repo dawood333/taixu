@@ -244,7 +244,7 @@ private fun ModelEditorContent(
     onDismissImportDialog: () -> Unit,
 ) {
     val context = LocalContext.current
-    // 全部表单字段迁移 rememberSaveable，旋转后输入内容不丢失
+    // All表单字段迁移 rememberSaveable，旋转后输入内容不丢失
     var providerId by rememberSaveable(modelId) {
         mutableStateOf(providers.firstOrNull { it.name == existing?.provider }?.id ?: providers.first().id)
     }
@@ -1049,11 +1049,11 @@ private fun ModelEditorContent(
                                     singleLine = true,
                                     isError = contextTokensInvalid || tokenWindowInvalid,
                                     supportingText = if (contextTokensInvalid) {
-                                        { Text("请输入大于 0 的整数，或Leave blank for automatic适配") }
+                                        { Text("Enter a positive integer, or leave blank for automatic sizing") }
                                     } else if (tokenWindowInvalid) {
-                                        { Text("不能大于当前Context window limit（自动 ${autoContextTokens?.let(::formatContextWindow) ?: "全局预算"}）") }
+                                        { Text("Cannot exceed the current context limit (automatic: ${autoContextTokens?.let(::formatContextWindow) ?: "global budget"})") }
                                     } else if (contextTokensText.isBlank() && autoContextTokens != null) {
-                                        { Text("Leave blank for automatic适配：${formatContextWindow(autoContextTokens)}") }
+                                        { Text("Leave blank for automatic sizing: ${formatContextWindow(autoContextTokens)}") }
                                     } else if (contextTokensText.isBlank()) {
                                         { Text("Leave blank to use the global fallback budget") }
                                     } else null,
@@ -1127,7 +1127,7 @@ private fun ModelEditorContent(
             }
         }
 
-        // ---- 6. 高级特性与网络配置 (Collapsible) ----
+        // ---- 6. Advanced features and network settings (Collapsible) ----
         item {
             RuntimeCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -1144,11 +1144,11 @@ private fun ModelEditorContent(
                         RuntimeIcon(RuntimeIconName.Shield, Modifier.size(18.dp), MaterialTheme.colorScheme.primary)
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "高级特性与网络配置",
+                                "Advanced features and network settings",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             )
                             Text(
-                                "Tool Call、识图、Responses API、RPM 限速与请求头",
+                                "Tool calls, vision, Responses API, RPM rate limits, and request headers",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -1174,8 +1174,8 @@ private fun ModelEditorContent(
                                 isError = !rpmValid,
                                 supportingText = { if (!rpmValid) Text(stringResource(R.string.model_integer_nonnegative)) },
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("单 Key 每分钟请求上限 (RPM)") },
-                                placeholder = { Text("0 表示不限制") },
+                                label = { Text("Per-key requests per minute (RPM)") },
+                                placeholder = { Text("0 means unlimited") },
                                 singleLine = true,
                                 shape = compactFieldShape,
                                 colors = fieldColors,
@@ -1193,7 +1193,7 @@ private fun ModelEditorContent(
                                     isError = !keepRecentValid,
                                     supportingText = { if (!keepRecentValid) Text(stringResource(R.string.model_integer_positive)) },
                                     modifier = Modifier.weight(1f),
-                                    label = { Text("压缩保留上限") },
+                                    label = { Text("Compaction retention limit") },
                                     placeholder = { Text("20000") },
                                     singleLine = true,
                                     shape = compactFieldShape,
@@ -1206,7 +1206,7 @@ private fun ModelEditorContent(
                                     isError = !reserveValid,
                                     supportingText = { if (!reserveValid) Text(stringResource(R.string.model_integer_positive)) },
                                     modifier = Modifier.weight(1f),
-                                    label = { Text("响应预留 Token") },
+                                    label = { Text("Reserved response tokens") },
                                     placeholder = { Text("16384") },
                                     singleLine = true,
                                     shape = compactFieldShape,
@@ -1215,57 +1215,57 @@ private fun ModelEditorContent(
                                 )
                             }
                             Text(
-                                "仅本模型的压缩预算覆盖：触发压缩时保留最近 N token 进上下文、为回复预留 N token；留空使用全局默认。",
+                                "Compaction budget override for this model only: retain the latest N tokens in context when compaction triggers and reserve N tokens for the response. Leave blank to use the global default.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
 
                             // 特性开关列表
                             EditorToggleRow(
-                                title = "支持函数调用 (Tool Call)",
-                                subtitle = "支持沙箱命令与工具调用闭环",
+                                title = "Supports tool calling",
+                                subtitle = "Supports sandbox commands and end-to-end tool calls",
                                 checked = toolCallEnabled,
                                 onCheckedChange = { toolCallEnabled = it },
                             )
 
                             EditorToggleRow(
-                                title = "支持多模态识图 (Vision)",
-                                subtitle = "向模型直接发送图片",
+                                title = "Supports multimodal vision",
+                                subtitle = "Send images directly to the model",
                                 checked = visionEnabled,
                                 onCheckedChange = { visionEnabled = it },
                             )
 
                             EditorToggleRow(
-                                title = "支持图片生成 (Image Generation)",
-                                subtitle = "模型响应可直接返回生成图片；仅确认支持时开启",
+                                title = "Supports image generation",
+                                subtitle = "Model responses can return generated images directly; enable only when supported",
                                 checked = imageGenerationEnabled,
                                 onCheckedChange = { imageGenerationEnabled = it },
                             )
 
                             EditorToggleRow(
-                                title = "使用 Responses API",
-                                subtitle = "使用 /v1/responses 替代 completions",
+                                title = "Use the Responses API",
+                                subtitle = "Use /v1/responses instead of completions",
                                 checked = responseApiEnabled,
                                 onCheckedChange = { responseApiEnabled = it },
                             )
 
                             EditorToggleRow(
                                 title = "Claude Prompt Caching",
-                                subtitle = "Anthropic 协议注入缓存断点，长会话最高省 90% 输入 Token",
+                                subtitle = "Inject cache breakpoints using the Anthropic protocol; can save up to 90% of input tokens in long sessions",
                                 checked = promptCachingEnabled,
                                 onCheckedChange = { promptCachingEnabled = it },
                             )
 
                             EditorToggleRow(
-                                title = "Prompt Cache 1 小时 TTL",
-                                subtitle = "扩大缓存有效期（需服务端支持扩展 TTL）",
+                                title = "Prompt cache 1-hour TTL",
+                                subtitle = "Extend cache lifetime (requires server support for extended TTL)",
                                 checked = promptCacheTtl1h,
                                 onCheckedChange = { promptCacheTtl1h = it },
                             )
 
                             EditorToggleRow(
-                                title = "纯净排查模式",
-                                subtitle = "不注入系统提示词与工具定义",
+                                title = "Clean troubleshooting mode",
+                                subtitle = "Do not inject system prompts or tool definitions",
                                 checked = pureChatMode,
                                 onCheckedChange = { pureChatMode = it },
                             )
@@ -1275,7 +1275,7 @@ private fun ModelEditorContent(
                                 value = customHeaders,
                                 onValueChange = { customHeaders = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text("Custom HTTP 请求头（多行 Key: Value）") },
+                                label = { Text("Custom HTTP headers (one Key: Value per line)") },
                                 placeholder = { Text("X-Custom-Header: value\nHTTP-Referer: https://taixu.app") },
                                 minLines = 2,
                                 maxLines = 4,
@@ -1306,7 +1306,7 @@ private fun ModelEditorContent(
                     if (testing) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             RuntimeCircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                            Text("正在测试…")
+                            Text("Testing…")
                         }
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1380,9 +1380,9 @@ private fun ModelEditorContent(
             val parsedRpmLimit = rpmLimitText.trim().toIntOrNull() ?: 0
 
             val buttonText = if (effectiveModels.size > 1) {
-                "Save已勾选的 ${effectiveModels.size} 个模型"
+                "Save ${effectiveModels.size} selected models"
             } else {
-                "Save模型档案配置"
+                "Save model profile configuration"
             }
 
             RuntimeButton(
@@ -1495,7 +1495,7 @@ private fun BatchImportKeysDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RuntimeIcon(RuntimeIconName.Key, Modifier.size(20.dp), MaterialTheme.colorScheme.primary)
-                Text("Bulk import密钥", fontWeight = FontWeight.Bold)
+                Text("Bulk import API keys", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -1506,7 +1506,7 @@ private fun BatchImportKeysDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
-                    "粘贴多个 API 密钥，一行一个，遇到换行即为下一个 Key：",
+                    "Paste multiple API keys, one per line. Each newline starts a new key:",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1530,14 +1530,14 @@ private fun BatchImportKeysDialog(
                             if (clipText.isNotBlank()) {
                                 text = clipText
                             } else {
-                                Toast.makeText(context, "剪贴板为空", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier.weight(1f).height(36.dp),
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 8.dp),
                     ) {
-                        Text("从剪贴板粘贴", style = MaterialTheme.typography.labelMedium)
+                        Text("Paste from clipboard", style = MaterialTheme.typography.labelMedium)
                     }
                     if (parsedCount > 0) {
                         Surface(
@@ -1545,7 +1545,7 @@ private fun BatchImportKeysDialog(
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                         ) {
                             Text(
-                                text = "已识别 $parsedCount 个",
+                                text = "Recognized $parsedCount",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -1560,7 +1560,7 @@ private fun BatchImportKeysDialog(
                 onClick = { onConfirm(text) },
                 enabled = parsedCount > 0,
             ) {
-                Text("导入")
+                Text("Import")
             }
         },
         dismissButton = {
@@ -1584,7 +1584,7 @@ private fun QuickImportJsonDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RuntimeIcon(RuntimeIconName.Code, Modifier.size(20.dp), MaterialTheme.colorScheme.primary)
-                Text("Import from JSON模型配置", fontWeight = FontWeight.Bold)
+                Text("Import model configuration from JSON", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -1595,7 +1595,7 @@ private fun QuickImportJsonDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
-                    "粘贴太墟导出的模型配置或 OpenAI 兼容 JSON，将自动解析并填入当前表单：",
+                    "Paste a model configuration exported from TaiXu or OpenAI-compatible JSON. It will be parsed and populated into the current form:",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1614,13 +1614,13 @@ private fun QuickImportJsonDialog(
                         if (clipText.isNotBlank()) {
                             text = clipText
                         } else {
-                            Toast.makeText(context, "剪贴板为空", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(36.dp),
                     shape = RoundedCornerShape(8.dp),
                 ) {
-                    Text("从剪贴板粘贴")
+                    Text("Paste from clipboard")
                 }
             }
         },
@@ -1629,7 +1629,7 @@ private fun QuickImportJsonDialog(
                 onClick = { onConfirm(text) },
                 enabled = text.isNotBlank(),
             ) {
-                Text("解析并填入")
+                Text("Parse and fill")
             }
         },
         dismissButton = {
@@ -1666,7 +1666,7 @@ private fun ProviderPickerDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RuntimeIcon(RuntimeIconName.Sparkles, Modifier.size(20.dp), MaterialTheme.colorScheme.primary)
-                Text("选择服务商预设", fontWeight = FontWeight.Bold)
+                Text("Choose a provider preset", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -1678,7 +1678,7 @@ private fun ProviderPickerDialog(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("搜索服务商名称或端点...", style = MaterialTheme.typography.bodySmall) },
+                    placeholder = { Text("Search provider name or endpoint…", style = MaterialTheme.typography.bodySmall) },
                     leadingIcon = {
                         RuntimeIcon(RuntimeIconName.Search, Modifier.size(16.dp), MaterialTheme.colorScheme.onSurfaceVariant)
                     },
@@ -1707,7 +1707,7 @@ private fun ProviderPickerDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     ProviderFilterChip(
-                        label = "全部",
+                        label = "All",
                         selected = selectedGroup == null,
                         onClick = { selectedGroup = null },
                     )
@@ -1754,7 +1754,7 @@ private fun ProviderPickerDialog(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
-                                    text = "未找到匹配的服务商",
+                                    text = "No matching providers found",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -1834,7 +1834,7 @@ private fun ProviderPickerDialog(
                                             }
                                         }
                                         Text(
-                                            text = option.baseUrl.ifBlank { "需Custom Base URL" },
+                                            text = option.baseUrl.ifBlank { "Custom base URL required" },
                                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 1,
@@ -1859,7 +1859,7 @@ private fun ProviderPickerDialog(
         confirmButton = {},
         dismissButton = {
             RuntimeTextButton(onClick = onDismiss) {
-                Text("关闭")
+                Text("Close")
             }
         },
     )
