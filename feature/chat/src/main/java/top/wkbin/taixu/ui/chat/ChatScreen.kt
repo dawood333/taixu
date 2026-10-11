@@ -373,14 +373,14 @@ fun ChatScreen(
         }
     }
 
-    // 切换会话后自动关闭遗留的子智能体成果抽屉，避免跨会话展示旧 lane
+    // Close any leftover subagent result drawer after switching sessions so an old lane is not shown in another session.
     LaunchedEffect(currentSessionId) {
         val opened = subagentResult
         if (opened != null && opened.sessionId != currentSessionId) viewModel.closeSubagentResult()
     }
 
-    // 模型·权限·主线·轮次 工具条：单栏Browser分页模式下随对话页一起滑走（Browser页全屏），
-    // 双栏/纯对话模式固定在顶部。提出为局部 lambda 避免三处重复传参。
+    // Model, permissions, main thread, and turn toolbar: in single-column Browser paging mode it scrolls away with chat (the Browser page is full-screen);
+    // in dual-pane and chat-only modes it stays pinned at the top. Extracted as a local lambda to avoid repeating arguments in three places.
     // When onOpenBrowser is non-null, append a Browser entry to the toolbar (highlight it when the agent has new activity).
     // When onOpenRepository is non-null, append a Repository entry for Git branch management; if no project is bound, show a hint when tapped instead of hiding it.
     val noProjectHint = stringResource(R.string.chat_repository_no_project)
@@ -422,8 +422,8 @@ fun ChatScreen(
             )
         }
 
-    // 模型回复里的 /workspace、/attachments 等沙箱路径在此翻译为宿主真实文件，
-    // 否则 Coil 会按 Android 根文件系统路径加载而必然失败。
+    // Translate sandbox paths such as /workspace and /attachments in model replies to real host files here;
+    // otherwise Coil would treat them as Android root-filesystem paths and fail.
     CompositionLocalProvider(LocalSandboxHostRoots provides viewModel.sandboxHostRoots, LocalA2uiSessionId provides currentSessionId) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
