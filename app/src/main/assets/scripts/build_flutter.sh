@@ -149,7 +149,7 @@ taixu_align_build_versions() {
         if [ -n "$actual_ndk" ]; then
             declared_ndk=$(grep -oE 'ndkVersion[[:space:]]*["'"'"'][^"'"'"']*["'"'"']' "$app_gradle" | head -1 | grep -oE '["'"'"'][^"'"'"']*["'"'"']' | tr -d "\"'")
             if [ -z "$declared_ndk" ] || [ "$declared_ndk" != "$actual_ndk" ]; then
-                echo "==> [TaiXu Build] NDK version alignment：项目声明=${declared_ndk:-<Flutter默认>}, 实际=$actual_ndk"
+                echo "==> [TaiXu Build] NDK version alignment：project declares ${declared_ndk:-<Flutter default>}, installed=$actual_ndk"
                 backup_once
                 sed -i "s/^\([[:space:]]*android[[:space:]]*{\)/\1\n    ndkVersion \"$actual_ndk\"/" "$app_gradle"
                 if grep -q "ndkVersion \"$actual_ndk\"" "$app_gradle"; then
@@ -171,7 +171,7 @@ taixu_align_build_versions() {
         actual_cmake=$(cmake --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
         flutter_cmake="3.22.1"
         if [ -n "$actual_cmake" ] && [ "$actual_cmake" != "$flutter_cmake" ]; then
-            echo "==> [TaiXu Build] CMake version alignment：Flutter 要求=$flutter_cmake, 实际=$actual_cmake"
+            echo "==> [TaiXu Build] CMake version alignment：Flutter requires=$flutter_cmake, installed=$actual_cmake"
             backup_once
             # Inject externalNativeBuild.cmake.version inside the android { block
             sed -i "s/^\([[:space:]]*android[[:space:]]*{\)/\1\n    externalNativeBuild {\n        cmake {\n            version \"$actual_cmake\"\n        }\n    }/" "$app_gradle"
@@ -290,7 +290,7 @@ managed_block = '''    // NDK 只提供 linux-x86_64 的 llvm-strip，在 ARM64 
 '''
 if managed_block in text:
     path.write_text(text.replace(managed_block, "", 1), encoding="utf-8")
-    print("==> [TaiXu Build] 已迁移旧版 Flutter 模板：启用 native 符号剥离")
+    print("==> [TaiXu Build] Migrated legacy Flutter template: enabled native symbol stripping")
 PY
     if grep -Fq 'keepDebugSymbols += "**/*.so"' "$FLUTTER_APP_GRADLE"; then
         echo "==> [TaiXu Build] ❌ A full keepDebugSymbols configuration was detected; remove it and try again"
@@ -318,7 +318,7 @@ AAPT2_PATH="${TAIXU_AAPT2_PATH:-$ANDROID_HOME/build-tools/35.0.0/aapt2}"
 case "$AAPT2_PATH" in
     /opt/android-sdk/build-tools/35.0.0/aapt2|/opt/taixu/toolchains/android/sdk-tools/artifacts/*/build-tools/aapt2) ;;
     *)
-        echo "==> [TaiXu Build] ❌ AAPT2 未指向不可变 ARM64 制品目录"
+        echo "==> [TaiXu Build] ❌ AAPT2 does not point to the immutable ARM64 artifact directory"
         exit 126
         ;;
 esac
