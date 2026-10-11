@@ -9,22 +9,22 @@ PROJECT_PATH="${1:-.}"
 TARGET="${2:-apk --debug}"
 GRADLE_VER="8.14.2"
 
-echo "==> [TaiXu Build Engine] 启动 Flutter 项目跨端编译..."
-echo "==> [TaiXu Build] 项目路径: $PROJECT_PATH"
+echo "==> [TaiXu Build Engine] Starting Flutter project build..."
+echo "==> [TaiXu Build] Project path: $PROJECT_PATH"
 
 TOOLCHAIN_LOCK_FILE="/opt/taixu/locks/android-toolchain.lock"
 mkdir -p /opt/taixu/locks
 command -v flock >/dev/null 2>&1 || {
-    echo "==> [TaiXu Build] ❌ 缺少 flock，拒绝在无工具链锁的情况下构建"
+    echo "==> [TaiXu Build] ❌ flock is missing; refusing to build without a toolchain lock"
     exit 1
 }
 exec 9>"$TOOLCHAIN_LOCK_FILE"
 flock -s -w 1800 9 || {
-    echo "==> [TaiXu Build] ❌ Android/Flutter 工具链正在装配，等待超时"
+    echo "==> [TaiXu Build] ❌ Timed out waiting for Android/Flutter toolchain setup"
     exit 1
 }
 
-# 1. 注入 Flutter 与 Gradle PATH (优先加载插件装配期固化的环境变量)
+# 1. Inject Flutter and Gradle into PATH (prefer environment variables persisted during plugin setup)
 workshop_java_home="${JAVA_HOME:-}"
 workshop_android_home="${ANDROID_HOME:-}"
 workshop_gradle_home="${GRADLE_HOME:-}"
@@ -65,7 +65,7 @@ LLVM_STRIP=$(find "$NDK_PATH/toolchains/llvm/prebuilt" \( -type f -o -type l \) 
 NDK_CLANG=$(find "$NDK_PATH/toolchains/llvm/prebuilt" \( -type f -o -type l \) -name clang -print -quit 2>/dev/null)
 if [ -z "$NDK_PATH" ] || [ ! -f "$NDK_PATH/source.properties" ] || \
    [ ! -x "$LLVM_STRIP" ] || [ ! -x "$NDK_CLANG" ]; then
-    echo "==> [TaiXu Build] ❌ 固定 ARM64 NDK 未就位，请重新装配 Android 核心基础环境"
+    echo "==> [TaiXu Build] ❌ Pinned ARM64 NDK is missing; reinstall the Android Core Environment"
     exit 126
 fi
 STRIP_MACHINE=$(od -An -t x1 -j 18 -N 2 "$LLVM_STRIP" 2>/dev/null | tr -d '[:space:]')
@@ -73,37 +73,37 @@ CLANG_MACHINE=$(od -An -t x1 -j 18 -N 2 "$NDK_CLANG" 2>/dev/null | tr -d '[:spac
 if [ "$STRIP_MACHINE" != "b700" ] || [ "$CLANG_MACHINE" != "b700" ] || \
    ! "$LLVM_STRIP" --version >/dev/null 2>&1 || \
    ! "$NDK_CLANG" --version >/dev/null 2>&1; then
-    echo "==> [TaiXu Build] ❌ NDK 主机工具不是可执行的 Linux AArch64 制品"
+    echo "==> [TaiXu Build] ❌ NDK host tool is not an executable Linux AArch64 binary"
     exit 126
 fi
 export ANDROID_NDK_HOME="$NDK_PATH"
 export ANDROID_NDK_ROOT="$NDK_PATH"
 export TAIXU_LLVM_STRIP_PATH="$LLVM_STRIP"
-echo "==> [TaiXu Build] 固定 ARM64 NDK: $NDK_PATH"
+echo "==> [TaiXu Build] Pinned ARM64 NDK: $NDK_PATH"
 
-# Java 启动器防回环守卫（与 build_android.sh 同一规则）：Flutter 的 Gradle
-# 宿主构建最终经 JAVA_HOME 启动 JVM。包装脚本回环在 PRoot 下是零输出、
-# CPU 满载的死循环，必须在 JVM 启动前拒绝。
+# Java launcher loop guard (same rule as build_android.sh): Flutter's Gradle
+# host build ultimately starts the JVM through JAVA_HOME. A wrapper-script loop under PRoot produces no output and
+# a CPU-saturating infinite loop, so reject it before starting the JVM.
 JAVA_GUARD="${JAVA_HOME:-/opt/taixu/toolchains/android/jdk}/bin/java"
 if [ -e "$JAVA_GUARD" ]; then
     JAVA_GUARD_REAL=$(readlink -f "$JAVA_GUARD" 2>/dev/null || echo "$JAVA_GUARD")
     JAVA_GUARD_MAGIC=$(od -An -t x1 -N 4 "$JAVA_GUARD_REAL" 2>/dev/null | tr -d '[:space:]')
     if [ "$JAVA_GUARD_MAGIC" != "7f454c46" ]; then
-        echo "==> [TaiXu Build] ❌ Java 启动器不是 ELF 二进制（疑似包装脚本/回环软链）: $JAVA_GUARD_REAL"
-        echo "==> [TaiXu Build] 请在插件中心重新装配【Android 全栈开发套件】以修复 JDK"
+        echo "==> [TaiXu Build] ❌ Java launcher is not an ELF binary (possible wrapper script or symlink loop): $JAVA_GUARD_REAL"
+        echo "==> [TaiXu Build] Reinstall the Android Full-Stack Development Suite from Plugin Center to repair the JDK"
         exit 126
     fi
 fi
 
-# 2. 自愈软链接与原生 gen_snapshot 映射
+# 2. Repair symlinks and map the native gen_snapshot binary
 if [ -d "$FLUTTER_HOME/bin" ] && [ ! -f /usr/local/bin/flutter ]; then
     ln -sf "$FLUTTER_HOME/bin/flutter" /usr/local/bin/flutter 2>/dev/null || true
     ln -sf "$FLUTTER_HOME/bin/dart" /usr/local/bin/dart 2>/dev/null || true
 fi
 
-# Flutter 引擎在 Linux ARM64 主机上构建 Android release/profile APK 时，
-# 按 artifacts.dart 寻址 android-arm64-{release,profile}/linux-arm64/gen_snapshot。
-# 若缺失，将原生 linux-arm64/gen_snapshot (AArch64 ELF) 自愈链接至对应目录。
+# When building Android release/profile APKs on a Linux ARM64 host, the Flutter engine
+# looks for android-arm64-{release,profile}/linux-arm64/gen_snapshot via artifacts.dart.
+# If missing, create a symlink from the native linux-arm64/gen_snapshot (AArch64 ELF) into the expected directory.
 ENGINE_DIR="$FLUTTER_HOME/bin/cache/artifacts/engine"
 if [ -x "$ENGINE_DIR/linux-arm64/gen_snapshot" ]; then
     for mode in release profile; do
@@ -111,7 +111,7 @@ if [ -x "$ENGINE_DIR/linux-arm64/gen_snapshot" ]; then
         mkdir -p "$target_dir" 2>/dev/null || true
         if [ ! -e "$target_dir/gen_snapshot" ]; then
             ln -sf "$ENGINE_DIR/linux-arm64/gen_snapshot" "$target_dir/gen_snapshot" 2>/dev/null || true
-            echo "==> [TaiXu Build] 已自愈链接 ARM64 gen_snapshot -> $target_dir/gen_snapshot"
+            echo "==> [TaiXu Build] Repaired ARM64 gen_snapshot link -> $target_dir/gen_snapshot"
         fi
     done
 fi
@@ -119,15 +119,15 @@ fi
 cd "$PROJECT_PATH"
 
 # ==============================================================================
-# 构建工具版本临时对齐（构建后自动恢复，不修改工具链本身）
+# Temporarily align build-tool versions (automatically restore after the build; do not modify the toolchains themselves)
 #
-# 1. NDK：Flutter Gradle 插件默认注入 ndkVersion（如 27.0.12077973），可能与
-#    太墟实际安装的 NDK（如 29.0.14206865）不一致，AGP 抛 CXX1100。
-# 2. CMake：Flutter 硬编码要求 CMake 3.22.1，太墟环境可能装了更新版本，
-#    AGP 抛 CXX1300。
+# 1. NDK: the Flutter Gradle plugin injects a default ndkVersion (e.g. 27.0.12077973), which may differ from
+#    the NDK installed by TaiXu (e.g. 29.0.14206865), causing AGP error CXX1100.
+# 2. CMake: Flutter hardcodes CMake 3.22.1, while TaiXu may have a newer version installed,
+#    causing AGP error CXX1300.
 #
-# 处理方式：临时修改项目 android/app/build.gradle 注入实际版本，构建结束后
-# 通过 trap EXIT 自动恢复原文件。不修改 NDK/CMake 本身，不影响 Android 项目。
+# Approach: temporarily update android/app/build.gradle to inject the installed versions, then
+# restore the original file through trap EXIT. The NDK/CMake installations themselves are not modified.
 # ==============================================================================
 TAIXU_GRADLE_ALIGN_BAK=""
 taixu_align_build_versions() {
@@ -142,43 +142,43 @@ taixu_align_build_versions() {
         fi
     }
 
-    # --- NDK 版本对齐 ---
+    # --- NDK version alignment ---
     ndk_home="${ANDROID_NDK_HOME:-/opt/taixu/toolchains/android/ndk}"
     if [ -f "$ndk_home/source.properties" ]; then
         actual_ndk=$(sed -n 's/^[[:space:]]*Pkg\.Revision[[:space:]]*=[[:space:]]*//p' "$ndk_home/source.properties" | head -n1 | tr -d '[:space:]')
         if [ -n "$actual_ndk" ]; then
             declared_ndk=$(grep -oE 'ndkVersion[[:space:]]*["'"'"'][^"'"'"']*["'"'"']' "$app_gradle" | head -1 | grep -oE '["'"'"'][^"'"'"']*["'"'"']' | tr -d "\"'")
             if [ -z "$declared_ndk" ] || [ "$declared_ndk" != "$actual_ndk" ]; then
-                echo "==> [TaiXu Build] NDK 版本对齐：项目声明=${declared_ndk:-<Flutter默认>}, 实际=$actual_ndk"
+                echo "==> [TaiXu Build] NDK version alignment：项目声明=${declared_ndk:-<Flutter默认>}, 实际=$actual_ndk"
                 backup_once
                 sed -i "s/^\([[:space:]]*android[[:space:]]*{\)/\1\n    ndkVersion \"$actual_ndk\"/" "$app_gradle"
                 if grep -q "ndkVersion \"$actual_ndk\"" "$app_gradle"; then
-                    echo "==> [TaiXu Build] ✅ 已注入 ndkVersion=$actual_ndk"
+                    echo "==> [TaiXu Build] ✅ Injected ndkVersion=$actual_ndk"
                 else
-                    echo "==> [TaiXu Build] ⚠️ ndkVersion 注入失败"
+                    echo "==> [TaiXu Build] ⚠️ Failed to inject ndkVersion"
                 fi
             fi
         else
-            echo "==> [TaiXu Build] ⚠️ 无法读取 NDK 版本，跳过 NDK 对齐"
+            echo "==> [TaiXu Build] ⚠️ Could not read NDK version; skipping NDK alignment"
         fi
     fi
 
-    # --- CMake 版本对齐 ---
-    # Flutter/AGP 默认要求 CMake 3.22.1，太墟环境可能装了更新版本。
-    # 必须在 android {} 配置块内设置 externalNativeBuild.cmake.version，
-    # afterEvaluate 阶段再设会被 AGP 拒绝（"It is too late to set version"）。
+    # --- CMake version alignment ---
+    # Flutter/AGP default to CMake 3.22.1, while TaiXu may have a newer version installed.
+    # Set externalNativeBuild.cmake.version inside the android {} configuration block;
+    # setting it during afterEvaluate is rejected by AGP ("It is too late to set version").
     if command -v cmake >/dev/null 2>&1; then
         actual_cmake=$(cmake --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
         flutter_cmake="3.22.1"
         if [ -n "$actual_cmake" ] && [ "$actual_cmake" != "$flutter_cmake" ]; then
-            echo "==> [TaiXu Build] CMake 版本对齐：Flutter 要求=$flutter_cmake, 实际=$actual_cmake"
+            echo "==> [TaiXu Build] CMake version alignment：Flutter 要求=$flutter_cmake, 实际=$actual_cmake"
             backup_once
-            # 在 android { 块内注入 externalNativeBuild.cmake.version
+            # Inject externalNativeBuild.cmake.version inside the android { block
             sed -i "s/^\([[:space:]]*android[[:space:]]*{\)/\1\n    externalNativeBuild {\n        cmake {\n            version \"$actual_cmake\"\n        }\n    }/" "$app_gradle"
             if grep -q "version \"$actual_cmake\"" "$app_gradle"; then
-                echo "==> [TaiXu Build] ✅ 已注入 externalNativeBuild.cmake.version=$actual_cmake"
+                echo "==> [TaiXu Build] ✅ Injected externalNativeBuild.cmake.version=$actual_cmake"
             else
-                echo "==> [TaiXu Build] ⚠️ CMake 版本注入失败"
+                echo "==> [TaiXu Build] ⚠️ Failed to inject the CMake version"
             fi
         fi
     fi
@@ -186,21 +186,21 @@ taixu_align_build_versions() {
 taixu_restore_gradle() {
     if [ -n "$TAIXU_GRADLE_ALIGN_BAK" ] && [ -f "$TAIXU_GRADLE_ALIGN_BAK" ]; then
         mv "$TAIXU_GRADLE_ALIGN_BAK" "android/app/build.gradle"
-        echo "==> [TaiXu Build] 已恢复 android/app/build.gradle（版本对齐临时修改已撤销）"
+        echo "==> [TaiXu Build] Restored android/app/build.gradle (temporary version-alignment changes reverted)"
     fi
 }
 trap taixu_restore_gradle EXIT
 taixu_align_build_versions
 
 if ! command -v flutter >/dev/null 2>&1; then
-    echo "==> [TaiXu Build] ❌ 未找到 Flutter SDK，请安装 Flutter 跨平台开发套件"
+    echo "==> [TaiXu Build] ❌ Flutter SDK not found; install the Flutter development suite"
     exit 127
 fi
 
-# Flutter 工具链自身依赖 unzip 解压引擎缓存（bin/cache/downloads/*.zip）。
-# 精简 rootfs 没有系统 unzip；安装期的临时 shim 只在 TOOL_DIR/bin 下、
-# 不在构建 PATH 上。这里在调起 flutter 之前自愈：用 JDK 的 jar 造一个
-# 常驻 /opt/taixu/bin/unzip（PATH 首位），避免 "Missing unzip tool" 中断。
+# The Flutter toolchain uses unzip to extract engine caches (bin/cache/downloads/*.zip).
+# The minimal rootfs has no system unzip; the temporary installation shim exists only under TOOL_DIR/bin,
+# which is not on the build PATH. Before launching Flutter, create a persistent wrapper using the JDK's jar
+# at /opt/taixu/bin/unzip (first in PATH) to prevent "Missing unzip tool" failures.
 if ! command -v unzip >/dev/null 2>&1; then
     JAR_BIN=""
     for candidate in "${JAVA_HOME:-/opt/taixu/toolchains/android/jdk}/bin/jar" /opt/taixu/toolchains/android/jdk/bin/jar /usr/bin/jar /usr/lib/jvm/default-java/bin/jar; do
@@ -225,22 +225,22 @@ if ! command -v unzip >/dev/null 2>&1; then
             "(cd \"\$dest\" && '$JAR_BIN' xf \"\$archive\")" \
             > /opt/taixu/bin/unzip
         chmod 755 /opt/taixu/bin/unzip
-        echo "==> [TaiXu Build] 已部署 unzip 兼容层（基于 JDK jar）：/opt/taixu/bin/unzip"
+        echo "==> [TaiXu Build] Installed JDK-JAR-based unzip compatibility wrapper: /opt/taixu/bin/unzip"
     else
-        echo "==> [TaiXu Build] ❌ 缺少 unzip 且无 JDK jar 可用，无法解压 Flutter 引擎缓存"
-        echo "==> [TaiXu Build] 请重新装配【Android 全栈开发套件】"
+        echo "==> [TaiXu Build] ❌ unzip is missing and no JDK jar is available to extract Flutter engine caches"
+        echo "==> [TaiXu Build] Reinstall the Android Full-Stack Development Suite"
         exit 127
     fi
 fi
 
 if [ ! -x "$FLUTTER_HOME/bin/flutter" ] || [ ! -x "$FLUTTER_HOME/bin/cache/dart-sdk/bin/dart" ]; then
-    echo "==> [TaiXu Build] ❌ Flutter SDK 不是可用的 Linux ARM64 版本，请在工坊重新装配 Flutter 套件"
+    echo "==> [TaiXu Build] ❌ Flutter SDK is not a usable Linux ARM64 build; reinstall the Flutter suite in Workshop"
     exit 126
 fi
-# Flutter 工具的 locateAndroidSdk 需要 $ANDROID_HOME/platform-tools/adb 存在
-# 才认这个 SDK（套件历史版本只装 build-tools + platform，adb 在 TOOL_DIR/bin）。
-# 缺了会报 "No Android SDK found. Try setting the ANDROID_HOME"，这里自愈补齐
-# platform-tools 布局与 licenses，存量沙箱无需重装插件。
+# Flutter's locateAndroidSdk requires $ANDROID_HOME/platform-tools/adb to exist
+# to recognize the SDK (older suite versions installed only build-tools and platform, with adb in TOOL_DIR/bin).
+# Without it, Flutter reports "No Android SDK found. Try setting the ANDROID_HOME"; repair the layout here
+# and licenses so existing sandboxes do not need the plugin reinstalled.
 if [ ! -e "$ANDROID_HOME/platform-tools/adb" ]; then
     ADB_CANDIDATE=""
     for candidate in "${TAIXU_TOOL_DIR:-/opt/taixu/tools/android-suite-offline}/bin/adb" /opt/taixu/bin/adb; do
@@ -249,7 +249,7 @@ if [ ! -e "$ANDROID_HOME/platform-tools/adb" ]; then
     mkdir -p "$ANDROID_HOME/platform-tools"
     if [ -n "$ADB_CANDIDATE" ]; then
         ln -sfn "$ADB_CANDIDATE" "$ANDROID_HOME/platform-tools/adb"
-        echo "==> [TaiXu Build] 已补齐 Flutter SDK 布局：$ANDROID_HOME/platform-tools/adb -> $ADB_CANDIDATE"
+        echo "==> [TaiXu Build] Completed Flutter SDK layout: $ANDROID_HOME/platform-tools/adb -> $ADB_CANDIDATE"
     fi
 fi
 mkdir -p "$ANDROID_HOME/licenses"
@@ -259,11 +259,11 @@ if [ ! -f "$ANDROID_HOME/licenses/android-sdk-license" ]; then
 fi
 
 if [ ! -f "${ANDROID_HOME}/platforms/android-34/android.jar" ]; then
-    echo "==> [TaiXu Build] ❌ 缺少 Android SDK Platform 34，请同时安装 Android 核心基础环境"
+    echo "==> [TaiXu Build] ❌ Android SDK Platform 34 is missing; install the Android Core Environment as well"
     exit 126
 fi
 if [ ! -f "${ANDROID_HOME}/build-tools/35.0.0/lib/d8.jar" ]; then
-    echo "==> [TaiXu Build] ❌ 缺少 Android Build-Tools 35.0.0，请重新装配 Android 核心基础环境"
+    echo "==> [TaiXu Build] ❌ Android Build Tools 35.0.0 are missing; reinstall the Android Core Environment"
     exit 126
 fi
 
@@ -293,7 +293,7 @@ if managed_block in text:
     print("==> [TaiXu Build] 已迁移旧版 Flutter 模板：启用 native 符号剥离")
 PY
     if grep -Fq 'keepDebugSymbols += "**/*.so"' "$FLUTTER_APP_GRADLE"; then
-        echo "==> [TaiXu Build] ❌ 检测到全量 keepDebugSymbols 配置，请删除后重试"
+        echo "==> [TaiXu Build] ❌ A full keepDebugSymbols configuration was detected; remove it and try again"
         exit 126
     fi
 fi
@@ -312,7 +312,7 @@ if [ -f "$FLUTTER_HOME/bin/flutter" ]; then
     fi
     printf 'sdk.dir=%s\nflutter.sdk=%s\n' "$ANDROID_HOME" "$FLUTTER_HOME" >> "$LOCAL_PROPERTIES_TMP"
     mv -f "$LOCAL_PROPERTIES_TMP" "$LOCAL_PROPERTIES"
-    echo "==> [TaiXu Build] 绑定 ANDROID_HOME/Flutter SDK: $ANDROID_HOME / $FLUTTER_HOME"
+    echo "==> [TaiXu Build] Binding ANDROID_HOME/Flutter SDK: $ANDROID_HOME / $FLUTTER_HOME"
 fi
 AAPT2_PATH="${TAIXU_AAPT2_PATH:-$ANDROID_HOME/build-tools/35.0.0/aapt2}"
 case "$AAPT2_PATH" in
@@ -326,24 +326,24 @@ AAPT2_MACHINE=$(od -An -t x1 -j 18 -N 2 "$AAPT2_PATH" 2>/dev/null | tr -d '[:spa
 if [ "$AAPT2_MACHINE" = "b700" ] && [ -x "$AAPT2_PATH" ] && \
    "$AAPT2_PATH" version >/dev/null 2>&1; then
     export ORG_GRADLE_PROJECT_android_aapt2FromMavenOverride="$AAPT2_PATH"
-    echo "==> [TaiXu Build] 使用 ARM64 原生 AAPT2: $AAPT2_PATH"
+    echo "==> [TaiXu Build] Using native ARM64 AAPT2: $AAPT2_PATH"
 else
-    echo "==> [TaiXu Build] ❌ 固定 ARM64 AAPT2 在构建启动前失效"
+    echo "==> [TaiXu Build] ❌ Pinned ARM64 AAPT2 became unavailable before the build started"
     exit 126
 fi
 
 if ! grep -Fqx 'android.builder.sdkDownload=false' "$GRADLE_USER_HOME/gradle.properties" 2>/dev/null; then
-    echo "==> [TaiXu Build] ❌ Gradle SDK 自动下载未禁用，拒绝构建以防官方 x86_64 工具覆盖"
+    echo "==> [TaiXu Build] ❌ Gradle SDK auto-download is enabled; refusing to build to prevent official x86_64 tools from overwriting ARM64 tools"
     exit 126
 fi
 if [ ! -f "$GRADLE_USER_HOME/init.d/taixu-android-ndk.gradle" ] || \
    ! grep -Fq 'androidExtension.ndkPath = taixuNdkPath' "$GRADLE_USER_HOME/init.d/taixu-android-ndk.gradle"; then
-    echo "==> [TaiXu Build] ❌ 固定 NDK 路径注入缺失"
+    echo "==> [TaiXu Build] ❌ Pinned NDK path injection is missing"
     exit 126
 fi
 
-# TaiXu: 兜底在全局 Gradle 配置注入 HTTP 连接/读超时，避免国内镜像慢或被重置时
-# 依赖解析无限静默阻塞（SocketException: connection abort）。幂等追加，仅补缺失行。
+# TaiXu: Fallback: inject HTTP connect/read timeouts into global Gradle configuration to avoid
+# silent, indefinite dependency-resolution stalls when mirrors are slow or reset (SocketException: connection abort). Append idempotently, adding only missing lines.
 GRADLE_PROPS="$GRADLE_USER_HOME/gradle.properties"
 if [ -f "$GRADLE_PROPS" ]; then
     for k in \
@@ -358,15 +358,15 @@ fi
 export GRADLE_OPTS="${GRADLE_OPTS:-} -Dorg.gradle.jvmargs=-Xmx1024m"
 
 if [ "${TAIXU_OFFLINE:-0}" = "1" ]; then
-    echo "==> [TaiXu Build] 离线模式：使用本地 Flutter Pub 缓存"
+    echo "==> [TaiXu Build] Offline mode: using the local Flutter Pub cache"
     flutter pub get --offline --verbose
 else
-    echo "==> [TaiXu Build] 正在拉取 Flutter 依赖 (flutter pub get)..."
+    echo "==> [TaiXu Build] Fetching Flutter dependencies (flutter pub get)..."
     flutter pub get --verbose
 fi
 
-# 3. 确保 Android 宿主使用本地 Gradle 8.14.2 + 国内镜像，避免 Wrapper 从 services.gradle.org
-#    下载发行版（国内网络易被重置，报 SocketException: connection abort）。
+# 3. Ensure the Android host uses local Gradle 8.14.2 and configured mirrors, preventing the Wrapper from downloading from services.gradle.org
+#    (connections may reset on some networks, causing SocketException: connection abort).
 mkdir -p android/gradle/wrapper
 cat > android/gradle/wrapper/gradle-wrapper.properties <<'EOF'
 distributionBase=GRADLE_USER_HOME
@@ -377,7 +377,7 @@ zipStorePath=wrapper/dists
 EOF
 cat > android/gradlew <<'EOF'
 #!/bin/sh
-# 优先复用插件装配期已装好的本地 Gradle 8.14.2，避免 Wrapper 重新下载发行版。
+# Prefer the local Gradle 8.14.2 installed by the plugin to avoid another Wrapper distribution download.
 DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -x "$GRADLE_HOME/bin/gradle" ]; then
     exec "$GRADLE_HOME/bin/gradle" "$@"
@@ -395,8 +395,8 @@ fi
 EOF
 chmod +x android/gradlew
 
-# 4. 全局强制阿里云镜像：Flutter 每次会重写工程文件，这里兜底写入全局 init 脚本，
-#    并把 GRADLE_USER_HOME 固定到 /root/.gradle，确保依赖解析一定走国内源。
+# 4. Force the configured mirror globally: Flutter rewrites project files, so add a fallback global init script
+#    and pin GRADLE_USER_HOME to /root/.gradle so dependency resolution uses the configured mirror.
 mkdir -p "$GRADLE_USER_HOME"
 cat > "$GRADLE_USER_HOME/init.gradle" <<'EOF'
 // TaiXu: 全局强制阿里云镜像。
@@ -419,8 +419,8 @@ gradle.beforeSettings { settings ->
 }
 EOF
 
-echo "==> [TaiXu Build] 正在执行 Flutter 打包编译 (flutter build $TARGET)..."
-# 注意：不能用 exec，否则 trap EXIT 不会触发，NDK 版本对齐的临时修改无法恢复。
+echo "==> [TaiXu Build] Running Flutter build (flutter build $TARGET)..."
+# 注意：不能用 exec，否则 trap EXIT 不会触发，NDK version alignment的临时修改无法恢复。
 if [ "${TAIXU_OFFLINE:-0}" = "1" ]; then
     flutter build $TARGET --offline --verbose
 else
