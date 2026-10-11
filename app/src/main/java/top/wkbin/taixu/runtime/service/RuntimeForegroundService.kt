@@ -46,7 +46,7 @@ class RuntimeForegroundService : Service() {
             getString(R.string.taixu_runtime_notification_channel),
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "用于展示 Linux 沙箱后台运行状态的常驻通知"
+            description = "Persistent notification showing the Linux sandbox background status"
             enableVibration(false)
             setSound(null, null)
             setShowBadge(true)
@@ -123,7 +123,7 @@ class RuntimeForegroundService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.taixu_notification)
-            .setContentTitle("Linux 沙箱")
+            .setContentTitle("Linux sandbox")
             .setContentText(getString(R.string.taixu_runtime_running))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
