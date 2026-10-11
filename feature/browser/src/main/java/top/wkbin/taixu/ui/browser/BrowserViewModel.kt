@@ -124,13 +124,13 @@ class BrowserViewModel(
     fun loadNetworkDetail(id: String) = viewModelScope.launch {
         _networkDetail.value = runCatching {
             registry.getDefault().networkDetail(id)
-        }.getOrNull() ?: "（无详情：引擎未就绪，或 body 未捕获）"
+        }.getOrNull() ?: "(No details: engine is not ready or the response body was not captured)"
     }
 
     /** 手动放行 CDP 暂停（断点/异常挂起）；恢复全部已暂停的 tab。 */
     fun resumeDebugger() = viewModelScope.launch {
         runCatching { registry.getDefault().debugResume(null) }
-            .onFailure { _toolMessage.value = "恢复失败：${it.message ?: "CDP 未启用"}" }
+            .onFailure { _toolMessage.value = "Restore failed: ${it.message ?: "CDP is not enabled"}" }
     }
 
     /**
@@ -216,7 +216,7 @@ class BrowserViewModel(
         val raw = _urlInput.value.trim()
         if (raw.isBlank()) return
         val target = normalizeUrl(raw) ?: run {
-            _toolMessage.value = "不支持的链接：仅允许 http/https（或 about:blank）"
+            _toolMessage.value = "Unsupported URL: only http/https (or about:blank) is allowed"
             return
         }
         viewModelScope.launch {
@@ -226,8 +226,8 @@ class BrowserViewModel(
                 if (active == null) engine.openTab(target, activate = true)
                 else engine.navigate(active, target)
                 _urlInput.value = target
-                _toolMessage.value = "已打开 $target"
-            }.onFailure { _toolMessage.value = it.message ?: "导航失败" }
+                _toolMessage.value = "Opened $target"
+            }.onFailure { _toolMessage.value = it.message ?: "Navigation failed" }
             syncTabs()
         }
     }
@@ -305,7 +305,7 @@ class BrowserViewModel(
         runCatching {
             val engine = registry.getDefault()
             if (engine.activeTab() == null) engine.openTab(TaiXuNewTab.URL, activate = true)
-        }.onFailure { _toolMessage.value = it.message ?: "浏览器引擎尚未就绪" }
+        }.onFailure { _toolMessage.value = it.message ?: "Browser engine is not ready" }
         syncTabs()
     }
 
