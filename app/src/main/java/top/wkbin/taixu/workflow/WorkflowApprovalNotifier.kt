@@ -26,7 +26,7 @@ import top.wkbin.taixu.service.WorkflowForegroundService
 
 /**
  * 后台审批通知：App 在后台时出现待审批工作流节点，发 IMPORTANCE_HIGH 通知
- * （带 批准/拒绝 按钮），点正文打开运行页。回到前台（或审批已处理）后自动撤掉通知。
+ * （带 Approve/Reject 按钮），点正文打开运行页。回到前台（或审批已处理）后自动撤掉通知。
  */
 class WorkflowApprovalNotifier(
     private val runManager: WorkflowRunManager,
@@ -78,8 +78,8 @@ class WorkflowApprovalNotifier(
         runCatching {
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "工作流审批", NotificationManager.IMPORTANCE_HIGH).apply {
-                    description = "工作流执行到人工审批节点时的提醒"
+                NotificationChannel(CHANNEL_ID, "Workflow approval", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "Notification when a workflow reaches a manual approval node"
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 },
             )
@@ -114,21 +114,21 @@ class WorkflowApprovalNotifier(
             )
             val notification = NotificationCompat.Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.taixu_notification)
-                .setContentTitle("工作流等待审批")
-                .setContentText(title.ifBlank { "节点 $nodeId 需要你批准后继续执行" })
+                .setContentTitle("Workflow awaiting approval")
+                .setContentText(title.ifBlank { "Node $nodeId needs your approval before it can continue" })
                 .setStyle(
                     NotificationCompat.BigTextStyle()
-                        .bigText(title.ifBlank { "节点 $nodeId 需要你批准后继续执行" }),
+                        .bigText(title.ifBlank { "Node $nodeId needs your approval before it can continue" }),
                 )
                 .setContentIntent(openRun)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_REMINDER)
-                .addAction(NotificationCompat.Action(R.drawable.taixu_notification, "批准", approvePending))
-                .addAction(NotificationCompat.Action(R.drawable.taixu_notification, "拒绝", denyPending))
+                .addAction(NotificationCompat.Action(R.drawable.taixu_notification, "Approve", approvePending))
+                .addAction(NotificationCompat.Action(R.drawable.taixu_notification, "Reject", denyPending))
                 .build()
             manager.notify(notificationId(executionId), notification)
-        }.onFailure { Log.w(TAG, "发布审批通知失败", it) }
+        }.onFailure { Log.w(TAG, "Failed to post approval notification", it) }
     }
 
     private fun revoke(context: Context, executionId: String) {
