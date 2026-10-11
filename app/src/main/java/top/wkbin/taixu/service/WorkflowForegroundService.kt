@@ -45,7 +45,7 @@ class WorkflowForegroundService : Service() {
     private var collecting = false
     /** 当前向 RuntimeLifecycleSupervisor 持有的保活租约（工作流运行时持有）。 */
     private var powerLease: ProcessingPowerLease? = null
-    /** 出现过Running状态的 executionId：用于检测"Running → 终态"迁移，终态通知只发一次。 */
+    /** Execution IDs that have been in the running state, used to detect transitions to a terminal state and ensure the terminal notification is sent only once. */
     private val seenRunning = mutableSetOf<String>()
     /** 进度通知节流：executionId → 上次发布时间。 */
     private val lastProgressPostAt = mutableMapOf<String, Long>()
