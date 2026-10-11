@@ -426,7 +426,7 @@ class LinuxRuntimeImpl(
                 val result = rootfsInstaller.updateOci(
                     distribution,
                     RegistryRoute.AUTO,
-                ) { progress -> updateDownloadProgress("更新 ${distribution.displayName}", 0.1f, 0.65f, progress) }
+                ) { progress -> updateDownloadProgress("Updating ${distribution.displayName}", 0.1f, 0.65f, progress) }
                 result.errorOrNull()?.let { error ->
                     _state.value = RuntimeState.Error(error.cause ?: IllegalStateException(error.message))
                     return@withContext AppResult.Failure(error)
