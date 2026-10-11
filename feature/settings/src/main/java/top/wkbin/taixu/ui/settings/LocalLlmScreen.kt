@@ -548,7 +548,7 @@ private fun DownloadModelDialog(
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("GGUF Download地址") },
+                    label = { Text("GGUF download URL") },
                     placeholder = { Text("https://.../model.gguf") },
                     isError = url.isNotBlank() && !urlValid,
                     supportingText = {
@@ -569,7 +569,7 @@ private fun DownloadModelDialog(
             }
         },
         confirmButton = {
-            RuntimeButton(onClick = { onDownload(url, sha256.ifBlank { null }) }, enabled = urlValid) { Text("开始Download") }
+            RuntimeButton(onClick = { onDownload(url, sha256.ifBlank { null }) }, enabled = urlValid) { Text("Start download") }
         },
         dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("Cancel") } },
     )
@@ -647,7 +647,7 @@ private fun DeleteModelConfirmDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "• Delete后需要重新Download或Import才能再次使用",
+                    text = "• The model must be downloaded or imported again before it can be used",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                 )
