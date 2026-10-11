@@ -1046,7 +1046,7 @@ private fun McpServerDetailDialog(
                                 McpAuthState.Unauthenticated, is McpAuthState.Error ->
                                     Button(onClick = onAuthorize, enabled = server.oauthClientId.isNotBlank()) { Text("Authorize") }
                                 is McpAuthState.Authorized ->
-                                    OutlinedButton(onClick = onLogout) { Text("退出Authorize") }
+                                    OutlinedButton(onClick = onLogout) { Text("Revoke authorization") }
                                 McpAuthState.Authorizing ->
                                     CircularProgressIndicator(modifier = Modifier.size(18.dp))
                                 McpAuthState.Unsupported -> Unit
@@ -1107,7 +1107,7 @@ private fun McpServerDetailDialog(
                     discoveredTools?.let { tools ->
                         if (tools.isEmpty()) {
                             Text(
-                                "该服务Connected，但未返回任何工具定义",
+                                "The service is connected but returned no tool definitions",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -1349,7 +1349,7 @@ private fun AddMcpServerDialog(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text("OAuth 2.0 + PKCE", style = MaterialTheme.typography.labelMedium)
-                                Text("Authorize码模式；token 加密Save且不会导出", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Authorization-code flow; the token is encrypted and is not exported", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Switch(checked = oauthEnabled, onCheckedChange = { oauthEnabled = it })
                         }
@@ -1486,7 +1486,7 @@ private fun parseMcpJson(rawJson: String): Result<List<McpServerConfig>> = runCa
                 McpServerConfig(
                     id = "custom_${serverName.lowercase().replace(Regex("[^a-z0-9_]"), "_")}_${System.currentTimeMillis()}",
                     name = serverName,
-                    description = desc.ifBlank { if (isSse) "Remote HTTP 服务: $url" else "Local Stdio: $command ${args.joinToString(" ")}" },
+                    description = desc.ifBlank { if (isSse) "Remote HTTP service: $url" else "Local Stdio: $command ${args.joinToString(" ")}" },
                     transportType = if (isSse) McpTransportType.SSE else McpTransportType.STDIO,
                     command = command,
                     args = args,
@@ -1518,7 +1518,7 @@ private fun parseMcpJson(rawJson: String): Result<List<McpServerConfig>> = runCa
             McpServerConfig(
                 id = "custom_${name.lowercase().replace(Regex("[^a-z0-9_]"), "_")}_${System.currentTimeMillis()}",
                 name = name,
-                description = desc.ifBlank { if (isSse) "Remote HTTP 服务: $url" else "Local Stdio: $command ${args.joinToString(" ")}" },
+                description = desc.ifBlank { if (isSse) "Remote HTTP service: $url" else "Local Stdio: $command ${args.joinToString(" ")}" },
                 transportType = if (isSse) McpTransportType.SSE else McpTransportType.STDIO,
                 command = command,
                 args = args,
