@@ -48,7 +48,7 @@ fun CustomIterationScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { RuntimeTopBar(title = "自定义迭代（实验）", onBack = onBack) }
+        topBar = { RuntimeTopBar(title = "Custom iteration (experimental)", onBack = onBack) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -62,13 +62,13 @@ fun CustomIterationScreen(
             RuntimeCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "全面自定义专属的 TaiXuDev",
+                        text = "Fully customize your own TaiXuDev",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "太墟（TaiXu）是一款致力于构建手机端 Linux 运行时与自主 Agent 的开源基础设施。通过「自定义迭代」，你可以在掌中调用太墟 AI 修改太墟自身、通过云端 GitHub Actions 自动化编译出独立的 TaiXuDev APK，并与社区开发者共同交流贡献。",
+                        text = "TaiXu is open-source infrastructure for building a mobile Linux runtime and autonomous agents. With Custom Iteration, you can use TaiXu AI on your phone to modify TaiXu itself, build a standalone TaiXuDev APK through cloud GitHub Actions, and collaborate with the developer community.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 22.sp
@@ -77,33 +77,33 @@ fun CustomIterationScreen(
             }
 
             // 特性清单
-            SectionHeader(title = "核心能力矩阵", subtitle = "一次准备，持续共建")
+            SectionHeader(title = "Core capabilities", subtitle = "Set up once, keep building together")
 
             IterationFeatureItem(
-                title = "隔离迭代工作区",
-                description = "独立路径 ~/custom_taixu，所有修改与宿主环境完全物理隔离。",
+                title = "Isolated iteration workspace",
+                description = "Uses a separate ~/custom_taixu path; all changes are physically isolated from the host environment.",
                 badgeColor = MaterialTheme.colorScheme.primary
             )
 
             IterationFeatureItem(
-                title = "专属 Agent 规范 Skill",
-                description = "内置 taixu-custom-iteration Skill，严格遵循多模块、Compose 与安全规则。",
+                title = "Dedicated Agent guidelines skill",
+                description = "Includes the taixu-custom-iteration skill, following multi-module, Compose, and security rules.",
                 badgeColor = MaterialTheme.colorScheme.secondary
             )
 
             IterationFeatureItem(
-                title = "GitHub Actions 云端 CI 构建",
-                description = "免去手机端繁琐编译，自动化生成 TaiXuDev（top.wkbin.taixu.dev）独立 APK。",
+                title = "Cloud CI builds with GitHub Actions",
+                description = "Avoid lengthy on-device compilation and automatically generate a standalone TaiXuDev APK (top.wkbin.taixu.dev).",
                 badgeColor = MaterialTheme.colorScheme.tertiary
             )
 
             IterationFeatureItem(
-                title = "双包共存与开源 PR 闭环",
-                description = "测试版与正式版完美共存，功能验证完毕后一键提交标准 PR 参与社区共建。",
+                title = "Coexistence of both apps and an open-source PR workflow",
+                description = "The test and production apps can coexist. After validating a feature, submit a standard PR to contribute to the community.",
                 badgeColor = MaterialTheme.colorScheme.primary
             )
 
-            // 错误提示：可关闭，不再常驻；重试走下方"开启自定义迭代"按钮
+            // 错误提示：可关闭，不再常驻；重试走下方"Start custom iteration"按钮
             if (uiState.errorMessage != null) {
                 NoticeBanner(
                     text = uiState.errorMessage ?: "",
@@ -134,10 +134,10 @@ fun CustomIterationScreen(
                         strokeWidth = 2.dp,
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("正在准备迭代工作区…")
+                    Text("Preparing the iteration workspace…")
                 } else {
                     Text(
-                        text = "开启自定义迭代",
+                        text = "Start custom iteration",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold
                     )
