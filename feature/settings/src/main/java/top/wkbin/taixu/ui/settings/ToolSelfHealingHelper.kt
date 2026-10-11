@@ -9,20 +9,20 @@ object ToolSelfHealingHelper {
         toolName: String,
         errorLogs: List<String>,
     ): String = buildString {
-        appendLine("【系统工具安装失败诊断与沙箱自愈任务】")
-        appendLine("- 目标工具：$toolName ($toolId)")
-        appendLine("- 预期安装路径：/opt/taixu/tools/$toolId")
-        appendLine("- 关联专精能力：@Linux沙箱运维专精")
+        appendLine("[System tool installation failure diagnosis and sandbox self-healing task]")
+        appendLine("- Target tool: $toolName ($toolId)")
+        appendLine("- Expected installation path: /opt/taixu/tools/$toolId")
+        appendLine("- Relevant specialist capability: @Linux Sandbox Operations Specialist")
         if (errorLogs.isNotEmpty()) {
-            appendLine("- 失败上下文与日志输出：")
+            appendLine("- Failure context and log output:")
             appendLine("```")
             errorLogs.takeLast(25).forEach { appendLine(it) }
             appendLine("```")
         }
         appendLine()
-        appendLine("【Agent 自愈目标与行动指南】：")
-        appendLine("1. 分析上述 PRoot 沙箱内的失败报错（如 dpkg 依赖破损、锁残留、网络下载受阻、commandLinks 软链接缺失或环境缺失）；")
-        appendLine("2. 直接调用 base 工具执行针对性的修复命令（如清理 /var/lib/dpkg 锁、dpkg --configure -a、apt-get --fix-broken install、手动从备用源拉取或补齐软链接）；")
-        appendLine("3. 修复完成后，在终端验证工具命令（如执行 /opt/taixu/bin/$toolId 或对应二进制），并在本会话中向我汇报排查原因与自愈结果。")
+        appendLine("[Agent self-healing objectives and action guide]:")
+        appendLine("1. Analyze the PRoot sandbox error above (for example, broken dpkg dependencies, stale locks, blocked downloads, missing commandLinks symlinks, or missing environment components).")
+        appendLine("2. Use the base tool to run targeted repair commands (for example, clear stale locks under /var/lib/dpkg, run dpkg --configure -a or apt-get --fix-broken install, download from a fallback source, or restore missing symlinks).")
+        appendLine("3. After repair, verify the tool in the terminal (for example, run /opt/taixu/bin/$toolId or the corresponding binary) and report the diagnosis and recovery results in this session.")
     }
 }
