@@ -4,7 +4,7 @@
 # ==============================================================================
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# 优先加载插件装配期固化的环境变量
+# Prefer environment variables persisted during plugin setup
 if [ -f /etc/profile.d/taixu-android.sh ]; then
     . /etc/profile.d/taixu-android.sh
 fi
