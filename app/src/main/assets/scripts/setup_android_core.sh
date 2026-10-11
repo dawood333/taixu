@@ -2,7 +2,7 @@
 # ==============================================================================
 # TaiXu (LinuxAIRuntime) - Android Core Development Environment Setup
 # ------------------------------------------------------------------------------
-# 由【Android & 移动全栈开发套件 · android-core】组件在插件安装阶段一次性执行。
+# Executed once during plugin installation by the Android & Mobile Full-Stack Development Suite's android-core component.
 # ==============================================================================
 set -e
 
@@ -34,12 +34,12 @@ TOOLCHAIN_LOCK_FILE="/opt/taixu/locks/android-toolchain.lock"
 
 mkdir -p /opt/taixu/locks
 command -v flock >/dev/null 2>&1 || {
-    echo "!! [TaiXu] 缺少 flock，无法安全装配 Android 工具链"
+    echo "!! [TaiXu] flock is missing; cannot safely install the Android toolchain"
     exit 1
 }
 exec 9>"$TOOLCHAIN_LOCK_FILE"
 flock -x -w 1800 9 || {
-    echo "!! [TaiXu] Android 工具链正被构建任务使用，等待超时"
+    echo "!! [TaiXu] Android toolchain is in use by a build task; lock wait timed out"
     exit 1
 }
 export TAIXU_TOOLCHAIN_LOCK_HELD=1
@@ -47,12 +47,12 @@ export TAIXU_TOOLCHAIN_LOCK_HELD=1
 # Remove the obsolete x86_64 AAPT2 wrapper and payload from upgraded sandboxes.
 rm -rf /opt/taixu/android-sdk-tools/qemu 2>/dev/null || true
 
-echo "==> [TaiXu] 正在初始化 Android 核心基础环境 (插件装配期一次性部署)..."
+echo "==> [TaiXu] Initializing the Android Core Environment (one-time plugin setup)..."
 
 mkdir -p /opt /usr/local/bin /usr/bin ${TAIXU_TOOL_DIR:-/opt/taixu/tools}/bin /tmp 2>/dev/null || true
 
 # ------------------------------------------------------------------------------
-# 步骤 1：定位 JDK 目录
+# Step 1: Locate the JDK directory
 # ------------------------------------------------------------------------------
 JDK_DIR=""
 for candidate in /usr/lib/jvm/java-17-openjdk-arm64 /usr/lib/jvm/java-17-openjdk-aarch64 /usr/lib/jvm/default-java; do
@@ -75,37 +75,37 @@ if [ -x "$JAVA_HOME_RESOLVED/bin/java" ] && [ ! -x /usr/bin/java ]; then
     ln -sf "$JAVA_HOME_RESOLVED/bin/java" /usr/bin/java 2>/dev/null || true
 fi
 
-# 工坊签名管理器（WorkshopSigningManager）与离线套件统一使用
-# /opt/taixu/toolchains/android/jdk 作为 JAVA_HOME 规范路径。在线安装的
-# apt JDK 位于 /usr/lib/jvm/*，这里补一个规范路径软链接，保证 keytool
-# 在在线/离线两条安装路径下都从默认路径可达。若离线插件已部署 JDK 真身
-# 目录（非软链接），保留不动。
+# The WorkshopSigningManager and offline suite share the same standard path.
+# /opt/taixu/toolchains/android/jdk is the standard JAVA_HOME path. Online installations place the
+# apt JDK under /usr/lib/jvm/*; create a standard-path symlink so keytool
+# is reachable from the expected path for both online and offline installations. If the offline plugin already deployed the actual JDK
+# directory (not a symlink), leave it unchanged.
 TOOLCHAIN_JDK_LINK="/opt/taixu/toolchains/android/jdk"
 if [ -d "$TOOLCHAIN_JDK_LINK" ] && [ ! -L "$TOOLCHAIN_JDK_LINK" ]; then
-    echo "==> [TaiXu] 检测到离线套件 JDK 真身，跳过规范路径链接"
+    echo "==> [TaiXu] Offline suite JDK detected; skipping standard-path symlink"
 else
     mkdir -p /opt/taixu/toolchains/android /opt/taixu/bin 2>/dev/null || true
     ln -sfn "$JAVA_HOME_RESOLVED" "$TOOLCHAIN_JDK_LINK"
-    # keytool / jarsigner 进 /opt/taixu/bin（PATH 首位），终端可直接调用。
+    # Place keytool / jarsigner in /opt/taixu/bin (first in PATH) so they can be invoked directly from the terminal.
     for jdk_cmd in keytool jarsigner; do
         if [ -x "$JAVA_HOME_RESOLVED/bin/$jdk_cmd" ]; then
             ln -sfn "$JAVA_HOME_RESOLVED/bin/$jdk_cmd" "/opt/taixu/bin/$jdk_cmd" 2>/dev/null || true
         fi
     done
-    echo "==> [TaiXu] JDK 规范路径已就位: $TOOLCHAIN_JDK_LINK -> $JAVA_HOME_RESOLVED"
+    echo "==> [TaiXu] Standard JDK path ready: $TOOLCHAIN_JDK_LINK -> $JAVA_HOME_RESOLVED"
 fi
 
 # ------------------------------------------------------------------------------
-# 步骤 2：修复 JDK 安全配置目录
-# JDK 9+ 从 $JAVA_HOME/conf/security/java.security 读取主配置；同时维护
-# lib/security 与 Debian 兼容路径，避免 PRoot 下链接断裂导致 JVM 崩溃。
+# Step 2: Repair the JDK security configuration directories
+# JDK 9+ reads its main configuration from $JAVA_HOME/conf/security/java.security; also maintain
+# the lib/security and Debian-compatible paths to prevent broken links from crashing the JVM under PRoot.
 # ------------------------------------------------------------------------------
 SECURITY_DIR="$JAVA_HOME_RESOLVED/lib/security"
 SECURITY_CONF_DIR="$JAVA_HOME_RESOLVED/conf/security"
 mkdir -p "$SECURITY_DIR" "$SECURITY_CONF_DIR" /etc/java-17-openjdk/security /etc/ssl/certs/java 2>/dev/null || true
 mkdir -p "$SECURITY_CONF_DIR/policy/unlimited" "$SECURITY_CONF_DIR/policy/limited" 2>/dev/null || true
 
-echo "==> [TaiXu] 正在修复 JDK java.security 配置文件..."
+echo "==> [TaiXu] Repairing the JDK java.security configuration..."
 
 SECURITY_TMP="${SECURITY_CONF_DIR}/java.security.taixu.tmp"
 cat > "$SECURITY_TMP" << 'EOF'
@@ -147,8 +147,8 @@ mv -f "$SECURITY_TMP" "$SECURITY_CONF_DIR/java.security"
 cp -f "$SECURITY_CONF_DIR/java.security" "$SECURITY_DIR/java.security" 2>/dev/null || true
 cp -f "$SECURITY_CONF_DIR/java.security" /etc/java-17-openjdk/security/java.security 2>/dev/null || true
 
-# 某些精简 rootfs 只带 java 二进制，没有 JDK 自带的 jurisdiction policy 文件。
-# crypto.policy=unlimited 找不到这两个文件时，Gradle 初始化 SSL 会直接失败。
+# Some minimal root filesystems include only the java binary and omit the JDK's jurisdiction policy files.
+# If these files are missing while crypto.policy=unlimited is set, Gradle's SSL initialization fails.
 cat > "$SECURITY_CONF_DIR/policy/unlimited/default_local.policy" << 'EOF'
 grant {
     permission javax.crypto.CryptoAllPermission;
@@ -162,21 +162,21 @@ EOF
 
 chmod 644 "$SECURITY_DIR/java.security" 2>/dev/null || true
 chmod 644 "$SECURITY_CONF_DIR/java.security" /etc/java-17-openjdk/security/java.security 2>/dev/null || true
-echo "==> [TaiXu] java.security 已写入 conf/security 与兼容路径"
+echo "==> [TaiXu] java.security written to conf/security and compatibility paths"
 
-# 部署 cacerts
+# Deploy cacerts
 if [ -s /opt/taixu/certs/cacerts ]; then
     cp -f /opt/taixu/certs/cacerts "$SECURITY_DIR/cacerts" 2>/dev/null || true
     cp -f /opt/taixu/certs/cacerts /etc/ssl/certs/java/cacerts 2>/dev/null || true
-    echo "==> [TaiXu] cacerts 已部署"
+    echo "==> [TaiXu] cacerts deployed"
 fi
 
-# 验证 java.security 可被 Java 加载
-echo "==> [TaiXu] 验证 java.security 可被 JVM 加载..."
+# Verify that Java can load java.security
+echo "==> [TaiXu] Verifying that the JVM can load java.security..."
 if "$JAVA_HOME_RESOLVED/bin/java" -version >/dev/null 2>&1; then
-    echo "==> [TaiXu] 验证通过: java.security 可被 JVM 加载"
+    echo "==> [TaiXu] Verification passed: java.security can be loaded by the JVM"
 else
-    echo "==> [TaiXu] 警告: java.security 验证未完成"
+    echo "==> [TaiXu] Warning: java.security verification did not complete"
 fi
 
 # unzip is bundled in the APK as a JDK-jar adapter. Keep a BusyBox fallback for
@@ -189,14 +189,14 @@ if ! command -v unzip >/dev/null 2>&1; then
     if ! command -v unzip >/dev/null 2>&1 && [ -x /bin/busybox ]; then
         ln -sf /bin/busybox /usr/local/bin/unzip 2>/dev/null || true
     fi
-    command -v unzip >/dev/null 2>&1 || { echo "!! [TaiXu] 无法部署 unzip 解压工具"; exit 1; }
+    command -v unzip >/dev/null 2>&1 || { echo "!! [TaiXu] Unable to install the unzip utility"; exit 1; }
 fi
 
 # ------------------------------------------------------------------------------
-# 步骤 3：部署 Android SDK 平台包 (android-34)
+# Step 3: Install the Android SDK platform package (android-34)
 # ------------------------------------------------------------------------------
 if [ ! -f "$SDK_HOME/platforms/android-34/android.jar" ]; then
-    echo "==> [TaiXu] 正在从国内镜像拉取 Android 34 平台包 (android.jar, ~60MB)..."
+    echo "==> [TaiXu] Downloading Android Platform 34 (android.jar, ~60 MB) from a configured mirror..."
     rm -rf /tmp/"$PLATFORM_ZIP" /tmp/android-platform-staging 2>/dev/null || true
     (curl -fsSL -m 300 "https://mirrors.cloud.tencent.com/AndroidSDK/$PLATFORM_ZIP" -o /tmp/"$PLATFORM_ZIP" 2>/dev/null || \
      curl -fsSL -m 300 "https://dl.google.com/android/repository/$PLATFORM_ZIP" -o /tmp/"$PLATFORM_ZIP" 2>/dev/null || true)
@@ -204,12 +204,12 @@ if [ ! -f "$SDK_HOME/platforms/android-34/android.jar" ]; then
     if [ -f /tmp/"$PLATFORM_ZIP" ]; then
         if command -v sha1sum >/dev/null 2>&1; then
             echo "$PLATFORM_SHA1  /tmp/$PLATFORM_ZIP" | sha1sum -c - >/dev/null 2>&1 || {
-                echo "!! [TaiXu] 平台包 SHA-1 校验失败，丢弃损坏文件"; rm -f /tmp/"$PLATFORM_ZIP"; }
+                echo "!! [TaiXu] Platform package SHA-1 verification failed; discarding the corrupted file"; rm -f /tmp/"$PLATFORM_ZIP"; }
         fi
     fi
 
     if [ -f /tmp/"$PLATFORM_ZIP" ]; then
-        echo "==> [TaiXu] 正在解压平台包到 $SDK_HOME/platforms/android-34 ..."
+        echo "==> [TaiXu] Extracting the platform package to $SDK_HOME/platforms/android-34..."
         mkdir -p /tmp/android-platform-staging "$SDK_HOME/platforms"
         (unzip -qo /tmp/"$PLATFORM_ZIP" -d /tmp/android-platform-staging 2>/dev/null || \
          python3 -c "import zipfile; zipfile.ZipFile('/tmp/$PLATFORM_ZIP').extractall('/tmp/android-platform-staging')" 2>/dev/null || true)
@@ -219,18 +219,18 @@ if [ ! -f "$SDK_HOME/platforms/android-34/android.jar" ]; then
             mkdir -p "$SDK_HOME/platforms"
             mv "$PLATFORM_SRC" "$SDK_HOME/platforms/android-34"
         else
-            echo "!! [TaiXu] 平台包解压失败，保留骨架目录待下次装配重试"
+            echo "!! [TaiXu] Platform package extraction failed; keeping the directory structure for the next setup attempt"
         fi
         rm -rf /tmp/"$PLATFORM_ZIP" /tmp/android-platform-staging 2>/dev/null || true
     else
-        echo "!! [TaiXu] 平台包下载失败，保留骨架目录待下次装配重试"
+        echo "!! [TaiXu] Platform package download failed; keeping the directory structure for the next setup attempt"
     fi
 else
-    echo "==> [TaiXu] Android 34 平台包已存在，跳过"
+    echo "==> [TaiXu] Android Platform 34 package already exists; skipping"
 fi
 
 # ------------------------------------------------------------------------------
-# 步骤 4：固定 SDK licenses 与 Build-Tools 组件元数据
+# Step 4: Pin SDK licenses and Build Tools component metadata
 # ------------------------------------------------------------------------------
 mkdir -p "$SDK_HOME/licenses" /root/.android/licenses 2>/dev/null || true
 cat > "$SDK_HOME/licenses/android-sdk-license" << 'EOF'
@@ -246,11 +246,11 @@ d975f751698a77b662f1254ddbeed3901e976f5a
 EOF
 cp -f "$SDK_HOME/licenses/"* /root/.android/licenses/ 2>/dev/null || true
 
-# 安装官方 Build-Tools 的 Java 工具（d8/r8/lib），再覆盖其中无法在 ARM64
-# rootfs 运行的 x86_64 原生工具。这样 AGP 不会在构建阶段再次联网补组件。
+# Install the official Build Tools Java components (d8/r8/lib), then replace native tools that cannot run in the ARM64
+# root filesystem with ARM64-compatible binaries. This prevents AGP from downloading components during the build.
 BUILD_TOOLS_DIR="$SDK_HOME/build-tools/$BUILD_TOOLS_VERSION"
 if [ ! -f "$BUILD_TOOLS_DIR/lib/d8.jar" ]; then
-    echo "==> [TaiXu] 正在部署 Android Build-Tools $BUILD_TOOLS_VERSION (Java d8/r8)..."
+    echo "==> [TaiXu] Installing Android Build Tools $BUILD_TOOLS_VERSION (Java d8/r8)..."
     rm -rf /tmp/"$BUILD_TOOLS_ZIP" /tmp/android-build-tools-staging 2>/dev/null || true
     (curl -fsSL -m 300 "https://mirrors.cloud.tencent.com/AndroidSDK/$BUILD_TOOLS_ZIP" -o /tmp/"$BUILD_TOOLS_ZIP" 2>/dev/null || \
      curl -fsSL -m 300 "https://dl.google.com/android/repository/$BUILD_TOOLS_ZIP" -o /tmp/"$BUILD_TOOLS_ZIP" 2>/dev/null || true)
@@ -291,21 +291,21 @@ done
 if [ ! -x "$ARM64_TOOLS_DIR/build-tools/aapt2" ] || \
    ! "$ARM64_TOOLS_DIR/build-tools/aapt2" version >/dev/null 2>&1; then
     if [ -e "$ARM64_TOOLS_DIR" ]; then
-        echo "!! [TaiXu] ARM64 SDK Tools 不可变制品发生完整性漂移，拒绝原位替换: $ARM64_TOOLS_DIR"
+        echo "!! [TaiXu] Immutable ARM64 SDK Tools artifact checksum/content drift detected; refusing in-place replacement: $ARM64_TOOLS_DIR"
         exit 1
     fi
-    echo "==> [TaiXu] 正在部署第三方 ARM64 Android SDK 工具 (aapt2/aidl/zipalign)..."
+    echo "==> [TaiXu] Installing third-party ARM64 Android SDK tools (aapt2/aidl/zipalign)..."
     ARM64_ARCHIVE="/tmp/android-sdk-tools-static-aarch64-${ARM64_TOOLS_VERSION}.zip"
     ARM64_STAGING="/tmp/android-sdk-tools-aarch64-staging"
     rm -f "$ARM64_ARCHIVE"
     rm -rf "$ARM64_STAGING"
     ARM64_DOWNLOADED=0
     for ARM64_URL in $ARM64_TOOLS_URLS; do
-        echo "==> [TaiXu] 尝试下载第三方 ARM64 工具包: $ARM64_URL"
+        echo "==> [TaiXu] Attempting to download third-party ARM64 tools: $ARM64_URL"
         if curl -fsSL -m 300 "$ARM64_URL" -o "$ARM64_ARCHIVE" 2>/dev/null && [ -s "$ARM64_ARCHIVE" ]; then
             if command -v sha256sum >/dev/null 2>&1 &&
                 ! echo "$ARM64_TOOLS_SHA256  $ARM64_ARCHIVE" | sha256sum -c - >/dev/null 2>&1; then
-                echo "!! [TaiXu] ARM64 SDK 工具包 SHA-256 校验失败，尝试下一个镜像"
+                echo "!! [TaiXu] ARM64 SDK tools SHA-256 verification failed; trying the next mirror"
                 rm -f "$ARM64_ARCHIVE"
             else
                 ARM64_DOWNLOADED=1
@@ -314,7 +314,7 @@ if [ ! -x "$ARM64_TOOLS_DIR/build-tools/aapt2" ] || \
         fi
     done
     [ "$ARM64_DOWNLOADED" -eq 1 ] || {
-        echo "!! [TaiXu] 第三方 ARM64 SDK 工具包下载失败，无法提供 ARM64 AAPT2"
+        echo "!! [TaiXu] Failed to download third-party ARM64 SDK tools; ARM64 AAPT2 will be unavailable"
         exit 1
     }
     if [ -f "$ARM64_ARCHIVE" ]; then
@@ -326,23 +326,23 @@ if [ ! -x "$ARM64_TOOLS_DIR/build-tools/aapt2" ] || \
                 chmod 755 "$ARM64_STAGING/build-tools"/* 2>/dev/null || true
                 AAPT2_MACHINE=$(od -An -tu2 -j18 -N2 "$ARM64_STAGING/build-tools/aapt2" 2>/dev/null | tr -d '[:space:]')
                 [ "$AAPT2_MACHINE" = "183" ] || {
-                    echo "!! [TaiXu] ARM64 AAPT2 ELF 架构校验失败: e_machine=$AAPT2_MACHINE"
+                    echo "!! [TaiXu] ARM64 AAPT2 ELF architecture check failed: e_machine=$AAPT2_MACHINE"
                     rm -rf "$ARM64_STAGING"
                     exit 1
                 }
                 "$ARM64_STAGING/build-tools/aapt2" version >/dev/null 2>&1 || {
-                    echo "!! [TaiXu] ARM64 AAPT2 无法在当前 RootFS 启动"
+                    echo "!! [TaiXu] ARM64 AAPT2 cannot start in the current RootFS"
                     rm -rf "$ARM64_STAGING"
                     exit 1
                 }
                 mkdir -p "$(dirname "$ARM64_TOOLS_DIR")"
                 mv "$ARM64_STAGING" "$ARM64_TOOLS_DIR"
             else
-                echo "!! [TaiXu] ARM64 SDK 工具包缺少 build-tools/aapt2，忽略该包"
+                echo "!! [TaiXu] ARM64 SDK tools package lacks build-tools/aapt2; ignoring this package"
                 rm -rf "$ARM64_STAGING"
             fi
         else
-            echo "!! [TaiXu] ARM64 SDK 工具包解压失败"
+            echo "!! [TaiXu] Failed to extract ARM64 SDK tools"
             rm -rf "$ARM64_STAGING"
             exit 1
         fi
@@ -394,7 +394,7 @@ if [ -d /workspace ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 步骤 5：链接 ADB / AAPT / zipalign / apksigner
+# Step 5: Link ADB / AAPT / zipalign / apksigner
 # ------------------------------------------------------------------------------
 for tool in aapt aapt2 adb zipalign apksigner; do
     DEB_BIN=$(command -v "$tool" 2>/dev/null || echo "/usr/bin/$tool")
@@ -404,10 +404,10 @@ for tool in aapt aapt2 adb zipalign apksigner; do
 done
 
 # ------------------------------------------------------------------------------
-# 步骤 6：部署官方独立 Gradle 8.14.2
+# Step 6: Install standalone official Gradle 8.14.2
 # ------------------------------------------------------------------------------
 if [ ! -f /opt/gradle-$GRADLE_VER/lib/gradle-launcher-$GRADLE_VER.jar ]; then
-    echo "==> [TaiXu] 正在从国内加速镜像拉取 Gradle $GRADLE_VER (~120MB)..."
+    echo "==> [TaiXu] Downloading Gradle $GRADLE_VER (~120 MB) from a configured mirror..."
     rm -rf /tmp/gradle-$GRADLE_VER.zip /opt/gradle-$GRADLE_VER 2>/dev/null || true
     (curl -fsSL -m 600 https://mirrors.cloud.tencent.com/gradle/gradle-$GRADLE_VER-bin.zip -o /tmp/gradle-$GRADLE_VER.zip 2>/dev/null || \
      curl -fsSL -m 600 https://mirrors.huaweicloud.com/gradle/gradle-$GRADLE_VER-bin.zip -o /tmp/gradle-$GRADLE_VER.zip 2>/dev/null || true)
@@ -415,12 +415,12 @@ if [ ! -f /opt/gradle-$GRADLE_VER/lib/gradle-launcher-$GRADLE_VER.jar ]; then
     if [ -f /tmp/gradle-$GRADLE_VER.zip ]; then
         if command -v sha256sum >/dev/null 2>&1; then
             echo "$GRADLE_SHA256  /tmp/gradle-$GRADLE_VER.zip" | sha256sum -c - >/dev/null 2>&1 || {
-                echo "!! [TaiXu] Gradle 包 SHA-256 校验失败，丢弃损坏文件"; rm -f /tmp/gradle-$GRADLE_VER.zip; }
+                echo "!! [TaiXu] Gradle package SHA-256 verification failed; discarding the corrupted file"; rm -f /tmp/gradle-$GRADLE_VER.zip; }
         fi
     fi
 
     if [ -f /tmp/gradle-$GRADLE_VER.zip ]; then
-        echo "==> [TaiXu] 正在解压 Gradle $GRADLE_VER 到 /opt/..."
+        echo "==> [TaiXu] Extracting Gradle $GRADLE_VER to /opt/..."
         (unzip -qo /tmp/gradle-$GRADLE_VER.zip -d /opt/ 2>/dev/null || \
          python3 -c "import zipfile; zipfile.ZipFile('/tmp/gradle-$GRADLE_VER.zip').extractall('/opt/')" 2>/dev/null || \
          busybox unzip /tmp/gradle-$GRADLE_VER.zip -d /opt/ 2>/dev/null || true)
@@ -432,15 +432,15 @@ if [ -d /opt/gradle-$GRADLE_VER/bin ]; then
     chmod +x /opt/gradle-$GRADLE_VER/bin/gradle 2>/dev/null || true
     ln -sf /opt/gradle-$GRADLE_VER/bin/gradle /usr/local/bin/gradle 2>/dev/null || true
     ln -sf /opt/gradle-$GRADLE_VER/bin/gradle /usr/bin/gradle 2>/dev/null || true
-    echo "==> [TaiXu] Gradle $GRADLE_VER 就绪"
+    echo "==> [TaiXu] Gradle $GRADLE_VER is ready"
 fi
 
 # ------------------------------------------------------------------------------
-# 步骤 7：全局 Gradle 镜像加速配置
+# Step 7: Configure global Gradle mirrors
 # ------------------------------------------------------------------------------
 mkdir -p /root/.gradle
 cat << 'EOF' > /root/.gradle/init.gradle
-// TaiXu: 全局强制阿里云镜像，避免 Gradle 从国外源拉取依赖（国内网络慢/被墙）。
+// TaiXu: 全局强制Aliyun mirror，避免 Gradle 从国外源拉取依赖（国内网络慢/被墙）。
 gradle.beforeSettings { settings ->
     settings.pluginManagement.repositories {
         maven { url 'https://maven.aliyun.com/repository/google' }
@@ -484,14 +484,14 @@ if [ -n "$TAIXU_AAPT2_PATH" ] && [ -x "$TAIXU_AAPT2_PATH" ] && \
     printf '\n# TaiXu: immutable ARM64 toolchain and mobile-safe build limits.\nandroid.aapt2FromMavenOverride=%s\nandroid.builder.sdkDownload=false\norg.gradle.daemon=false\norg.gradle.parallel=false\norg.gradle.workers.max=2\norg.gradle.jvmargs=-Xmx1024m -XX:MaxMetaspaceSize=384m -XX:+UseSerialGC -Dfile.encoding=UTF-8\nsystemProp.org.gradle.internal.http.connectionTimeout=30000\nsystemProp.org.gradle.internal.http.socketTimeout=60000\nkotlin.daemon.jvmargs=-Xmx512m -XX:MaxMetaspaceSize=256m\n' \
         "$TAIXU_AAPT2_PATH" >> "$GRADLE_PROPERTIES_TMP"
     mv -f "$GRADLE_PROPERTIES_TMP" "$GRADLE_PROPERTIES"
-    echo "==> [TaiXu] Gradle 全局 AAPT2 覆盖: $TAIXU_AAPT2_PATH"
+    echo "==> [TaiXu] Global Gradle AAPT2 override: $TAIXU_AAPT2_PATH"
 else
-    echo "!! [TaiXu] AAPT2 无法启动，未写入 Gradle 全局覆盖"
+    echo "!! [TaiXu] AAPT2 could not start; global Gradle override was not written"
     exit 1
 fi
 
 # ------------------------------------------------------------------------------
-# 步骤 8：持久化核心环境变量（全局生效）
+# Step 8: Persist core environment variables (global)
 # ------------------------------------------------------------------------------
 cat << EOF > /etc/profile.d/taixu-android.sh
 # TaiXu Android development environment (managed by android-core plugin)
@@ -506,8 +506,8 @@ export TAIXU_NDK_SHA256="$TAIXU_NDK_SHA256"
 export ANDROID_NDK_HOME="$TAIXU_NDK_PATH"
 export ANDROID_NDK_ROOT="$TAIXU_NDK_PATH"
 export TAIXU_LLVM_STRIP_PATH="$TAIXU_LLVM_STRIP_PATH"
-# /opt/taixu/bin 必须保持首位：终端与 Agent 直接执行 gradle/gradlew 时
-# 先经过 TaiXu ARM64 工具链自检，再调度固定 Gradle。
+# /opt/taixu/bin must remain first in PATH so terminal and Agent invocations of gradle/gradlew
+# run the TaiXu ARM64 toolchain checks before invoking the pinned Gradle.
 export PATH="/opt/taixu/bin:\$JAVA_HOME/bin:\$GRADLE_HOME/bin:\$PATH"
 # PRoot sandbox: use non-blocking entropy
 export _JAVA_OPTIONS="-Djava.security.egd=file:/dev/urandom"
@@ -537,33 +537,33 @@ if [ -f /etc/bash.bashrc ] && ! grep -q "taixu-android" /etc/bash.bashrc 2>/dev/
 fi
 
 # ------------------------------------------------------------------------------
-# 步骤 9：最终验证
+# Step 9: Final verification
 # ------------------------------------------------------------------------------
-echo "==> [TaiXu] 装配自检:"
+echo "==> [TaiXu] Setup self-check:"
 
-[ -x "$JAVA_HOME_RESOLVED/bin/java" ] && echo "    [OK] Java 运行时" || { echo "    [MISS] Java 运行时"; exit 1; }
+[ -x "$JAVA_HOME_RESOLVED/bin/java" ] && echo "    [OK] Java runtime" || { echo "    [MISS] Java runtime"; exit 1; }
 # 工坊签名（创建/导入 keystore）依赖规范路径下的 keytool，缺失时签名功能不可用。
-[ -x /opt/taixu/toolchains/android/jdk/bin/keytool ] && echo "    [OK] keytool 签名工具链 (规范路径)" || { echo "    [MISS] keytool 签名工具链"; exit 1; }
+[ -x /opt/taixu/toolchains/android/jdk/bin/keytool ] && echo "    [OK] keytool signing toolchain (standard path)" || { echo "    [MISS] keytool signing toolchain"; exit 1; }
 [ -s "$SECURITY_CONF_DIR/java.security" ] && [ -f "$SECURITY_CONF_DIR/policy/unlimited/default_local.policy" ] && echo "    [OK] java.security + crypto policy" || { echo "    [MISS] java.security / crypto policy"; exit 1; }
 [ -s "$SECURITY_DIR/cacerts" ] && "$JAVA_HOME_RESOLVED/bin/keytool" -list -keystore "$SECURITY_DIR/cacerts" -storetype PKCS12 -storepass changeit >/dev/null 2>&1 && echo "    [OK] Java cacerts (PKCS12)" || { echo "    [MISS] Java cacerts"; exit 1; }
-[ -f "$SDK_HOME/platforms/android-34/android.jar" ] && echo "    [OK] Android Platform 34" || { echo "    [MISS] Android 平台包"; exit 1; }
+[ -f "$SDK_HOME/platforms/android-34/android.jar" ] && echo "    [OK] Android Platform 34" || { echo "    [MISS] Android platform package"; exit 1; }
 [ -s "$SDK_HOME/licenses/android-sdk-license" ] && echo "    [OK] Android SDK licenses" || { echo "    [MISS] Android SDK licenses"; exit 1; }
 [ -f "$BUILD_TOOLS_DIR/source.properties" ] && [ -f "$BUILD_TOOLS_DIR/lib/d8.jar" ] && echo "    [OK] Build-Tools $BUILD_TOOLS_VERSION (Java d8/r8 + ARM64 native tools)" || { echo "    [MISS] Build-Tools $BUILD_TOOLS_VERSION"; exit 1; }
-[ -f "$TAIXU_NDK_PATH/source.properties" ] && [ -x "$TAIXU_NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/clang" ] && echo "    [OK] lzhiyong ARM64 NDK $TAIXU_NDK_VERSION" || { echo "    [MISS] 固定 ARM64 NDK"; exit 1; }
+[ -f "$TAIXU_NDK_PATH/source.properties" ] && [ -x "$TAIXU_NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/clang" ] && echo "    [OK] lzhiyong ARM64 NDK $TAIXU_NDK_VERSION" || { echo "    [MISS] Pinned ARM64 NDK"; exit 1; }
 [ -x "$TAIXU_LLVM_STRIP_PATH" ] && "$TAIXU_LLVM_STRIP_PATH" --version >/dev/null 2>&1 && echo "    [OK] NDK ARM64 llvm-strip" || { echo "    [MISS] NDK ARM64 llvm-strip"; exit 1; }
 AAPT2_MACHINE=$(od -An -tu2 -j18 -N2 "$TAIXU_AAPT2_PATH" 2>/dev/null | tr -d '[:space:]')
-[ "$AAPT2_MACHINE" = "183" ] && [ -x "$TAIXU_AAPT2_PATH" ] && "$TAIXU_AAPT2_PATH" version >/dev/null 2>&1 && echo "    [OK] ARM64 AAPT2: $TAIXU_AAPT2_PATH" || { echo "    [MISS] ARM64 AAPT2 未就位、架构错误或无法启动"; exit 1; }
+[ "$AAPT2_MACHINE" = "183" ] && [ -x "$TAIXU_AAPT2_PATH" ] && "$TAIXU_AAPT2_PATH" version >/dev/null 2>&1 && echo "    [OK] ARM64 AAPT2: $TAIXU_AAPT2_PATH" || { echo "    [MISS] ARM64 AAPT2 is missing, has the wrong architecture, or cannot start"; exit 1; }
 [ -f /opt/gradle-$GRADLE_VER/lib/gradle-launcher-$GRADLE_VER.jar ] && echo "    [OK] Gradle $GRADLE_VER" || { echo "    [MISS] Gradle"; exit 1; }
-[ -f /root/.gradle/init.gradle ] && echo "    [OK] 阿里云镜像" || { echo "    [MISS] Gradle 镜像配置"; exit 1; }
-grep -Fqx "android.aapt2FromMavenOverride=$TAIXU_AAPT2_PATH" /root/.gradle/gradle.properties && echo "    [OK] Gradle 全局 AAPT2 覆盖" || { echo "    [MISS] Gradle 全局 AAPT2 覆盖"; exit 1; }
-grep -Fqx "android.builder.sdkDownload=false" /root/.gradle/gradle.properties && echo "    [OK] Gradle SDK 自动下载已禁用" || { echo "    [MISS] Gradle SDK 自动下载禁用策略"; exit 1; }
+[ -f /root/.gradle/init.gradle ] && echo "    [OK] Aliyun mirror" || { echo "    [MISS] Gradle mirror configuration"; exit 1; }
+grep -Fqx "android.aapt2FromMavenOverride=$TAIXU_AAPT2_PATH" /root/.gradle/gradle.properties && echo "    [OK] Global Gradle AAPT2 override" || { echo "    [MISS] Global Gradle AAPT2 override"; exit 1; }
+grep -Fqx "android.builder.sdkDownload=false" /root/.gradle/gradle.properties && echo "    [OK] Gradle SDK auto-download disabled" || { echo "    [MISS] Gradle SDK auto-download policy"; exit 1; }
 grep -Fqx "org.gradle.daemon=false" /root/.gradle/gradle.properties && \
 grep -Fqx "org.gradle.parallel=false" /root/.gradle/gradle.properties && \
 grep -Fqx "org.gradle.workers.max=2" /root/.gradle/gradle.properties && \
 grep -Fq "org.gradle.jvmargs=-Xmx1024m" /root/.gradle/gradle.properties && \
-    echo "    [OK] Gradle 移动端资源与 daemon 策略" || { echo "    [MISS] Gradle 移动端资源策略"; exit 1; }
-[ -f /root/.gradle/init.d/taixu-android-ndk.gradle ] && grep -Fq "$TAIXU_NDK_PATH" /root/.gradle/init.d/taixu-android-ndk.gradle && echo "    [OK] Gradle 固定 NDK 路径注入" || { echo "    [MISS] Gradle NDK 路径注入"; exit 1; }
-grep -Fq "export JAVA_HOME=\"$JAVA_HOME_RESOLVED\"" /etc/profile.d/taixu-android.sh && echo "    [OK] JAVA_HOME 持久化环境" || { echo "    [MISS] JAVA_HOME 持久化环境"; exit 1; }
+    echo "    [OK] Gradle mobile resource and daemon policy" || { echo "    [MISS] Gradle mobile resource policy"; exit 1; }
+[ -f /root/.gradle/init.d/taixu-android-ndk.gradle ] && grep -Fq "$TAIXU_NDK_PATH" /root/.gradle/init.d/taixu-android-ndk.gradle && echo "    [OK] Gradle pinned NDK path injection" || { echo "    [MISS] Gradle NDK path injection"; exit 1; }
+grep -Fq "export JAVA_HOME=\"$JAVA_HOME_RESOLVED\"" /etc/profile.d/taixu-android.sh && echo "    [OK] Persistent JAVA_HOME environment" || { echo "    [MISS] Persistent JAVA_HOME environment"; exit 1; }
 
 SSL_PROBE="/tmp/TaiXuSslProbe.java"
 cat > "$SSL_PROBE" << 'EOF'
@@ -587,4 +587,4 @@ else
 fi
 rm -f "$SSL_PROBE"
 
-echo "==> [TaiXu] ✅ Android 核心基础环境插件装配完成！"
+echo "==> [TaiXu] ✅ Android Core Environment plugin setup completed!"
