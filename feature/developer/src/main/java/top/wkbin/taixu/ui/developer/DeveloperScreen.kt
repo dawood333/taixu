@@ -735,7 +735,7 @@ private fun displayStep(step: String): String = when (step) {
     "detectArchitecture" -> "Detect device architecture"
     "checkStorage" -> "Check available storage"
     "createDirectories" -> "Create runtime directories"
-    "Prepare PRoot" -> "Prepare PRoot launch components"
+    "准备 PRoot" -> "Prepare PRoot launch components"
     "configureRootfs" -> "Configure Linux system"
     "configureDns" -> "Configure DNS"
     "configureEnvironment" -> "Configure environment variables"
