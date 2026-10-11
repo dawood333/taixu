@@ -11,7 +11,7 @@ This Skill guides the AI Agent in helping users iterate on the TaiXu app itself 
 
 ## 1. Core Security and Isolation Rules
 
-1. **Workspace isolation**：All changes to TaiXu source code must be made exclusively in the isolated workspace `~/custom_taixu` 中进行，Never modify the running host directory or system-level configuration directly.
+1. **Workspace isolation:** All changes to TaiXu source code must be made exclusively in the isolated workspace `~/custom_taixu`. Never modify the running host directory or system-level configuration directly.
 2. **Credential security**：
    - Guide the user to authenticate with `gh auth login`(device-code flow) or an SSH key；
    - Never print GitHub tokens, private keys, or any sensitive credentials in terminal output, session messages, or commit records.
@@ -29,9 +29,9 @@ This Skill guides the AI Agent in helping users iterate on the TaiXu app itself 
    - Confirm that the current workspace is `~/custom_taixu`;
    - Check the current Git branch and ensure the working tree is clean.
 2. **Architecture requirements**：
-   - **UI 层**：Use Jetpack Compose + Material3 and follow the `top.wkbin.taixu.ui` package naming convention;
-   - **状态管理**：Inject ViewModels with Koin and expose state using `StateFlow` + `collectAsStateWithLifecycle`;
-   - **Linux 沙盒**：Follow the standard contracts in the `runtime` module for PRoot system calls and interactions.
+   - **UI layer:**Use Jetpack Compose + Material3 and follow the `top.wkbin.taixu.ui` package naming convention;
+   - **State management:**Inject ViewModels with Koin and expose state using `StateFlow` + `collectAsStateWithLifecycle`;
+   - **Linux sandbox:**Follow the standard contracts in the `runtime` module for PRoot system calls and interactions.
 3. **Local smoke tests**：
    - Before committing, run `./gradlew testDebugUnitTest` for basic unit tests;
    - After verification passes, create a feature branch such as `feature/xxx` and commit the changes.
