@@ -243,7 +243,7 @@ fun ChatScreen(
             .getOrDefault(activeDistroId)
     }
 
-    // 性能：不再直接依赖 `messages` 整个 list 引用（流式输出时每个 token 块都会换新引用，
+    // Performance: avoid depending on the entire `messages` list reference (streaming output creates a new reference for every token chunk,
     // 导致这几处 O(n) 派生每帧重算）。改为依赖「由消息列表推导出的、真正影响结果的稳定键」。
     val toolResults = remember(
         // ToolResult 的数量 + 末条内容长度：只要没有新增/更新工具结果，就不需要重算映射。
@@ -350,7 +350,7 @@ fun ChatScreen(
         }
     }
 
-    // VM 层轻量通知（附件处理失败 / 模型档案已存在 / 新会话已创建等）以 Toast 上抛
+    // Surface lightweight ViewModel notices (attachment failures, existing model profiles, new sessions, etc.) as Toasts.
     LaunchedEffect(notice) {
         notice?.let {
             Toast.makeText(appContext, it, Toast.LENGTH_SHORT).show()
@@ -358,7 +358,7 @@ fun ChatScreen(
         }
     }
 
-    // rewind 完成：Snackbar 附「撤销回滚」动作（Toast 无法承载动作）
+    // After rewind completes, show a Snackbar with an Undo action (a Toast cannot carry actions).
     val rewindUndoLabel = stringResource(R.string.chat_rewind_undo)
     LaunchedEffect(Unit) {
         viewModel.rewindCompletedEvents.collect { message ->
@@ -381,8 +381,8 @@ fun ChatScreen(
 
     // 模型·权限·主线·轮次 工具条：单栏Browser分页模式下随对话页一起滑走（Browser页全屏），
     // 双栏/纯对话模式固定在顶部。提出为局部 lambda 避免三处重复传参。
-    // onOpenBrowser 非空时工具条末尾追加"Browser"入口（agent 有新动态时高亮）。
-    // onOpenRepository 非空即追加"仓库"入口（Git 分支管理）；未绑定项目时点击给提示而非隐藏。
+    // When onOpenBrowser is non-null, append a Browser entry to the toolbar (highlight it when the agent has new activity).
+    // When onOpenRepository is non-null, append a Repository entry for Git branch management; if no project is bound, show a hint when tapped instead of hiding it.
     val noProjectHint = stringResource(R.string.chat_repository_no_project)
     var toolchainGap by remember { mutableStateOf(false) }; var showToolchainPanel by remember { mutableStateOf(false) }
 
@@ -633,7 +633,7 @@ fun ChatScreen(
                                 )
                             }
                         } else {
-                            // Browser页：全屏，仅保留自己的极薄状态栏（末尾带"返回对话"）+ URL 栏；
+                            // Browser page: full-screen, retaining only its slim status bar (with a Back to conversation action) and URL bar;
                             // 底部用贴合版 insets（无呼吸空间），URL 栏直接贴在底部导航栏上方
                             Box(
                                 Modifier
@@ -852,9 +852,9 @@ fun ChatScreen(
             onNavigateToMessage = { messageId ->
                 showRuntimeTimeline = false
                 coroutineScope.launch {
-                    // 关键修复：旧实现用过滤后的 messages.indexOfFirst，缺少 LazyColumn 头部偏移补偿
+                    // Important fix: the old implementation used indexOfFirst on filtered messages without compensating for the LazyColumn header offset
                     // 与上界保护，sheet 打开后消息变化时可能传入越界索引（LazyListState 抛
-                    // IllegalArgumentException）。此处改用与 ChatMessageList 完全一致的投影（含折叠开关）。
+                    // (IllegalArgumentException). Use the same projection as ChatMessageList here, including the collapse toggle.
                     val renderItems = projectChatMessages(messages, toolResults, collapseEnabled = chatRoundCollapse)
                     val targetIndex = renderItems.indexOfFirst { item ->
                         item is ChatRenderItem.MessageItem && item.message.id == messageId
