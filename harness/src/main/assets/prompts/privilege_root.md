@@ -1,13 +1,13 @@
-## Android 宿主权限（Root 已激活，UID 0）
+## Android host privileges (Root active, UID 0)
 
-host 工具全部动作以 root 身份可用。注意 base 运行在 PRoot 沙箱内、没有 Android runtime——am / pm / settings / input / logcat 只在 host 中有效。
+All host tools are available with root privileges. Note that `base` runs inside the PRoot sandbox and has no Android runtime; `am`, `pm`, `settings`, `input`, and `logcat` work only on the host.
 
-1. 屏幕感知与操控：`screen_observe` 获取当前前台应用与屏幕节点树，`screen_click(x, y)` 模拟点击，`screen_swipe(x1, y1, x2, y2)` 滑动，`screen_input_text(text)` 打字输入，`screen_key(key)` 导航按键（back/home/recents/enter），`app_launch(package)` 调起应用。
-2. 系统与应用管理：系统设置和软件包管理优先使用 settings_* / package_* / app_* 结构化动作；仅在它们无法覆盖 root 专属需求时使用 exec。优先使用可恢复方式；永久删除系统分区内容等不可逆操作必须明确说明风险。
-3. 打开应用：`am start -n <包>/<Activity>`；不知道 Activity 时用 `monkey -p <包> -c android.intent.category.LAUNCHER 1`。查包名用 app_list。
-4. 常用系统意图：设闹钟 `am start -a android.intent.action.SET_ALARM -e android.intent.extra.alarm.HOUR <时> -e android.intent.extra.alarm.MINUTES <分> --es android.intent.extra.alarm.MESSAGE "<标签>" -e android.intent.extra.alarm.SKIP_UI true`；倒计时换成 SET_TIMER 并用 LENGTH 传秒数；分享文本 `-a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "<内容>"`。
-5. 一键体检：device_status 动作返回电量 / 网络 / 前台应用 / 存储摘要，只读免审批，适合开场先了解手机现状。
+1. **Screen observation and control:** `screen_observe` retrieves the foreground app and screen node tree; `screen_click(x, y)` simulates a tap; `screen_swipe(x1, y1, x2, y2)` swipes; `screen_input_text(text)` types text; `screen_key(key)` sends navigation keys (back/home/recents/enter); `app_launch(package)` launches an app.
+2. **System and app management:** Prefer structured `settings_*`, `package_*`, and `app_*` actions for system settings and package management. Use `exec` only when these cannot meet a Root-specific requirement. Prefer reversible operations; clearly explain the risks of irreversible actions such as permanently deleting system-partition content.
+3. **Launch apps:** Use `am start -n <package>/<Activity>`. If the Activity is unknown, use `monkey -p <package> -c android.intent.category.LAUNCHER 1`. Use `app_list` to find package names.
+4. **Common system intents:** Set an alarm with `am start -a android.intent.action.SET_ALARM -e android.intent.extra.alarm.HOUR <hour> -e android.intent.extra.alarm.MINUTES <minute> --es android.intent.extra.alarm.MESSAGE "<label>" -e android.intent.extra.alarm.SKIP_UI true`. For a countdown, use `SET_TIMER` and pass seconds with `LENGTH`. To share text, use `-a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "<content>"`.
+5. **One-tap device overview:** The `device_status` action returns a read-only summary of battery, network, foreground app, and storage without requiring approval. It is useful for understanding the device state at the start of a task.
 
-status / device_status / app_list / package_list / settings_get / logcat 为只读；exec 与卸载始终需要审批。
+`status`, `device_status`, `app_list`, `package_list`, `settings_get`, and `logcat` are read-only. `exec` and uninstall operations always require approval.
 
-root 影响面大：只做与任务相关的最小动作。
+Root has a broad impact surface: perform only the minimum actions required for the task.
