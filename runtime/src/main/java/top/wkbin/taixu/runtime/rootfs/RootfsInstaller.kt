@@ -420,17 +420,17 @@ class RootfsInstaller(
             SafeFileTree.delete(broken)
             if (!rootfs.renameTo(broken)) {
                 throw IllegalStateException(
-                    "启动恢复中断的更新失败：无法移开当前 RootFS（旧版本保留在 ${backup.path}）",
+                    "Failed to resume interrupted update: unable to move the current RootFS (the previous version is preserved at ${backup.path})",
                 )
             }
             runCatching { SafeFileTree.delete(broken) }
         }
-        check(backup.renameTo(rootfs)) { "无法恢复上一次未提交的 RootFS 更新（旧版本保留在 ${backup.path}）" }
+        check(backup.renameTo(rootfs)) { "Unable to restore the previous uncommitted RootFS update (the previous version is preserved at ${backup.path})" }
         pathManager.rootfsUpdatePendingMarker(distroId).delete()
         logger.w("Recovered previous RootFS after an interrupted update for $distroId")
     }
 
     private fun failure(prefix: String, throwable: Throwable): AppResult<File> = AppResult.Failure(
-        AppError(ErrorCode.INSTALLATION_FAILED, "$prefix：${throwable.message ?: "未知错误"}", throwable),
+        AppError(ErrorCode.INSTALLATION_FAILED, "$prefix：${throwable.message ?: "Unknown error"}", throwable),
     )
 }
