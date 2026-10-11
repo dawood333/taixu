@@ -244,22 +244,22 @@ fun ChatScreen(
     }
 
     // Performance: avoid depending on the entire `messages` list reference (streaming output creates a new reference for every token chunk,
-    // 导致这几处 O(n) 派生每帧重算）。改为依赖「由消息列表推导出的、真正影响结果的稳定键」。
+    // causing these O(n) derived values to be recalculated every frame). Depend instead on stable keys derived from the messages that actually affect the result.
     val toolResults = remember(
-        // ToolResult 的数量 + 末条内容长度：只要没有新增/更新工具结果，就不需要重算映射。
+        // ToolResult count plus the last result's content length: skip remapping unless a tool result is added or updated.
         messages.count { it is ToolResult },
         messages.lastOrNull { it is ToolResult }?.let { (it as ToolResult).output.length },
     ) {
         messages.filterIsInstance<ToolResult>().associateBy { it.toolCallId }
     }
     val lastAssistantMessageId = remember(
-        // 只有「新增了一条 AssistantText」才会改变结果，故依赖其数量与末条 id。
+        // Only adding an AssistantText changes the result, so depend on its count and last ID.
         messages.count { it is AssistantText },
         messages.lastOrNull { it is AssistantText }?.id,
     ) {
         messages.filterIsInstance<AssistantText>().lastOrNull()?.id
     }
-    // 两者语义不同（实时思考高亮 vs 重新生成定位），但取值一致，复用同一计算结果
+    // These serve different purposes (live reasoning highlight vs. regeneration positioning) but share the same value, so reuse one calculation.
     val liveThinkingMessageId = lastAssistantMessageId
     val currentBranch = remember(branches) { branches.firstOrNull { it.isCurrent } }
 
