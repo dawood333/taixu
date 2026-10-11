@@ -52,7 +52,7 @@ def run(repo, command):
     proc = subprocess.run(["git", "-C", repo] + command, capture_output=True, text=True, timeout=30)
     output = (proc.stdout or "") + (proc.stderr or "")
     if proc.returncode != 0:
-        raise RuntimeError(output.strip() or "git 命令失败")
+        raise RuntimeError(output.strip() or "Git command failed")
     return output.strip()
 
 
@@ -62,9 +62,9 @@ def main():
     args = parser.parse_args()
     repository = resolve_repository(args.repository)
     tools = [
-        {"name": "git_status", "description": "获取工作区状态", "inputSchema": {"type": "object", "properties": {}}},
-        {"name": "git_log", "description": "获取提交历史", "inputSchema": {"type": "object", "properties": {"limit": {"type": "integer"}}}},
-        {"name": "git_diff", "description": "获取工作区差异", "inputSchema": {"type": "object", "properties": {"target": {"type": "string"}}}},
+        {"name": "git_status", "description": "Get workspace status", "inputSchema": {"type": "object", "properties": {}}},
+        {"name": "git_log", "description": "Get commit history", "inputSchema": {"type": "object", "properties": {"limit": {"type": "integer"}}}},
+        {"name": "git_diff", "description": "Get workspace diff", "inputSchema": {"type": "object", "properties": {"target": {"type": "string"}}}},
     ]
     for line in sys.stdin:
         try:
@@ -83,7 +83,7 @@ def main():
                     if name == "git_status": text = run(repository, ["status", "--short", "--branch"])
                     elif name == "git_log": text = run(repository, ["log", "--oneline", "-n", str(max(1, min(int(tool_args.get("limit", 20)), 200)))])
                     elif name == "git_diff": text = run(repository, ["diff", str(tool_args.get("target", ""))] if tool_args.get("target") else ["diff"])
-                    else: raise ValueError("未知工具: " + str(name))
+                    else: raise ValueError("Unknown tool: " + str(name))
                     result = {"content": [{"type": "text", "text": text}], "isError": False}
                 except Exception as exc:
                     result = {"content": [{"type": "text", "text": str(exc)}], "isError": True}
