@@ -105,7 +105,7 @@ import top.wkbin.taixu.harness.checkpoint.RewindScope
 import top.wkbin.taixu.harness.session.ConversationBranch
 import top.wkbin.taixu.runtime.DistributionCatalog
 
-// 悬浮玻璃底栏实际占高 = 上下 8dp padding + 64dp 条体 = 80dp，留 2dp 微缝防贴死
+// The floating glass bottom bar occupies 80dp: 8dp top/bottom padding plus a 64dp bar. Leave a 2dp gap to prevent overlap.
 private val AgentBottomBarHeight = 82.dp
 
 // Browser URL 栏贴合版：与底栏总占位一致（8 + 64 + 8 = 80dp），零缝隙直接贴在底栏上方
