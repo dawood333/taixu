@@ -61,7 +61,7 @@ internal fun SessionMemorySheet(
 ) {
     val haptic = LocalHapticFeedback.current
 
-    // 破坏性操作待确认目标：非 null 时弹出二次确认
+    // Target of a destructive action; show a confirmation dialog when non-null.
     var confirmTarget by rememberSaveable { mutableStateOf<String?>(null) } // "clear" / "memory:<id>"
 
     ModalBottomSheet(
@@ -84,7 +84,7 @@ internal fun SessionMemorySheet(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                // —— 长期记忆 ——
+                // — Long-term memory —
                 item(key = "header_memories") {
                     SectionHeader(
                         icon = RuntimeIconName.Brain,
@@ -111,7 +111,7 @@ internal fun SessionMemorySheet(
                     }
                 }
 
-                // —— 任务草稿 ——
+                // — Task scratchpad —
                 item(key = "header_scratchpads") {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -164,7 +164,7 @@ internal fun SessionMemorySheet(
         }
     }
 
-    // 破坏性操作二次确认（清空草稿 / 删除单条记忆），样式对齐 DistroManagementScreen 的确认弹窗
+    // Confirmation for destructive actions (clearing the scratchpad or deleting a memory), styled to match DistroManagementScreen.
     confirmTarget?.let { target ->
         val isClear = target == "clear"
         RuntimeAlertDialog(
