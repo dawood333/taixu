@@ -308,7 +308,7 @@ class DistroConfigurator(
         val findCommand = "find /usr /bin /sbin -xdev -type f -perm /6000 -exec chmod ug-s {} +"
         val cleanupTmp = "rm -f /bin/*.dpkg-tmp /usr/bin/*.dpkg-tmp /usr/sbin/*.dpkg-tmp /sbin/*.dpkg-tmp 2>/dev/null || true"
         File(hookDir, "99taixu-strip-setuid").writeText(
-            "// PRoot 沙箱：setuid 不生效，保留会导致 dpkg 升级卡死（见 taixu-runtime 文档）。\n" +
+            "// PRoot sandbox: setuid has no effect; leaving these files can hang dpkg upgrades (see the taixu-runtime documentation).\n" +
                 "DPkg::Pre-Invoke { \"$cleanupTmp\"; };\n" +
                 "DPkg::Post-Invoke { \"$findCommand\"; };\n",
         )
