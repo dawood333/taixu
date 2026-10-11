@@ -6,8 +6,8 @@ export interface DiffRow {
 const MAX_DIFF_LINES = 400;
 
 /**
- * 行级 LCS diff。文件编辑块通常几十行，O(n·m) 足够；
- * 任一侧超过 400 行时退化为全删全加并标注省略，避免长文件卡顿。
+ * Line-based LCS diff. File-edit blocks usually contain only dozens of lines, so O(n·m) is sufficient;
+ * if either side exceeds 400 lines, fall back to showing all lines as removed/added with an omission marker to avoid freezing on large files.
  */
 export function diffLines(before: string, after: string): DiffRow[] {
   const left = before.split("\n");
@@ -21,7 +21,7 @@ export function diffLines(before: string, after: string): DiffRow[] {
   }
 
   const width = right.length;
-  // lcs[i][j] = left[i..] 与 right[j..] 的最长公共子序列长度（滚动压平为一维）。
+  // lcs[i][j] = length of the longest common subsequence of left[i..] and right[j..] (flattened to one rolling dimension).
   const lcs = new Uint32Array((left.length + 1) * (width + 1));
   for (let i = left.length - 1; i >= 0; i -= 1) {
     for (let j = width - 1; j >= 0; j -= 1) {
