@@ -236,7 +236,7 @@ fun DeveloperScreen(
                     onValueChange = { value -> pairingCode = value.filter(Char::isDigit).take(6) },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("One-time 6-digit pairing code") },
-                    supportingText = { Text("先在System“无线调试”中打开“使用配对码配对设备”；端口无需手填") },
+                    supportingText = { Text("First, open “Wireless debugging” in system Settings and select “Pair device with pairing code”; the port is discovered automatically.") },
                     singleLine = true,
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -399,7 +399,7 @@ fun DeveloperScreen(
                 ResourceHeader(RuntimeIconName.Cpu, "Background processes", "${processes.size} active processes", viewModel::refreshProcesses)
                 Spacer(Modifier.height(14.dp))
                 if (processes.isEmpty()) {
-                    Text("当前没有登记中的Background processes。", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("No background processes are currently registered.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 } else {
                     processes.forEachIndexed { index, process ->
                         if (index > 0) HorizontalDivider(Modifier.padding(vertical = 10.dp), color = MaterialTheme.colorScheme.outlineVariant)
@@ -427,7 +427,7 @@ fun DeveloperScreen(
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(runtime.name.name, style = MaterialTheme.typography.titleMedium)
-                                Text(runtime.version ?: "版本Unknown", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(runtime.version ?: "Unknown version", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             TextButton(onClick = { cleanupTarget = runtime }, enabled = !busy) { Text("Clean up") }
                         }
@@ -476,7 +476,7 @@ fun DeveloperScreen(
                                 val logs = viewModel.readAgentLogs()
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 clipboard.setPrimaryClip(ClipData.newPlainText("TaiXu Agent Logs", logs))
-                                Toast.makeText(context, "Logs copied到剪贴板", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Logs copied to clipboard", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.weight(1f),
                         ) {
@@ -537,7 +537,7 @@ fun DeveloperScreen(
             onDismissRequest = { cleanupTarget = null },
             title = { Text("Clean up ${runtime.name.name}？") },
             text = { Text("This removes a shared runtime that is not referenced by any tools. This action cannot be automatically reversed.") },
-            confirmButton = { TextButton(onClick = { cleanupTarget = null; viewModel.cleanupRuntime(runtime.id) }) { Text("确认Clean up", color = MaterialTheme.colorScheme.error) } },
+            confirmButton = { TextButton(onClick = { cleanupTarget = null; viewModel.cleanupRuntime(runtime.id) }) { Text("Confirm cleanup", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { cleanupTarget = null }) { Text("Cancel") } },
         )
     }
@@ -554,7 +554,7 @@ fun DeveloperScreen(
             title = { Text("Reset the current sandbox?") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("• 将清除自行安装的软件包与System修改", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("• Manually installed packages and system modifications will be removed", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("• Project code under /workspace will not be deleted", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                 }
             },
@@ -576,7 +576,7 @@ fun DeveloperScreen(
         RuntimeAlertDialog(
             onDismissRequest = { showRootfsUpdateConfirmation = false },
             title = { Text("Update Linux RootFS?") },
-            text = { Text("将在线下载并校验新版本，保留 /root 与 /opt/taixu。更新期间后台 Linux 进程会Stop，失败时自动恢复旧版本。") },
+            text = { Text("A new version will be downloaded and verified online; /root and /opt/taixu will be preserved. Background Linux processes will stop during the update, and the previous version will be restored automatically if it fails.") },
             confirmButton = { TextButton(onClick = { showRootfsUpdateConfirmation = false; viewModel.updateRootfs() }) { Text("Confirm update") } },
             dismissButton = { TextButton(onClick = { showRootfsUpdateConfirmation = false }) { Text("Cancel") } },
         )
@@ -595,7 +595,7 @@ fun DeveloperScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showAgentLogDialog = false }) { Text("关闭") }
+                TextButton(onClick = { showAgentLogDialog = false }) { Text("Close") }
             },
             dismissButton = {
                 TextButton(onClick = {
@@ -634,7 +634,7 @@ private fun RuntimeControlCard(
                 Text("RootFS ${rootfsVersion ?: "Not installed"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 rootfsUpdate?.let { info ->
                     Text(
-                        if (info.hasUpdate) "Update available" else "已Yes最新",
+                        if (info.hasUpdate) "Update available" else "Up to date",
                         style = MaterialTheme.typography.labelSmall,
                         color = if (info.hasUpdate) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -653,7 +653,7 @@ private fun RuntimeControlCard(
             }
             initializing.detail?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             Spacer(Modifier.height(10.dp))
-            OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text("Cancel下载") }
+            OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) { Text("Cancel download") }
         } else {
             Spacer(Modifier.height(16.dp))
             Button(onClick = onInitialize, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
@@ -698,7 +698,7 @@ private fun RuntimeControlCard(
             androidx.compose.runtime.LaunchedEffect(it.throwable) {
                 Log.w("DeveloperScreen", "Runtime error: ${it.throwable.message}")
             }
-            NoticeBanner("Runtime 初始化失败，请检查网络与存储空间后点击「Retry initialization」", isError = true)
+            NoticeBanner("Runtime initialization failed. Check network access and storage space, then tap “Retry initialization”", isError = true)
         }
     }
 }
@@ -732,14 +732,14 @@ private fun describeState(state: RuntimeState): String = when (state) {
 }
 
 private fun displayStep(step: String): String = when (step) {
-    "detectArchitecture" -> "检测设备Architecture"
+    "detectArchitecture" -> "Detect device architecture"
     "checkStorage" -> "Check available storage"
     "createDirectories" -> "Create runtime directories"
-    "Prepare PRoot" -> "Prepare PRoot 启动组件"
-    "configureRootfs" -> "配置 Linux System"
+    "Prepare PRoot" -> "Prepare PRoot launch components"
+    "configureRootfs" -> "Configure Linux system"
     "configureDns" -> "Configure DNS"
     "configureEnvironment" -> "Configure environment variables"
     "createWorkspace" -> "Create workspace"
-    "runHealthCheck" -> "运行Health check"
+    "runHealthCheck" -> "Run health check"
     else -> step
 }
