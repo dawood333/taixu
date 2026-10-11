@@ -523,7 +523,7 @@ class EmbeddedAdbManager(
                 ?: Endpoint("manual", LOOPBACK, explicitPort)
         }
         return pairingEndpointMap.values.firstOrNull()
-            ?: error("未发现配对端口：请在系统\"无线调试\"中打开\"使用配对码配对设备\"")
+            ?: error("No pairing port found. In system “Wireless debugging”, select “Pair device with pairing code”.")
     }
 
     private suspend fun awaitConnectEndpoint(preferredHost: String): Endpoint? =
