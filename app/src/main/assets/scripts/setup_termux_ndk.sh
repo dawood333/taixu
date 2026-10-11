@@ -33,12 +33,12 @@ mkdir -p /opt/taixu/locks "$TOOLCHAIN_ROOT/ndk/artifacts" "$SDK_HOME/ndk" /tmp
 
 if [ "${TAIXU_TOOLCHAIN_LOCK_HELD:-0}" != "1" ]; then
     command -v flock >/dev/null 2>&1 || {
-        echo "!! [TaiXu] 缺少 flock，无法安全装配 Android 工具链"
+        echo "!! [TaiXu] flock is missing; cannot safely install the Android toolchain"
         exit 1
     }
     exec 9>"$LOCK_FILE"
     flock -x -w 1800 9 || {
-        echo "!! [TaiXu] Android 工具链正被构建任务使用，等待超时"
+        echo "!! [TaiXu] Android toolchain is in use by a build task; lock wait timed out"
         exit 1
     }
 fi
@@ -66,11 +66,11 @@ validate_ndk() {
 
 if ! validate_ndk "$NDK_PATH"; then
     if [ -e "$NDK_ARTIFACT_DIR" ]; then
-        echo "!! [TaiXu] ARM64 NDK 不可变制品发生完整性漂移，拒绝原位替换: $NDK_ARTIFACT_DIR"
-        echo "!! [TaiXu] 请先通过诊断/清理流程隔离损坏制品后再装配"
+        echo "!! [TaiXu] Immutable ARM64 NDK artifact integrity drift detected; refusing in-place replacement: $NDK_ARTIFACT_DIR"
+        echo "!! [TaiXu] Quarantine the corrupted artifact through the diagnostic/cleanup workflow before reinstalling"
         exit 1
     fi
-    echo "==> [TaiXu] 正在部署 lzhiyong/termux-ndk $NDK_RELEASE ($NDK_VERSION, Linux AArch64)..."
+    echo "==> [TaiXu] Installing lzhiyong/termux-ndk $NDK_RELEASE ($NDK_VERSION, Linux AArch64)..."
     archive="/tmp/$NDK_ARCHIVE_NAME"
     staging="/tmp/taixu-termux-ndk-staging.$$"
     pending="$TOOLCHAIN_ROOT/ndk/artifacts/.pending-$NDK_SHA256-$$"
@@ -79,19 +79,19 @@ if ! validate_ndk "$NDK_PATH"; then
 
     downloaded=0
     for url in $NDK_URLS; do
-        echo "==> [TaiXu] 尝试下载 ARM64 NDK: $url"
+        echo "==> [TaiXu] Attempting to download ARM64 NDK: $url"
         if curl -fL --retry 4 --retry-all-errors --connect-timeout 20 --max-time 1800 \
             "$url" -o "$archive" 2>/dev/null && [ -s "$archive" ]; then
             if echo "$NDK_SHA256  $archive" | sha256sum -c - >/dev/null 2>&1; then
                 downloaded=1
                 break
             fi
-            echo "!! [TaiXu] ARM64 NDK SHA-256 校验失败，切换镜像"
+            echo "!! [TaiXu] ARM64 NDK SHA-256 verification failed; switching mirror"
             rm -f "$archive"
         fi
     done
     [ "$downloaded" -eq 1 ] || {
-        echo "!! [TaiXu] lzhiyong/termux-ndk 下载失败"
+        echo "!! [TaiXu] Failed to download lzhiyong/termux-ndk"
         exit 1
     }
 
@@ -104,7 +104,7 @@ if ! validate_ndk "$NDK_PATH"; then
     '; then
         :
     else
-        echo "!! [TaiXu] ARM64 NDK 归档包含不安全路径"
+        echo "!! [TaiXu] ARM64 NDK archive contains unsafe paths"
         rm -f "$archive"
         exit 1
     fi
@@ -114,14 +114,14 @@ if ! validate_ndk "$NDK_PATH"; then
     rm -f "$archive"
     source_properties=$(find "$staging" -mindepth 2 -maxdepth 4 -type f -name source.properties -print -quit 2>/dev/null || true)
     [ -n "$source_properties" ] || {
-        echo "!! [TaiXu] ARM64 NDK 归档缺少 source.properties"
+        echo "!! [TaiXu] ARM64 NDK archive is missing source.properties"
         rm -rf "$staging"
         exit 1
     }
     extracted_ndk=$(dirname "$source_properties")
     chmod 755 "$extracted_ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/"* 2>/dev/null || true
     validate_ndk "$extracted_ndk" || {
-        echo "!! [TaiXu] ARM64 NDK ELF、版本或运行验证失败"
+        echo "!! [TaiXu] ARM64 NDK ELF, version, or execution verification failed"
         rm -rf "$staging"
         exit 1
     }
@@ -129,7 +129,7 @@ if ! validate_ndk "$NDK_PATH"; then
     mkdir -p "$pending"
     mv "$extracted_ndk" "$pending/ndk"
     validate_ndk "$pending/ndk" || {
-        echo "!! [TaiXu] ARM64 NDK staging 验证失败"
+        echo "!! [TaiXu] ARM64 NDK staging verification failed"
         rm -rf "$staging" "$pending"
         exit 1
     }
@@ -139,7 +139,7 @@ if ! validate_ndk "$NDK_PATH"; then
 fi
 
 validate_ndk "$NDK_PATH" || {
-    echo "!! [TaiXu] 固定 ARM64 NDK 不可用: $NDK_PATH"
+    echo "!! [TaiXu] Pinned ARM64 NDK is unavailable: $NDK_PATH"
     exit 1
 }
 
@@ -148,7 +148,7 @@ validate_ndk "$NDK_PATH" || {
 if [ -e "$NDK_SDK_VIEW" ] && [ ! -L "$NDK_SDK_VIEW" ]; then
     displaced="$SDK_HOME/ndk/.replaced-non-taixu-$NDK_VERSION-$(date +%s)"
     mv "$NDK_SDK_VIEW" "$displaced"
-    echo "==> [TaiXu] 已隔离同版本的非太墟 NDK: $displaced"
+    echo "==> [TaiXu] Quarantined a same-version NDK not managed by TaiXu: $displaced"
 fi
 sdk_link_tmp="$SDK_HOME/ndk/.taixu-$NDK_VERSION-$$"
 rm -f "$sdk_link_tmp"
@@ -210,4 +210,4 @@ gradle.projectsEvaluated {
 EOF
 mv -f "$init_tmp" /root/.gradle/init.d/taixu-android-ndk.gradle
 
-echo "==> [TaiXu] ✅ 固定 ARM64 NDK: $NDK_PATH"
+echo "==> [TaiXu] ✅ Pinned ARM64 NDK: $NDK_PATH"
