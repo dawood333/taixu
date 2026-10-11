@@ -263,8 +263,8 @@ fun ChatScreen(
     val liveThinkingMessageId = lastAssistantMessageId
     val currentBranch = remember(branches) { branches.firstOrNull { it.isCurrent } }
 
-    // Agent 联动：上次访问「仓库」页之后 agent 又写过文件（write/edit/base/process），
-    // 则工作条「仓库」入口高亮，提示有新改动可提交；进入仓库页即熄灭。
+    // Agent integration: if the agent writes files (write/edit/base/process) after the Repository page was last visited,
+    // highlight the Repository entry in the toolbar to indicate new changes to commit; clear the highlight when the page is opened.
     var lastRepositoryVisitAt by rememberSaveable { mutableStateOf(0L) }
     val repositoryHighlight = remember(messages, lastRepositoryVisitAt) {
         messages.filterIsInstance<ToolCall>().any { call ->
@@ -279,7 +279,7 @@ fun ChatScreen(
     // entry so returning to 智枢 does not perform a second, redundant scrollToItem during the
     // tab transition.
     var initialPositionedSessionKey by rememberSaveable { mutableStateOf<String?>(null) }
-    // 会话键只需首条消息 id，依赖单值而非整个 list。
+    // The session key needs only the first message ID, not the entire list.
     val currentSessionKey = remember(messages.firstOrNull()?.id) { messages.firstOrNull()?.id ?: "" }
 
     val lastMessageSignature = remember(messages) {
@@ -293,8 +293,8 @@ fun ChatScreen(
         }
     }
 
-    // 🌟 1. 消息发送与流式输出跟随滚动
-    // 仅当用户本来就停在底部附近时才跟随输出滚动；上滑阅读历史时不打扰，
+    // 🌟 1. Follow scrolling when sending messages and streaming output.
+    // Follow streaming output only when the user is already near the bottom; do not interrupt when they scroll up to read history.
     // 重新滑回底部（或新发消息）后恢复自动跟随。
     LaunchedEffect(messages.size, lastMessageSignature) {
         if (messages.isNotEmpty()) {
