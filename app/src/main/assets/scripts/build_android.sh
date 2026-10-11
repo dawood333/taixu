@@ -3,8 +3,8 @@
 # TaiXu (LinuxAIRuntime) - Android Project One-Key Build Engine
 # Usage: build_android.sh <project_path> [task]
 # ------------------------------------------------------------------------------
-# 纯执行器：所有环境部署均由【Android & 移动全栈开发套件】插件装配完成。
-# 本脚本只负责：加载环境 → 调度 Gradle 构建。不做任何修复/下载/自愈。
+# Execution-only script: all environment setup is performed by the Android & Mobile Full-Stack Development Suite plugin.
+# This script only loads the environment and invokes Gradle. It does not repair, download, or self-heal anything.
 # ==============================================================================
 set -e
 
@@ -12,9 +12,9 @@ PROJECT_PATH="${1:-.}"
 TASK="${2:-assembleDebug}"
 GRADLE_VER="8.14.2"
 
-echo "==> [TaiXu Build Engine] 启动 Android 项目编译..."
-echo "==> [TaiXu Build] 项目路径: $PROJECT_PATH"
-echo "==> [TaiXu Build] 构建任务: $TASK"
+echo "==> [TaiXu Build Engine] Starting Android project build..."
+echo "==> [TaiXu Build] Project path: $PROJECT_PATH"
+echo "==> [TaiXu Build] Build task: $TASK"
 
 # Builds take a shared lock for their entire lifetime. Android toolchain setup
 # takes the exclusive side of the same lock, so immutable views cannot change
@@ -22,16 +22,16 @@ echo "==> [TaiXu Build] 构建任务: $TASK"
 TOOLCHAIN_LOCK_FILE="/opt/taixu/locks/android-toolchain.lock"
 mkdir -p /opt/taixu/locks
 command -v flock >/dev/null 2>&1 || {
-    echo "==> [TaiXu Build] ❌ 缺少 flock，拒绝在无工具链锁的情况下构建"
+    echo "==> [TaiXu Build] ❌ flock is missing; refusing to build without a toolchain lock"
     exit 1
 }
 exec 9>"$TOOLCHAIN_LOCK_FILE"
 flock -s -w 1800 9 || {
-    echo "==> [TaiXu Build] ❌ Android 工具链正在装配，等待超时"
+    echo "==> [TaiXu Build] ❌ Android toolchain setup timed out while waiting for the lock"
     exit 1
 }
 
-# 1. 加载插件装配期固化的环境变量
+# 1. Load environment variables persisted during plugin setup
 workshop_java_home="${JAVA_HOME:-}"
 workshop_android_home="${ANDROID_HOME:-}"
 workshop_gradle_home="${GRADLE_HOME:-}"
@@ -53,7 +53,7 @@ if [ -f /etc/profile.d/taixu-android.sh ]; then . /etc/profile.d/taixu-android.s
 [ -z "$workshop_ninja_home" ] || TAIXU_NINJA_HOME="$workshop_ninja_home"
 [ -z "$workshop_gradle_user_home" ] || GRADLE_USER_HOME="$workshop_gradle_user_home"
 [ -z "$workshop_tool_dir" ] || TAIXU_TOOL_DIR="$workshop_tool_dir"
-# /etc/environment 由插件装配期写入，PRoot 非登录 shell 场景下兜底
+# /etc/environment is written during plugin setup as a fallback for non-login shells in PRoot
 if [ -f /etc/environment ]; then
     while IFS= read -r line; do
         case "$line" in
@@ -83,8 +83,8 @@ fi
 AAPT2_OVERRIDE="${TAIXU_AAPT2_PATH:-$ANDROID_HOME/build-tools/35.0.0/aapt2}"
 NDK_PATH="${TAIXU_NDK_PATH:-${ANDROID_NDK_HOME:-/opt/taixu/toolchains/android/ndk}}"
 
-# 非登录 shell 可能没有继承插件写入的 profile；变量为空时从标准 JDK
-# 目录和 PATH 重新解析，避免环境变量漂移阻断构建。
+# A non-login shell may not inherit the profile written by the plugin; if variables are empty, resolve them from the standard JDK
+# directories and PATH to avoid build failures caused by environment-variable drift.
 if [ -z "${JAVA_HOME:-}" ] || [ ! -x "$JAVA_HOME/bin/java" ]; then
     JAVA_HOME=""
     for candidate in /usr/lib/jvm/java-17-openjdk-arm64 /usr/lib/jvm/java-17-openjdk-aarch64 /usr/lib/jvm/default-java; do
@@ -106,7 +106,7 @@ if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
     export PATH="$JAVA_HOME/bin:$PATH"
 fi
 
-# 固定本次构建使用的 Java，避免 PATH 中的旧软链接指向另一套 JDK。
+# Pin the Java executable for this build to avoid an old PATH symlink pointing to a different JDK.
 JAVA_EXEC=""
 if [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
     JAVA_EXEC="$JAVA_HOME/bin/java"
@@ -118,26 +118,26 @@ else
     fi
 fi
 if [ -z "$JAVA_EXEC" ] || [ ! -x "$JAVA_EXEC" ]; then
-    echo "==> [TaiXu Build] ❌ 未找到可执行 Java (JAVA_HOME=$JAVA_HOME)"
+    echo "==> [TaiXu Build] ❌ No executable Java found (JAVA_HOME=$JAVA_HOME)"
     exit 127
 fi
-# Java 启动器必须解析到真正的 ELF。包装脚本一旦与其 exec 目标形成回环
-# （脚本 → 软链接 → 脚本），每次 exec 都要过 PRoot 的 ptrace 翻译，
-# 表现为 JVM 零输出、CPU 持续满载的"卡死"。在启动 JVM 之前拒绝，
-# 绝不让它烧满 30 分钟超时。
+# The Java launcher must resolve to a real ELF. If a wrapper script and its exec target form a loop
+# (script → symlink → script), each exec goes through PRoot ptrace translation,
+# causing a JVM hang with no output and sustained full CPU usage. Reject this before starting the JVM,
+# rather than letting it run until the 30-minute timeout.
 JAVA_REAL=$(readlink -f "$JAVA_EXEC" 2>/dev/null || echo "$JAVA_EXEC")
 JAVA_MAGIC=$(od -An -t x1 -N 4 "$JAVA_REAL" 2>/dev/null | tr -d '[:space:]')
 if [ "$JAVA_MAGIC" != "7f454c46" ]; then
-    echo "==> [TaiXu Build] ❌ Java 启动器不是 ELF 二进制（疑似包装脚本/回环软链）: $JAVA_REAL"
-    echo "==> [TaiXu Build] 请在插件中心重新装配【Android 全栈开发套件】以修复 JDK"
+    echo "==> [TaiXu Build] ❌ Java launcher is not an ELF binary (possible wrapper script or symlink loop): $JAVA_REAL"
+    echo "==> [TaiXu Build] Reinstall the Android Full-Stack Development Suite from Plugin Center to repair the JDK"
     exit 126
 fi
 JAVA_LAUNCHER_MACHINE=$(od -An -t x1 -j 18 -N 2 "$JAVA_REAL" 2>/dev/null | tr -d '[:space:]')
 if [ "$JAVA_LAUNCHER_MACHINE" != "b700" ]; then
-    echo "==> [TaiXu Build] ❌ Java 启动器不是 AArch64 ELF (machine=$JAVA_LAUNCHER_MACHINE): $JAVA_REAL"
+    echo "==> [TaiXu Build] ❌ Java launcher is not an AArch64 ELF (machine=$JAVA_LAUNCHER_MACHINE): $JAVA_REAL"
     exit 126
 fi
-echo "==> [TaiXu Build] Java 执行文件: $JAVA_EXEC"
+echo "==> [TaiXu Build] Java executable: $JAVA_EXEC"
 
 echo "==> [TaiXu Build] JAVA_HOME: $JAVA_HOME"
 echo "==> [TaiXu Build] ANDROID_HOME: $ANDROID_HOME"
@@ -147,22 +147,22 @@ echo "==> [TaiXu Build] ANDROID_HOME: $ANDROID_HOME"
 REQUIRED_BUILD_TOOLS="35.0.0"
 if [ ! -f "$ANDROID_HOME/build-tools/$REQUIRED_BUILD_TOOLS/source.properties" ] || \
    [ ! -f "$ANDROID_HOME/build-tools/$REQUIRED_BUILD_TOOLS/lib/d8.jar" ]; then
-    echo "==> [TaiXu Build] ❌ 缺少 Android Build-Tools $REQUIRED_BUILD_TOOLS"
-    echo "==> [TaiXu Build] 请在插件中心重新装配【Android 核心基础环境】后再构建"
+    echo "==> [TaiXu Build] ❌ Android Build Tools $REQUIRED_BUILD_TOOLS are missing"
+    echo "==> [TaiXu Build] Reinstall the Android Core Environment from Plugin Center before building"
     exit 2
 fi
 case "$AAPT2_OVERRIDE" in
     /opt/android-sdk/build-tools/35.0.0/aapt2|/opt/taixu/toolchains/android/sdk-tools/artifacts/*/build-tools/aapt2) ;;
     *)
-        echo "==> [TaiXu Build] ❌ AAPT2 未指向不可变 ARM64 制品目录"
+        echo "==> [TaiXu Build] ❌ AAPT2 does not point to the immutable ARM64 artifact directory"
         exit 2
         ;;
 esac
 AAPT2_MACHINE=$(od -An -t x1 -j 18 -N 2 "$AAPT2_OVERRIDE" 2>/dev/null | tr -d '[:space:]')
 if [ "$AAPT2_MACHINE" != "b700" ] || [ ! -x "$AAPT2_OVERRIDE" ] || \
    ! "$AAPT2_OVERRIDE" version >/dev/null 2>&1; then
-    echo "==> [TaiXu Build] ❌ ARM64 AAPT2 未就位"
-    echo "==> [TaiXu Build] 请在插件中心重新装配【Android 核心基础环境】后再构建"
+    echo "==> [TaiXu Build] ❌ ARM64 AAPT2 is not installed"
+    echo "==> [TaiXu Build] Reinstall the Android Core Environment from Plugin Center before building"
     exit 2
 fi
 
@@ -170,7 +170,7 @@ NDK_STRIP=$(find "$NDK_PATH/toolchains/llvm/prebuilt" \( -type f -o -type l \) -
 NDK_CLANG=$(find "$NDK_PATH/toolchains/llvm/prebuilt" \( -type f -o -type l \) -name clang -print -quit 2>/dev/null)
 if [ -z "$NDK_PATH" ] || [ ! -f "$NDK_PATH/source.properties" ] || \
    [ ! -x "$NDK_STRIP" ] || [ ! -x "$NDK_CLANG" ]; then
-    echo "==> [TaiXu Build] ❌ 固定 ARM64 NDK 未就位，请重新装配 Android 核心基础环境"
+    echo "==> [TaiXu Build] ❌ Pinned ARM64 NDK is missing; reinstall the Android Core Environment"
     exit 2
 fi
 STRIP_MACHINE=$(od -An -t x1 -j 18 -N 2 "$NDK_STRIP" 2>/dev/null | tr -d '[:space:]')
@@ -178,22 +178,22 @@ CLANG_MACHINE=$(od -An -t x1 -j 18 -N 2 "$NDK_CLANG" 2>/dev/null | tr -d '[:spac
 if [ "$STRIP_MACHINE" != "b700" ] || [ "$CLANG_MACHINE" != "b700" ] || \
    ! "$NDK_STRIP" --version >/dev/null 2>&1 || \
    ! "$NDK_CLANG" --version >/dev/null 2>&1; then
-    echo "==> [TaiXu Build] ❌ NDK 主机工具不是可执行的 Linux AArch64 制品"
+    echo "==> [TaiXu Build] ❌ NDK host tool is not an executable Linux AArch64 binary"
     exit 126
 fi
-echo "==> [TaiXu Build] 固定 ARM64 NDK: $NDK_PATH"
+echo "==> [TaiXu Build] Pinned ARM64 NDK: $NDK_PATH"
 if ! grep -Fqx 'android.builder.sdkDownload=false' "$GRADLE_USER_HOME/gradle.properties" 2>/dev/null; then
-    echo "==> [TaiXu Build] ❌ Gradle SDK 自动下载未禁用，拒绝构建以防官方 x86_64 工具覆盖"
+    echo "==> [TaiXu Build] ❌ Gradle SDK auto-download is enabled; refusing to build to prevent official x86_64 tools from overwriting the ARM64 tools"
     exit 2
 fi
 if [ ! -f "$GRADLE_USER_HOME/init.d/taixu-android-ndk.gradle" ] || \
    ! grep -Fq 'androidExtension.ndkPath = taixuNdkPath' "$GRADLE_USER_HOME/init.d/taixu-android-ndk.gradle"; then
-    echo "==> [TaiXu Build] ❌ 固定 NDK 路径注入缺失"
+    echo "==> [TaiXu Build] ❌ Pinned NDK path injection is missing"
     exit 2
 fi
-# 2. 绑定 SDK 到当前工程。保留用户的其他 local.properties 键。
-# NDK 路径由 taixu-android-ndk.gradle 通过 android.ndkPath 唯一注入。
-# 清理旧 ndk.dir 但不再写回，避免 AGP 8.11.1 拒绝两种 locator 并存。
+# 2. Bind the SDK to the current project while preserving other user-defined local.properties keys.
+# The NDK path is injected exclusively through android.ndkPath by taixu-android-ndk.gradle.
+# Remove the legacy ndk.dir entry without writing it back, because AGP 8.11.1 rejects having both locators.
 LOCAL_PROPERTIES="$PROJECT_PATH/local.properties"
 LOCAL_PROPERTIES_TMP="${LOCAL_PROPERTIES}.taixu.tmp"
 if [ -f "$LOCAL_PROPERTIES" ]; then
@@ -205,7 +205,7 @@ else
 fi
 printf 'sdk.dir=%s\n' "$ANDROID_HOME" >> "$LOCAL_PROPERTIES_TMP"
 mv -f "$LOCAL_PROPERTIES_TMP" "$LOCAL_PROPERTIES"
-echo "==> [TaiXu Build] 绑定 ANDROID_HOME: $ANDROID_HOME"
+echo "==> [TaiXu Build] Binding ANDROID_HOME: $ANDROID_HOME"
 
 # 3. SSL 信任库参数
 SSL_OPTS=""
@@ -215,7 +215,7 @@ elif [ -s /etc/ssl/certs/java/cacerts ]; then
     CACERTS_PATH="/etc/ssl/certs/java/cacerts"
 fi
 if [ -n "$CACERTS_PATH" ]; then
-    # 内置 cacerts 是 PKCS12；显式声明格式，避免精简 OpenJDK 默认按 JKS 解析。
+    # The bundled cacerts uses PKCS12; declare the format explicitly so slim OpenJDK does not try to parse it as JKS.
     SSL_OPTS="-Djavax.net.ssl.trustStore=$CACERTS_PATH -Djavax.net.ssl.trustStoreType=PKCS12 -Djavax.net.ssl.trustStorePassword=changeit"
 fi
 
@@ -227,14 +227,14 @@ cd "$PROJECT_PATH"
 EXTRA_ARGS="--console=plain --info --stacktrace --no-daemon --max-workers=2 -Dorg.gradle.native=false -Dorg.gradle.internal.http.connectionTimeout=30000 -Dorg.gradle.internal.http.socketTimeout=60000 -Pandroid.builder.sdkDownload=false"
 if [ "${TAIXU_OFFLINE:-0}" = "1" ]; then
     EXTRA_ARGS="$EXTRA_ARGS --offline"
-    echo "==> [TaiXu Build] 离线模式：禁止 Gradle 网络请求，仅使用本地缓存"
+    echo "==> [TaiXu Build] Offline mode: block Gradle network requests and use only local caches"
 fi
 if [ "$AAPT2_MACHINE" = "b700" ] && [ -x "$AAPT2_OVERRIDE" ] && \
    "$AAPT2_OVERRIDE" version >/dev/null 2>&1; then
     EXTRA_ARGS="$EXTRA_ARGS -Pandroid.aapt2FromMavenOverride=$AAPT2_OVERRIDE"
     echo "==> [TaiXu Build] ARM64 AAPT2: $AAPT2_OVERRIDE"
 else
-    echo "==> [TaiXu Build] ❌ 固定 ARM64 AAPT2 在构建启动前失效"
+    echo "==> [TaiXu Build] ❌ Pinned ARM64 AAPT2 became unavailable before the build started"
     exit 2
 fi
 JAVA_RUNTIME_OPTS="-Djava.security.egd=file:/dev/urandom"
@@ -243,8 +243,8 @@ export GRADLE_OPTS="${GRADLE_OPTS:-} $JAVA_RUNTIME_OPTS"
 GRADLE_JVM_MEMORY_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=384m -XX:+UseSerialGC -Dfile.encoding=UTF-8"
 
 if [ -d "$GRADLE_HOME/lib" ]; then
-    echo "==> [TaiXu Build] 调度 Gradle: $GRADLE_HOME"
-    echo "==> [TaiXu Build] 依赖解析与任务执行即将开始；下载项、仓库地址与任务阶段会实时写入构建日志..."
+    echo "==> [TaiXu Build] Invoking Gradle: $GRADLE_HOME"
+    echo "==> [TaiXu Build] Dependency resolution and task execution are starting; downloads, repository URLs, and task stages will be written to the build log in real time..."
     exec "$JAVA_EXEC" $GRADLE_JVM_MEMORY_OPTS \
         -Dorg.gradle.appname=gradle \
         -Dorg.gradle.installation.dir="$GRADLE_HOME" \
@@ -252,7 +252,7 @@ if [ -d "$GRADLE_HOME/lib" ]; then
         -classpath "$GRADLE_HOME/lib/*" \
         org.gradle.launcher.GradleMain $TASK $EXTRA_ARGS
 elif [ -d /opt/gradle-8.7/lib ]; then
-    echo "==> [TaiXu Build] 调度官方独立完整版 Gradle 8.7 执行构建..."
+    echo "==> [TaiXu Build] Invoking the standalone official Gradle 8.7 distribution..."
     exec "$JAVA_EXEC" $GRADLE_JVM_MEMORY_OPTS \
         -Dorg.gradle.appname=gradle \
         -Dorg.gradle.installation.dir=/opt/gradle-8.7 \
@@ -260,16 +260,16 @@ elif [ -d /opt/gradle-8.7/lib ]; then
         -classpath "/opt/gradle-8.7/lib/*" \
         org.gradle.launcher.GradleMain $TASK $EXTRA_ARGS
 elif [ -x "$GRADLE_HOME/bin/gradle" ]; then
-    echo "==> [TaiXu Build] 调度 $GRADLE_HOME/bin/gradle 执行构建..."
+    echo "==> [TaiXu Build] Invoking $GRADLE_HOME/bin/gradle..."
     exec "$GRADLE_HOME/bin/gradle" $TASK $EXTRA_ARGS
 elif [ -f ./gradlew ] && [ -f ./gradle/wrapper/gradle-wrapper.jar ]; then
-    echo "==> [TaiXu Build] 调度项目本地 Gradle Wrapper 执行构建..."
+    echo "==> [TaiXu Build] Invoking the project's local Gradle Wrapper..."
     chmod +x ./gradlew
     exec ./gradlew $TASK $EXTRA_ARGS
 elif command -v gradle >/dev/null 2>&1; then
-    echo "==> [TaiXu Build] 调度系统 Gradle 执行构建..."
+    echo "==> [TaiXu Build] Invoking system Gradle..."
     exec gradle $TASK $EXTRA_ARGS
 else
-    echo "==> [TaiXu Build] ❌ 未找到有效的 Gradle 执行环境，请在插件中心装配【Android & 移动全栈开发套件】"
+    echo "==> [TaiXu Build] ❌ No valid Gradle environment found. Install the Android & Mobile Full-Stack Development Suite from Plugin Center."
     exit 127
 fi
