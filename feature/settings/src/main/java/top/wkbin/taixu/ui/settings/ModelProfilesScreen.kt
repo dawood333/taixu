@@ -481,7 +481,7 @@ private fun ModelProfileCard(
             if (model.apiKeyCount > 0) add("${model.apiKeyCount} Key")
             if (model.requestsPerMinutePerKey > 0) add("${model.requestsPerMinutePerKey} RPM/Key")
             explicitCtxTokens?.let { add("${formatProfileContextWindow(it)} context") }
-            autoCtxTokens?.let { add("自动 ${formatProfileContextWindow(it)} context") }
+            autoCtxTokens?.let { add("Automatic ${formatProfileContextWindow(it)} context") }
         }.joinToString(" • ")
 
         if (metadataSummary.isNotBlank()) {
