@@ -136,7 +136,7 @@ internal fun ChatMessageList(
     val renderItems = rememberChatRenderItems(messages, toolResults, expandedOverrides, chatRoundCollapse, reveal.limits)
     val waitingForFirstOutput = remember(
         // 只依赖「末条消息的 id + 其内容签名」：流式期间末条内容变化会改变签名（真正需要重算），
-        // 而历史消息变化不影响该判定，因此无需依赖整个 messages 列表引用（避免每帧 O(n) 重算）。
+        // Historical message changes do not affect this check, so it need not depend on the entire messages list reference (avoiding an O(n) recalculation every frame).
         messages.lastOrNull()?.id,
         messages.lastOrNull()?.let { last ->
             when (last) {
@@ -247,8 +247,8 @@ internal fun ChatMessageList(
                                 onNavigateToSettings = onNavigateToSettings,
                             )
                             is ToolCall -> {
-                                // 原始下标由投影阶段预计算（见 projectChatMessages），组合期 O(1)，
-                                // 不再在每个 Lazy 项里对 messages 做 indexOfFirst 的 O(n) 全表扫描。
+                                // Original indices are precomputed during projection (see projectChatMessages), making this O(1) during composition;
+                                // each Lazy item no longer performs an O(n) indexOfFirst scan over the entire messages list.
                                 val rawIndex = item.rawIndex
                                 if (message.tool == HarnessTool.SUBAGENT) {
                                     SubagentCard(
