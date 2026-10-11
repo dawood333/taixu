@@ -468,12 +468,12 @@ class CodeIndexer:
         if self.indexing:
             done, total = self.progress_done, self.progress_total
             pct = int(done * 100 / total) if total else 0
-            return f"后台初始索引进行中: {done}/{total} 个文件 ({pct}%)，请稍后重试同步或查询"
+            return f"Background initial indexing in progress: {done}/{total} files ({pct}%). Retry synchronization or queries shortly."
         if not self.initial_index_done:
-            return "初始索引尚未开始"
+            return "Initial indexing has not started"
         if self.initial_index_error:
-            return f"初始索引失败: {self.initial_index_error}"
-        return "索引就绪"
+            return f"Initial indexing failed: {self.initial_index_error}"
+        return "Index ready"
 
     def start_background_initial_index(self):
         def run():
@@ -604,10 +604,10 @@ class CodeIndexer:
             matched_symbols = self.db.search_symbols(query.split()[-1] if " " in query else query, limit=3)
 
         if not matched_symbols:
-            return f"CodeGraph: 未在知识图谱中检索到符号 '{query}'。建议使用 codegraph_search 模糊搜索类名/函数名，或执行 codegraph_sync 同步最新代码。"
+            return f"CodeGraph: no symbol matching '{query}' was found in the knowledge graph. Try codegraph_search for fuzzy class/function search, or run codegraph_sync to synchronize the latest code."
 
         output_blocks = []
-        output_blocks.append(f"=== CodeGraph 探索结果: '{query}' (匹配到 {len(matched_symbols)} 个符号) ===")
+        output_blocks.append(f"=== CodeGraph exploration results: '{query}' ({len(matched_symbols)} symbols matched) ===")
 
         for sym in matched_symbols:
             name = sym["name"]
@@ -621,33 +621,33 @@ class CodeIndexer:
 
             block = []
             block.append(f"\n[{kind.upper()}] {name}  →  {file_path}:{line_start}")
-            block.append(f"定义签名: {sig}")
+            block.append(f"Definition signature: {sig}")
             if sym.get("docstring"):
-                block.append(f"文档说明: {sym['docstring']}")
+                block.append(f"Documentation: {sym['docstring']}")
 
             # Callers
             callers = self.db.get_callers(name, limit=8)
             if callers:
                 caller_strs = [f"{c['caller']} ({c['file_path']}:{c['line_no']})" for c in callers if c['caller']]
                 if caller_strs:
-                    block.append("  ↳ 上游调用者 (Callers): " + ", ".join(caller_strs))
+                    block.append("  ↳ Upstream callers: " + ", ".join(caller_strs))
 
             # Callees
             callees = self.db.get_callees(name, limit=8)
             if callees:
                 callee_strs = [f"{c['callee']} ({c['file_path']}:{c['line_no']})" for c in callees]
                 if callee_strs:
-                    block.append("  ↳ 下游调用 (Callees): " + ", ".join(callee_strs))
+                    block.append("  ↳ Downstream callees: " + ", ".join(callee_strs))
 
             # Impact summary
             impact = self.db.get_impact(name, max_depth=1)
             if impact:
-                block.append(f"  ⚡ 影响面 (Direct Blast Radius): 直接关联 {len(impact)} 处外部调用")
+                block.append(f"  ⚡ Direct blast radius: {len(impact)} directly related external calls")
 
             # Verbatim code snippet
             snippet = self.read_code_snippet(file_path, line_start, max_lines=18)
             if snippet:
-                block.append("代码切片:\n```\n" + snippet + "\n```")
+                block.append("Code slice:\n```\n" + snippet + "\n```")
 
             output_blocks.append("\n".join(block))
 
@@ -661,17 +661,17 @@ class CodeIndexer:
 TOOLS_DEF = [
     {
         "name": "codegraph_explore",
-        "description": "【核心图谱导航】1 步检索代码库中的符号定义、调用拓扑（Call Graph）、代码切片与波及范围。遇到架构问答、函数链路梳理或定位实现时强制优先调用，替代盲目全量 grep。",
+        "description": "[Core code-graph navigation] Retrieve symbol definitions, call graphs, code slices, and impact radius in one step. Prioritize this tool for architecture questions, call-chain tracing, or locating implementations instead of blindly grepping the entire repository.",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "自然语言意图、类名、函数名或查询主题（如 'Interceptor' 或 'handleRequest'）"
+                    "description": "Natural-language intent, class name, function name, or query topic (e.g. 'Interceptor' or 'handleRequest')"
                 },
                 "scope": {
                     "type": "string",
-                    "description": "可选。限定搜索的子目录路径（如 'src/main' 或 'core/model'）"
+                    "description": "Optional. Restrict the search to a subdirectory (e.g. 'src/main' or 'core/model')"
                 }
             },
             "required": ["query"]
@@ -679,56 +679,56 @@ TOOLS_DEF = [
     },
     {
         "name": "codegraph_search",
-        "description": "精确查找类、函数、方法或符号定义列表及其所在文件与行号。",
+        "description": "Find exact class, function, method, or symbol definitions, including their files and line numbers.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "query": {"type": "string", "description": "符号名称或关键字"},
-                "kind": {"type": "string", "description": "可选。限定类型：class, function, method 等"}
+                "query": {"type": "string", "description": "Symbol name or keyword"},
+                "kind": {"type": "string", "description": "Optional. Restrict the symbol kind: class, function, method, etc."}
             },
             "required": ["query"]
         }
     },
     {
         "name": "codegraph_callers",
-        "description": "向上溯源：查找指定函数/方法在整个代码库中的所有调用者（Callers）。",
+        "description": "Trace upstream: find all callers of a specified function/method across the repository.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "target": {"type": "string", "description": "目标函数或方法名"}
+                "target": {"type": "string", "description": "Target function or method name"}
             },
             "required": ["target"]
         }
     },
     {
         "name": "codegraph_callees",
-        "description": "向下追踪：列出指定函数或类调用的所有下游函数与引用（Callees）。",
+        "description": "Trace downstream: list all functions and references called by a specified function or class.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "target": {"type": "string", "description": "起始函数或类名"}
+                "target": {"type": "string", "description": "Starting function or class name"}
             },
             "required": ["target"]
         }
     },
     {
         "name": "codegraph_impact",
-        "description": "波及范围（Blast Radius）分析：分析修改某个类或函数后，受影响的直接与间接上游模块列表。",
+        "description": "Blast-radius analysis: identify directly and indirectly affected upstream modules after changing a class or function.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "target": {"type": "string", "description": "要修改或重构的目标符号名"}
+                "target": {"type": "string", "description": "Target symbol to modify or refactor"}
             },
             "required": ["target"]
         }
     },
     {
         "name": "codegraph_sync",
-        "description": "增量同步工作区代码图谱数据库（.codegraph/index.db）。默认按文件 mtime 只解析改动的文件，通常几秒内完成；force=true 会强制全量重新解析所有文件，大仓库在手机上可能耗时数分钟，仅在怀疑索引损坏或首次建库失败时使用。",
+        "description": "Incrementally synchronize the workspace code-graph database (.codegraph/index.db). By default, only files with changed mtimes are parsed, usually within seconds. force=true reparses every file and may take minutes on a large repository; use it only if the index may be corrupt or initial indexing failed.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "force": {"type": "boolean", "description": "强制全量重建（很慢，仅在索引疑似损坏时使用）"}
+                "force": {"type": "boolean", "description": "Force a full rebuild (slow; use only if the index may be corrupt)"}
             }
         }
     }
@@ -782,33 +782,33 @@ def main():
                     elif tool_name == "codegraph_search":
                         res_text = guarded_call(indexer, lambda: to_json_text(
                             indexer.db.search_symbols(tool_args.get("query", ""), tool_args.get("kind")),
-                            "未检索到匹配符号"))
+                            "No matching symbols found"))
                     elif tool_name == "codegraph_callers":
                         res_text = guarded_call(indexer, lambda: to_json_text(
                             indexer.db.get_callers(tool_args.get("target", "")),
-                            "未发现调用者引用"))
+                            "No caller references found"))
                     elif tool_name == "codegraph_callees":
                         res_text = guarded_call(indexer, lambda: to_json_text(
                             indexer.db.get_callees(tool_args.get("target", "")),
-                            "未发现下游调用"))
+                            "No downstream calls found"))
                     elif tool_name == "codegraph_impact":
                         res_text = guarded_call(indexer, lambda: to_json_text(
                             indexer.db.get_impact(tool_args.get("target", "")),
-                            "未发现外部受影响模块"))
+                            "No externally affected modules found"))
                     elif tool_name == "codegraph_sync":
                         res_text = guarded_call(indexer, lambda: run_sync(indexer, tool_args))
                     else:
-                        raise ValueError(f"未知工具: {tool_name}")
+                        raise ValueError(f"Unknown tool: {tool_name}")
 
                     result = {"content": [{"type": "text", "text": res_text}], "isError": False}
                 except IndexNotReady as exc:
                     # 索引未就绪 ≠ 工具失败：以正常结果返回进度与降级建议，
                     # 不计入 agent 侧失败轮次，防止首次大仓库查询触发熔断。
-                    hint = ("本次调用不计为失败。可选择：① 稍后重试本工具（索引完成后自动可用）；"
-                            "② 先用内置终端 ripgrep/grep 完成等价检索。")
+                    hint = ("This call is not counted as a failure. You can: 1) retry this tool later (it becomes available automatically when indexing finishes);"
+                            "2) perform the equivalent search with ripgrep/grep in the built-in terminal.")
                     result = {"content": [{"type": "text", "text": f"⏳ {str(exc)}\n{hint}"}], "isError": False}
                 except Exception as exc:
-                    result = {"content": [{"type": "text", "text": f"CodeGraph 工具执行异常: {str(exc)}"}], "isError": True}
+                    result = {"content": [{"type": "text", "text": f"CodeGraph tool execution error: {str(exc)}"}], "isError": True}
 
                 out = response(req_id, result)
             else:
@@ -850,9 +850,9 @@ def guarded_call(indexer, fn):
 
 def run_sync(indexer, tool_args):
     res = indexer.scan_and_index(force=bool(tool_args.get("force", False)))
-    return (f"图谱同步成功: 扫描更新 {res['indexed_files']} 个文件，"
-            f"现有总符号数: {res['total_symbols']}，总引用数: {res['total_refs']} "
-            f"(耗时 {res['duration_sec']}s)")
+    return (f"Graph synchronization succeeded: scanned and updated {res['indexed_files']} files; "
+            f"total symbols: {res['total_symbols']}; total references: {res['total_refs']} "
+            f"(elapsed: {res['duration_sec']}s)")
 
 
 if __name__ == "__main__":
