@@ -120,7 +120,7 @@ data class WorkflowLaunchRequest(
     val initialVariables: Map<String, String> = emptyMap(),
 )
 
-/** 空会话首屏的权限感知引导档位；决定开场提示卡的文案与色调。 */
+/** Permission-aware guidance level for an empty chat's first screen; determines the opening hint card's copy and color. */
 enum class OnboardingPrivilege { SANDBOX, SANDBOX_UNLOCKABLE, SHIZUKU_READY, ROOT_READY }
 
 class ChatViewModel(
@@ -168,7 +168,7 @@ class ChatViewModel(
         "attachments" to pathManager.attachmentsDir,
     )
 
-    /** 空会话首屏权限感知引导：按实际特权状态给出不同玩法提示。 */
+    /** Permission-aware guidance for an empty chat: show different usage hints based on the actual privilege state. */
     val privilegeOnboarding: StateFlow<OnboardingPrivilege?> =
         flow { emit(privilegeManager.getPrivilegeInfo()) }
             .map { info ->
@@ -221,7 +221,7 @@ class ChatViewModel(
 
     fun switchDistro(distroId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            // 先关闭所有旧系统 PTY 会话，再切换发行版
+            // Close all PTY sessions from the previous system before switching distributions.
             terminalSessionManager.closeAllSessions()
             linuxRuntime.switchActiveDistro(distroId)
         }
@@ -304,7 +304,7 @@ class ChatViewModel(
             WorkflowLaunchRequest(suggestion.workflowId, suggestion.projectName, suggestion.initialVariables),
         )
     }
-    /** 运行中排队的待发送消息（当前任务结束后自动接续）。 */
+    /** Messages queued for sending while a task is running; sent automatically when the current task finishes. */
     val pendingMessages: StateFlow<List<PendingMessage>> = harnessLoop.pendingMessages
     val queuedPrompts: StateFlow<List<QueuedPrompt>> = harnessLoop.queuedPrompts
 
