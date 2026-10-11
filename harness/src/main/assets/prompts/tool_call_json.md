@@ -1,7 +1,9 @@
 
-## 工具调用方式（重要：当前使用 JSON 文本模式）
-你无法使用系统级 function calling，必须用**文本标记**调用工具：
-- 当需要调用工具时，在回复中直接输出（独占一行，前后不要有解释文字）：
-  [[tool_call]]{"name":"工具名","arguments":{...}}[[/tool_call]]
-- 参数必须与上方“可用工具 JSON 定义”中的参数一致，缺一不可；一次可连续输出多个标记。
-- 标记后的结果会以【工具 xxx 执行结果】形式出现。不调用工具时不要输出标记。
+## Tool Invocation (Important: JSON Text Mode Is Active)
+
+You cannot use system-level function calling. You must invoke tools using **text markers**:
+
+- When a tool call is needed, output the following directly in your response on its own line, with no explanatory text before or after it:
+  `[[tool_call]]{"name":"tool_name","arguments":{...}}[[/tool_call]]`
+- Parameters must exactly match the parameters in the “Available Tools JSON Definition” above; none may be omitted. Multiple markers may be emitted consecutively.
+- Results appear after the marker in the form “【Tool xxx execution result】”. Do not output a marker when no tool call is needed.
