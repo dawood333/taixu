@@ -183,14 +183,14 @@ fun LinuxEnvironmentSettingsScreen(
                         } else {
                             "Access the TaiXu Agent and workspace from a computer browser on the same Wi-Fi network"
                         },
-                        value = if (webChatStatus.isRunning) "已开启" else "未开启",
+                        value = if (webChatStatus.isRunning) "Enabled" else "Disabled",
                         onClick = { showWebChatDialog = true },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Package,
-                        title = "应用管理",
-                        subtitle = "同步系统/用户应用，查看禁用、冻结与后台联网限制状态",
+                        title = "App management",
+                        subtitle = "Sync system and user apps; inspect disabled, frozen, and background-network restriction states",
                         onClick = onOpenAppManagement,
                     )
                 }
@@ -198,7 +198,7 @@ fun LinuxEnvironmentSettingsScreen(
 
             item {
                 Text(
-                    text = "系统底层特权",
+                    text = "System-level privileges",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
@@ -206,16 +206,16 @@ fun LinuxEnvironmentSettingsScreen(
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Key,
-                        title = "系统运行特权模式",
+                        title = "System execution privilege mode",
                         subtitle = if (executionMode != effectiveExecutionMode) {
-                            "首选 ${executionMode.shortLabel} 暂不可用：${privilegeState.reason}"
+                            "Preferred mode ${executionMode.shortLabel} is currently unavailable: ${privilegeState.reason}"
                         } else {
-                            "PRoot 用户态沙箱 · Shizuku · Root"
+                            "PRoot user-space sandbox · Shizuku · Root"
                         },
                         value = if (executionMode == effectiveExecutionMode) {
                             effectiveExecutionMode.shortLabel
                         } else {
-                            "${effectiveExecutionMode.shortLabel}（已降级）"
+                            "${effectiveExecutionMode.shortLabel} (fallback mode)"
                         },
                         onClick = { showExecutionModeDialog = true },
                     )
@@ -237,7 +237,7 @@ private fun ExecutionModeDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 RuntimeIcon(RuntimeIconName.Shield, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-                Text("选择系统运行模式", fontWeight = FontWeight.Bold)
+                Text("Choose system execution mode", fontWeight = FontWeight.Bold)
             }
         },
         text = {
@@ -246,7 +246,7 @@ private fun ExecutionModeDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
-                    "切换特权模式将自动发起授权检测；授权成功后即刻释放对应的高级系统与硬件能力。",
+                    "Switching privilege modes automatically checks authorization. Once authorized, the corresponding advanced system and hardware capabilities become available.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -258,7 +258,7 @@ private fun ExecutionModeDialog(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.size(12.dp))
-                        Text("正在进行特权探测与授权申请…", style = MaterialTheme.typography.bodyMedium)
+                        Text("Checking privileges and requesting authorization…", style = MaterialTheme.typography.bodyMedium)
                     }
                 }
                 ExecutionMode.entries.forEach { mode ->
@@ -273,7 +273,7 @@ private fun ExecutionModeDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss, enabled = !switching) {
-                Text("关闭")
+                Text("Close")
             }
         },
     )
@@ -309,7 +309,7 @@ private fun ExecutionModeOptionItem(
                         color = MaterialTheme.colorScheme.primary,
                     ) {
                         Text(
-                            "当前激活",
+                            "Active",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -323,7 +323,7 @@ private fun ExecutionModeOptionItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "要求: ${mode.requiredPrivilege}",
+                text = "Required: ${mode.requiredPrivilege}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,
             )
