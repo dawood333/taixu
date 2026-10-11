@@ -108,10 +108,10 @@ import top.wkbin.taixu.runtime.DistributionCatalog
 // The floating glass bottom bar occupies 80dp: 8dp top/bottom padding plus a 64dp bar. Leave a 2dp gap to prevent overlap.
 private val AgentBottomBarHeight = 82.dp
 
-// Browser URL 栏贴合版：与底栏总占位一致（8 + 64 + 8 = 80dp），零缝隙直接贴在底栏上方
+// Browser URL bar variant: its total height matches the bottom bar (8 + 64 + 8 = 80dp), with no gap above the bar.
 private val BrowserBottomBarHeight = 80.dp
 
-/** 会改动工作区文件的工具：这些工具执行后「仓库」入口按需高亮提示新改动 */
+/** Tools that modify workspace files; after they run, highlight the Repository entry to indicate new changes. */
 private val REPOSITORY_HIGHLIGHT_TOOLS = setOf(
     HarnessTool.WRITE,
     HarnessTool.EDIT,
@@ -125,7 +125,7 @@ private fun chatBottomInsets(bottomBarHeight: Dp): WindowInsets {
     return bottomBarInsets.union(WindowInsets.ime)
 }
 
-/** 太墟 · 智枢对话界面 (TaiXu Agent)：智能结对编程、工具自动化调用与代码生成 */
+/** TaiXu Agent chat interface for AI pair programming, automated tool calls, and code generation. */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -190,7 +190,7 @@ fun ChatScreen(
     val notice by viewModel.notice.collectAsStateWithLifecycle()
     val subagentResult by viewModel.subagentResult.collectAsStateWithLifecycle()
 
-    // 弹窗开关与编辑目标：用 rememberSaveable 保存，旋转 / 进程重建后不丢失
+    // Save dialog visibility and edit targets with rememberSaveable so they survive rotation and process recreation.
     var showSessions by rememberSaveable { mutableStateOf(false) }
     var showNewSession by rememberSaveable { mutableStateOf(false) }
     var showModels by rememberSaveable { mutableStateOf(false) }
@@ -202,7 +202,7 @@ fun ChatScreen(
     var showMemorySheet by rememberSaveable { mutableStateOf(false) }
     var showFloatingPermissionDialog by rememberSaveable { mutableStateOf(false) }
     var branchFromMessageId by rememberSaveable { mutableStateOf<String?>(null) }
-    // 编辑目标消息只保存 id，避免把不可保存的实体放进状态保存器
+    // Store only the target message ID to avoid putting non-saveable entities into the state saver.
     var editTargetMessageId by rememberSaveable { mutableStateOf<String?>(null) }
     val editTargetMessage = remember(messages, editTargetMessageId) {
         messages.filterIsInstance<UserMessage>().firstOrNull { it.id == editTargetMessageId }
