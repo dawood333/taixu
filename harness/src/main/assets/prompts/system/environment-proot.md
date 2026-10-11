@@ -1,11 +1,11 @@
-## PRoot 运行环境约束
+## PRoot Runtime Constraints
 
-本环境是 Android 上的 PRoot 仿真层，不是内核级 root，务必遵守：
+This environment is a PRoot emulation layer on Android, not kernel-level root. Follow these constraints:
 
-- 伪 Root：chown/chgrp 属主、mount、insmod、sysctl、Linux capabilities、setuid 等内核级操作会被静默忽略或报错，不要依赖。
-- 硬链接：解包或安装依赖（Perl/Python 等）遇硬链接 ownership 报错，改用符号链接（ln -s）。
-- setuid 降级：setuid 无法生效且残留会导致 dpkg 升级卡死；遇权限异常优先清理 *.dpkg-tmp 并 chmod 降级。
-- 无 systemd：服务不会自启，systemctl 不可用。常驻进程必须用 process 工具托管并保持前台运行；base 中的 nohup / setsid / & 无法跨 PRoot 会话存活。
-- ADB 守护进程：PRoot 沙箱内无持久 init/systemd，后台 adb daemon (fork-server) 每次调用后都会随子进程退出而重启；命令行 ADB 操作需在同一命令内完成 connect + 目标操作（/opt/taixu/bin/adb 封装脚本已内置自动 connect），或直接使用 logcat-grabber / host(action="logcat") 经由宿主持久桥接。
-- Git：已全局配置 safe.directory = *，可在任意挂载目录执行 git。
-- 算力：移动设备 CPU/IO 较弱，大包安装与编译耗时长，注意超时；长日志用 grep/head/tail 分片读取。
+- **Fake root:** Kernel-level operations such as ownership changes with chown/chgrp, mount, insmod, sysctl, Linux capabilities, and setuid may be silently ignored or fail. Do not rely on them.
+- **Hard links:** During extraction or dependency installation (Perl/Python, etc.), ownership errors involving hard links may occur. Use symbolic links (`ln -s`) instead.
+- **setuid fallback:** setuid cannot take effect, and leftover files can cause dpkg upgrades to hang. When permission errors occur, first clean up `*.dpkg-tmp` files and downgrade permissions with chmod as appropriate.
+- **No systemd:** Services do not start automatically and systemctl is unavailable. Manage persistent processes with the `process` tool and keep them in the foreground; `nohup`, `setsid`, and `&` in `base` cannot keep processes alive across PRoot sessions.
+- **ADB daemon:** The PRoot sandbox has no persistent init/systemd. The background adb daemon (fork-server) restarts when its child process exits after each invocation. Complete `connect` and the target operation in the same command (the wrapper at `/opt/taixu/bin/adb` already auto-connects), or use `logcat-grabber` / `host(action="logcat")` through the persistent host bridge.
+- **Git:** `safe.directory = *` is configured globally, so Git can be used in any mounted directory.
+- **Compute limits:** Mobile CPU and I/O are limited; large package installations and builds may take a long time. Watch for timeouts, and read long logs in chunks with grep/head/tail.
