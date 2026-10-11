@@ -95,7 +95,7 @@ import top.wkbin.taixu.core.common.navigation.GlobalNavigationBus
 import top.wkbin.taixu.core.common.translation.TranslationManager
 import top.wkbin.taixu.core.common.translation.TranslationModelStatus
 
-/** 消息气泡：用户/助手气泡、思考块、任务计划卡、能力事件卡。 */
+/** Message bubbles: user/assistant messages, reasoning blocks, task-plan cards, and capability-event cards. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun UserBubble(
@@ -108,9 +108,9 @@ internal fun UserBubble(
 ) {
     val context = LocalContext.current
     var showMenu by remember { mutableStateOf(false) }
-    // 删除消息为破坏性操作，先经确认对话框
+    // Deleting a message is destructive, so confirm it in a dialog first.
     var showDeleteConfirm by rememberSaveable { mutableStateOf(false) }
-    // 撤回到此轮：先选择撤回范围（代码/对话/两者）
+    // Rewind to this turn: first choose the scope (code, conversation, or both).
     var showRewindScopeDialog by rememberSaveable { mutableStateOf(false) }
 
     val copyText = {
@@ -124,7 +124,7 @@ internal fun UserBubble(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // 🌟 1. 多模态图片预览卡片
+            // 🌟 1. Multimodal image preview card.
             if (message.imageUrls.isNotEmpty()) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -143,7 +143,7 @@ internal fun UserBubble(
                 }
             }
 
-            // 🌟 2. 用户文字气泡
+            // 🌟 2. User text bubble.
             if (message.text.isNotBlank()) {
                 Surface(
                     color = MaterialTheme.colorScheme.primaryContainer,
