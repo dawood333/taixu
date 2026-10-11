@@ -209,7 +209,7 @@ private fun NetworkDetailBody(detail: String?) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         Text(
-            text = detail ?: "加载中…",
+            text = detail ?: "Loading…",
             style = MaterialTheme.typography.bodySmall.copy(
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
