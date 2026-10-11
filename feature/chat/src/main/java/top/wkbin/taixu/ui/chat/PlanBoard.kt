@@ -60,9 +60,9 @@ data class PlanStepUi(
 /**
  * plan 工具写入的 stepsJson 防御性解析器。
  *
- * 模型生成的步骤结构不固定：可能是字符串数组、对象数组（title/step/name/description 等
+ * The model-generated step structure is not fixed: it may be an array of strings or an array of objects (title/step/name/description, etc.
  * 字段名不定，完成状态可能是布尔或 pending/in_progress/completed 枚举字符串）、
- * 也可能被包裹在 {"steps": [...]} 对象里。解析失败一律降级为空列表，绝不让看板崩溃。
+ * or wrapped in an object such as {"steps": [...]}. Parsing failures fall back to an empty list so the board never crashes.
  */
 object PlanStepParser {
     private val json = Json { ignoreUnknownKeys = true }
@@ -143,7 +143,7 @@ object PlanStepParser {
 
 /**
  * 会话级结构化任务规划看板：数据来自模型通过 plan 工具写入的 AgentPlanEntity，
- * 与叙述文本中 `- [ ]` 正则卡片互补——模型不输出 markdown 时进度依然可见、可核验。
+ * Complements regex-based `- [ ]` cards in narrative text: progress remains visible and verifiable even when the model emits no Markdown.
  */
 @Composable
 internal fun SessionPlanBoardCard(
