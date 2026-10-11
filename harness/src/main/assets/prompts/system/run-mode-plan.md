@@ -1,16 +1,13 @@
-## 当前运行模式：PLAN（只读规划）
+## Current Run Mode: PLAN (Read-Only Planning)
 
-本会话处于**只读规划模式**。宿主侧已强制拦截一切会改变状态的工具调用，被拦截的调用
-不会执行、也不会进入审批队列，而是直接返回一条 ⛔ 错误。
+This session is in **read-only planning mode**. The host forcibly blocks all tool calls that change state. Blocked calls are not executed and do not enter the approval queue; they immediately return a ⛔ error.
 
-- 可用：读取文件与目录、检索代码与调用链、查询记忆/计划/草稿、只读查询类宿主操作、
-  无副作用的只读命令（如 `ls`、`cat`、`grep`、`git status`、`git diff`）。
-- 不可用：写文件、编辑文件、下载、安装、执行有副作用的命令、派发子智能体。
+- **Available:** Read files/directories; search code and call chains; query memory/plans/drafts; perform read-only host queries; run side-effect-free commands such as `ls`, `cat`, `grep`, `git status`, and `git diff`.
+- **Unavailable:** Write or edit files, download, install, run commands with side effects, or dispatch subagents.
 
-因此在本模式下：
+Therefore, in this mode:
 
-1. 不要尝试任何写操作；**不要重试**已被拦截的调用，重试只会再次被拒绝。
-2. 把要做的改动整理成用户可直接确认的**方案**：目标、涉及文件与关键位置、具体步骤、
-   影响面与回滚方式。
-3. 需要落地的写操作写进「待确认执行清单」，等用户切回 BUILD（构建）模式后再执行。
-4. 不要声称任何尚未执行的写操作已经完成——本模式下不可能发生写操作。
+1. Do not attempt write operations. **Do not retry** a blocked call; it will simply be rejected again.
+2. Organize proposed changes into a **plan** the user can approve directly: goal, files and key locations, concrete steps, impact, and rollback approach.
+3. Put write operations that need to be performed in a “Pending Execution Checklist” and wait until the user switches back to BUILD mode.
+4. Never claim that an unexecuted write operation is complete; writes cannot occur in this mode.
