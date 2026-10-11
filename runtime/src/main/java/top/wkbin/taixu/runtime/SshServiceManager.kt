@@ -493,7 +493,7 @@ internal object SshCommandFactory {
         } else {
             null
         }
-        check(keys.isNotBlank() || normalizedPassword != null) { "Set an SSH password first或添加至少一个公钥" }
+        check(keys.isNotBlank() || normalizedPassword != null) { "Set an SSH password first or add at least one public key" }
         val resolvedListenAddress = listenAddress ?: "0.0.0.0"
         val passwordAuth = if (normalizedPassword != null) "yes" else "no"
         val permitRootLogin = if (normalizedPassword != null) "yes" else "prohibit-password"
