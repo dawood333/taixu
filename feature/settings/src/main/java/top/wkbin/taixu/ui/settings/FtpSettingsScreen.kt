@@ -404,7 +404,7 @@ private fun FtpPasswordDialog(
     val matches = password == confirmation
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (passwordConfigured) "修改 FTP Login password" else "设置 FTP Login password") },
+        title = { Text(if (passwordConfigured) "Change FTP login password" else "Set FTP login password") },
         text = {
             Column(
                 modifier = Modifier
@@ -413,15 +413,15 @@ private fun FtpPasswordDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    "Password将通过 Android Keystore 加密Save，外部客户端连接时需输入此Password。",
+                    "The password is encrypted with Android Keystore and must be entered by connecting clients.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it.take(128) },
-                    label = { Text("新Password") },
-                    supportingText = { Text("至少 4 个字符") },
+                    label = { Text("New password") },
+                    supportingText = { Text("At least 4 characters") },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     singleLine = true,
@@ -430,10 +430,10 @@ private fun FtpPasswordDialog(
                 OutlinedTextField(
                     value = confirmation,
                     onValueChange = { confirmation = it.take(128) },
-                    label = { Text("再次输入Password") },
+                    label = { Text("Re-enter password") },
                     isError = confirmation.isNotEmpty() && !matches,
                     supportingText = {
-                        if (confirmation.isNotEmpty() && !matches) Text("两次输入的Password不一致")
+                        if (confirmation.isNotEmpty() && !matches) Text("The passwords do not match")
                     },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -451,9 +451,9 @@ private fun FtpPasswordDialog(
         dismissButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (passwordConfigured) {
-                    RuntimeTextButton(onClick = onClear) { Text("清除Password") }
+                    RuntimeTextButton(onClick = onClear) { Text("Clear password") }
                 }
-                RuntimeTextButton(onClick = onDismiss) { Text("取消") }
+                RuntimeTextButton(onClick = onDismiss) { Text("Cancel") }
             }
         },
     )
@@ -468,13 +468,13 @@ private fun FtpUsernameDialog(
     var username by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(currentUsername) }
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("修改 FTP Login username") },
+        title = { Text("Change FTP login username") },
         text = {
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it.take(32) },
                 label = { Text("Username") },
-                supportingText = { Text("默认为 root") },
+                supportingText = { Text("Defaults to root") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -486,7 +486,7 @@ private fun FtpUsernameDialog(
             ) { Text("Save") }
         },
         dismissButton = {
-            RuntimeTextButton(onClick = onDismiss) { Text("取消") }
+            RuntimeTextButton(onClick = onDismiss) { Text("Cancel") }
         },
     )
 }
