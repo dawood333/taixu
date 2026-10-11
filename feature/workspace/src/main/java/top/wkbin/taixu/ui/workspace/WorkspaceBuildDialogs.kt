@@ -283,10 +283,10 @@ internal fun BuildProgressDialog(
                                 progress.stepDurations.forEach { step ->
                                     val barRatio = (step.durationMs.toFloat() / maxDuration.toFloat()).coerceIn(0.02f, 1f)
                                     val barColor = when {
-                                        step.step.contains("拉取") || step.step.contains("依赖") -> Color(0xFF2196F3) // 蓝色
-                                        step.step.contains("编译") || step.step.contains("Kotlin") || step.step.contains("Java") || step.step.contains("Dex") -> Color(0xFF4CAF50) // 绿色
-                                        step.step.contains("打包") || step.step.contains("APK") -> Color(0xFFFF9800) // 橙色
-                                        else -> Color(0xFF9E9E9E) // 灰色
+                                        step.step.contains("拉取") || step.step.contains("依赖") || step.step.contains("download", ignoreCase = true) || step.step.contains("resolve", ignoreCase = true) || step.step.contains("dependency", ignoreCase = true) -> Color(0xFF2196F3) // Blue
+                                        step.step.contains("编译") || step.step.contains("compile", ignoreCase = true) || step.step.contains("Kotlin") || step.step.contains("Java") || step.step.contains("Dex") -> Color(0xFF4CAF50) // Green
+                                        step.step.contains("打包") || step.step.contains("package", ignoreCase = true) || step.step.contains("assemble", ignoreCase = true) || step.step.contains("APK") -> Color(0xFFFF9800) // Orange
+                                        else -> Color(0xFF9E9E9E) // Gray
                                     }
                                     val durationText = if (step.durationMs >= 1000) "${"%.1f".format(step.durationMs / 1000.0)}s" else "${step.durationMs}ms"
                                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
