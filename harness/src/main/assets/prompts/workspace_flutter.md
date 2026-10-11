@@ -1,7 +1,7 @@
-### Flutter 工程操作规约
-- 当前工程类型：Flutter；根目录标记：{{MARKER_TEXT}}。
-- 修改前先 read `pubspec.yaml`、`lib/` 和 `android/` 的 Gradle 配置；Dart 代码用 edit/write 修改。
-- 依赖优先执行 `flutter pub get`；构建入口：`/opt/taixu/scripts/build_flutter.sh "{{WORKSPACE_PATH}}" "apk --debug"`，或 `flutter build apk --debug`。
-- 若项目 Flutter/Gradle 版本与标准入口不兼容，先检查 `pubspec.yaml`、Flutter 约束与 Android wrapper 分析依赖要求；随后先调用 `build_script(action=list)` 检查库中是否已有适配的现有脚本。若有匹配脚本则直接调用 `build_script(action=bind, id=...)` 挂载复用；若无适配脚本，再调用 `build_script(action=create, project_type=flutter, ...)` 创建有明确适用版本说明的 POSIX shell 脚本并挂载。脚本的 `$1` 是项目目录，`$2` 是传给 `flutter build` 的完整参数；脚本内执行 `flutter build $2`（切勿加双引号以保留参数分词）；不得写死当前项目路径。
-- 安装到手机时，确认 `build/app/outputs/flutter-apk/*.apk` 完整后复制到 `/sdcard/Download/`，再执行 `taixu-host install-apk <apk路径>`；检测到 ADB 后可直接 `adb install -r <apk>`。排查运行日志或崩溃时直接调用 `host(action="logcat", package="<包名>")` 或执行 `logcat-grabber <包名>`，无需 Shizuku/Root。
-- 遇到 Android Gradle/AAPT2 错误，检查 `android/gradle.properties`、Android 核心环境和 ARM64 AAPT2，不要反复全量下载 Flutter SDK。
+### Flutter Project Workflow Rules
+- Current project type: Flutter; root marker: {{MARKER_TEXT}}.
+- Before making changes, use `read` to inspect `pubspec.yaml`, `lib/`, and the Gradle configuration under `android/`. Modify Dart code with `edit` or `write`.
+- Prefer `flutter pub get` for dependencies. Build with `/opt/taixu/scripts/build_flutter.sh "{{WORKSPACE_PATH}}" "apk --debug"` or `flutter build apk --debug`.
+- If the project's Flutter/Gradle versions are incompatible with the standard entry point, inspect `pubspec.yaml`, Flutter constraints, and the Android wrapper to determine dependency requirements. Then call `build_script(action=list)` to check for a compatible existing script. If one matches, reuse it with `build_script(action=bind, id=...)`. If none matches, create and bind a POSIX shell script with explicit version compatibility notes using `build_script(action=create, project_type=flutter, ...)`. In the script, `$1` is the project directory and `$2` contains all arguments passed to `flutter build`; run `flutter build $2` without quotes so argument splitting is preserved. Never hard-code the current project path.
+- To install on the phone, verify that `build/app/outputs/flutter-apk/*.apk` is complete, copy it to `/sdcard/Download/`, then run `taixu-host install-apk <apk-path>`. If ADB is detected, you can run `adb install -r <apk>` directly. For runtime logs or crashes, call `host(action="logcat", package="<package-name>")` or run `logcat-grabber <package-name>`; Shizuku/Root is not required.
+- For Android Gradle/AAPT2 errors, inspect `android/gradle.properties`, the Android Core Environment, and ARM64 AAPT2. Do not repeatedly download the entire Flutter SDK.
