@@ -80,7 +80,7 @@ class ToolCenterViewModel(
                 toolManager.syncRegistry()
             } catch (e: Exception) {
                 logger.w("Failed to sync tool registry: ${e.message}", e)
-                _operationError.value = "刷新插件目录失败，请检查网络后重试"
+                _operationError.value = "Failed to refresh the plugin catalog. Check the network and try again."
             } finally {
                 _isSyncing.value = false
             }
@@ -92,7 +92,7 @@ class ToolCenterViewModel(
             ?.substringAfterLast('/')
             ?.substringAfterLast(':')
             ?.takeIf { it.isNotBlank() }
-            ?: "本地插件包"
+            ?: "Local plugin package"
         toolManager.startLocalPluginImport(uri, fileName)
     }
 
@@ -128,7 +128,7 @@ class ToolCenterViewModel(
                 toolManager.uninstall(toolId)
             } catch (e: Exception) {
                 logger.w("Tool uninstall failed: $toolId, ${e.message}", e)
-                _operationError.value = "卸载「$toolId」失败，请稍后重试；可查看日志了解详情"
+                _operationError.value = "Failed to uninstall “$toolId”. Try again later or check the logs for details."
             }
         }
     }
@@ -260,7 +260,7 @@ class ToolCenterViewModel(
             _installedComponentIds.value,
         )
         if (blockers.isEmpty()) return null
-        val message = "请先卸载依赖「${component.name}」的组件：${blockers.joinToString("、") { it.name }}"
+        val message = "Uninstall the components that depend on “${component.name}” first: ${blockers.joinToString(", ") { it.name }}"
         _operationError.value = message
         return message
     }
