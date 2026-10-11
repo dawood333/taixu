@@ -62,11 +62,11 @@ fun BrowserScreen(
     viewModel: BrowserViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    // 系统返回优先走 WebView 历史栈；无法后退时才退出浏览器页
+    // 系统返回优先走 WebView 历史栈；无法Back时才退出浏览器页
     BackHandler(enabled = state.canGoBack) { viewModel.onBack(onExhausted = onBack) }
     Column(modifier = Modifier.fillMaxSize()) {
         RuntimeTopBar(
-            title = "内置浏览器",
+            title = "Built-in browser",
             statusText = state.title.takeIf { it.isNotBlank() } ?: state.url.takeIf { it.isNotBlank() } ?: "—",
             onBack = onBack,
         )
@@ -76,13 +76,13 @@ fun BrowserScreen(
 
 /**
  * 可复用的浏览器内容面板，浏览区域最大化：
- *  - 顶部：极薄状态栏（共浏览开关 · 快照入口 · 标签页胶囊 · 返回对话，可横向滚动）；
+ *  - 顶部：极薄状态栏（共浏览开关 · Snapshots入口 · 标签页胶囊 · Back to chat，可横向滚动）；
  *  - 中部：WebView 占满剩余空间；
- *  - 底部：紧凑 URL 栏（后退/前进/刷新 + 小输入胶囊 + 跳转圆钮）。
+ *  - 底部：紧凑 URL 栏（Back/Forward/Refresh + 小输入胶囊 + 跳转圆钮）。
  *
  * 不含屏幕级导航外壳（RuntimeTopBar/BackHandler）；
  * BrowserScreen 独立页与 chat 分屏内嵌共用。
- * [onExit] 非空时状态栏末尾追加"返回对话"胶囊（chat 分屏内嵌场景）。
+ * [onExit] 非空时状态栏末尾追加"Back to chat"胶囊（chat 分屏内嵌场景）。
  */
 @Composable
 fun BrowserPane(
@@ -208,16 +208,16 @@ private fun BrowserStatusBar(
             val coTint = if (coBrowsingEnabled) Color(0xFF3F8FFF) else Color(0xFFFF8F3F)
             BrowserStatusItem(
                 icon = if (coBrowsingEnabled) RuntimeIconName.Visibility else RuntimeIconName.VisibilityOff,
-                label = if (coBrowsingEnabled) "共浏览中" else "已暂停",
+                label = if (coBrowsingEnabled) "Co-browsing" else "Paused",
                 tint = coTint,
                 highlight = coBrowsingEnabled,
                 onClick = onCoBrowsingToggle,
             )
             StatusDivider()
-            // 2. 页面快照入口（Agent 视角的元素树）
+            // 2. 页面Snapshots入口（Agent 视角的元素树）
             BrowserStatusItem(
                 icon = RuntimeIconName.Search,
-                label = "快照",
+                label = "Snapshots",
                 tint = MaterialTheme.colorScheme.tertiary,
                 onClick = onShowSnapshot,
             )
@@ -225,7 +225,7 @@ private fun BrowserStatusBar(
             // 3. 网络时间线入口（请求流 + Hook 命中，agent 操作可视化）
             BrowserStatusItem(
                 icon = RuntimeIconName.Network,
-                label = "网络 $networkCount",
+                label = "Network $networkCount",
                 tint = MaterialTheme.colorScheme.tertiary,
                 onClick = onShowNetwork,
             )
@@ -234,7 +234,7 @@ private fun BrowserStatusBar(
             if (tabs.isEmpty()) {
                 BrowserStatusItem(
                     icon = RuntimeIconName.Globe,
-                    label = "尚无标签页",
+                    label = "No tabs yet",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     onClick = {},
                 )
@@ -247,12 +247,12 @@ private fun BrowserStatusBar(
                     )
                 }
             }
-            // 末尾：返回对话（chat 分屏内嵌时显示）
+            // 末尾：Back to chat（chat 分屏内嵌时显示）
             if (onExit != null) {
                 StatusDivider()
                 BrowserStatusItem(
                     icon = RuntimeIconName.Back,
-                    label = "返回对话",
+                    label = "Back to chat",
                     tint = MaterialTheme.colorScheme.primary,
                     highlight = true,
                     onClick = onExit,
@@ -312,7 +312,7 @@ private fun StatusDivider() {
 
 /**
  * CDP 调试暂停横幅：断点/异常命中导致页面 JS 挂起时悬浮于浏览区顶部，
- * 提示暂停原因与命中位置，并提供手动"继续执行"（agent 不在时避免页面无限冻结）。
+ * 提示暂停原因与命中位置，并提供手动"Resume execution"（agent 不在时避免页面无限冻结）。
  */
 @Composable
 private fun DebugPausedBanner(
@@ -323,7 +323,7 @@ private fun DebugPausedBanner(
     val frame = paused.callFrames.firstOrNull()
     val location = frame?.let {
         "${it.functionName.ifEmpty { "<anonymous>" }} @ ${it.url.substringAfterLast('/')}:${it.lineNumber + 1}"
-    } ?: "无调用栈"
+    } ?: "No stack trace"
     Surface(
         color = Color(0xCCB45309),
         shape = RoundedCornerShape(10.dp),
@@ -339,7 +339,7 @@ private fun DebugPausedBanner(
             RuntimeIcon(RuntimeIconName.Alert, Modifier.size(16.dp), tint = Color.White)
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "已暂停 · ${paused.reason}",
+                    "Paused · ${paused.reason}",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color.White,
                     maxLines = 1,
@@ -365,7 +365,7 @@ private fun DebugPausedBanner(
                 ) {
                     RuntimeIcon(RuntimeIconName.Play, Modifier.size(12.dp), tint = Color(0xFFB45309))
                     Text(
-                        "继续",
+                        "Resume",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color(0xFFB45309),
                     )
@@ -414,7 +414,7 @@ private fun BrowserStatusItem(
 }
 
 /**
- * 底部紧凑 URL 栏：后退/前进/刷新小图标钮 + 圆角输入胶囊 + 主色跳转圆钮。
+ * 底部紧凑 URL 栏：Back/Forward/Refresh小图标钮 + 圆角输入胶囊 + 主色跳转圆钮。
  * 单行高度 ~44dp，只占浏览区很小一块。
  */
 @Composable
@@ -440,13 +440,13 @@ private fun BrowserUrlBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            RuntimeIconButton(onClick = onBack, enabled = canGoBack, contentDescription = "后退") {
+            RuntimeIconButton(onClick = onBack, enabled = canGoBack, contentDescription = "Back") {
                 RuntimeIcon(RuntimeIconName.Back, Modifier.size(17.dp))
             }
-            RuntimeIconButton(onClick = onForward, enabled = canGoForward, contentDescription = "前进") {
+            RuntimeIconButton(onClick = onForward, enabled = canGoForward, contentDescription = "Forward") {
                 RuntimeIcon(RuntimeIconName.ChevronRight, Modifier.size(17.dp))
             }
-            RuntimeIconButton(onClick = onRefresh, contentDescription = "刷新") {
+            RuntimeIconButton(onClick = onRefresh, contentDescription = "Refresh") {
                 RuntimeIcon(RuntimeIconName.Refresh, Modifier.size(17.dp))
             }
             // URL 输入胶囊：占满剩余宽度，右侧内嵌跳转圆钮
