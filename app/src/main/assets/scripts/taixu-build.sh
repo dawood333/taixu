@@ -67,21 +67,21 @@ export TAIXU_BUILD_ENGINE=1
 
 fail() { echo "[TaiXu Build] ERROR: $*" >&2; exit 10; }
 warn() { echo "[TaiXu Build] WARN: $*" >&2; }
-need_file() { test -e "$1" || fail "缺少 $2: $1"; }
-need_exec() { test -x "$1" || fail "缺少可执行文件 $2: $1"; }
+need_file() { test -e "$1" || fail "Missing $2: $1"; }
+need_exec() { test -x "$1" || fail "Missing executable $2: $1"; }
 verify_artifact() {
     verifier=/opt/taixu/scripts/taixu-build-verify.sh
-    need_exec "$verifier" "APK ABI 验证器"
-    /bin/sh "$verifier" "$1" || fail "APK 产物验证失败，拒绝导出/安装"
+    need_exec "$verifier" "APK ABI verifier"
+    /bin/sh "$verifier" "$1" || fail "APK artifact verification failed; refusing to export/install"
 }
 
 check_elf_machine() {
     path="$1"
     expected="$2"
     label="$3"
-    test -f "$path" || fail "$label 不存在: $path"
+    test -f "$path" || fail "$label does not exist: $path"
     machine=$(od -An -t x1 -j 18 -N 2 "$path" 2>/dev/null | tr -d '[:space:]')
-    test "$machine" = "$expected" || fail "$label ELF 架构不匹配 (machine=$machine, expected=$expected)"
+    test "$machine" = "$expected" || fail "$label ELF architecture mismatch (machine=$machine, expected=$expected)"
 }
 
 # The JDK launcher must resolve to a real ELF binary. A wrapper script whose
@@ -104,9 +104,9 @@ check_java_arch() {
     bin="$1"
     expected="$2"
     label="$3"
-    test -x "$bin" || fail "$label 不存在: $bin"
+    test -x "$bin" || fail "$label does not exist: $bin"
     machine=$(java_arch_machine "$bin")
-    test "$machine" = "$expected" || fail "$label ELF 架构不匹配 (machine=$machine, expected=$expected)"
+    test "$machine" = "$expected" || fail "$label ELF architecture mismatch (machine=$machine, expected=$expected)"
 }
 
 detect_project() {
@@ -126,7 +126,7 @@ keep_project_arm64_only() {
         case "$abi" in
             arm64-v8a) ;;
             armeabi-v7a|x86|x86_64)
-                echo "[TaiXu Build] 清理非 ARM64 生成目录: lib/$abi"
+                echo "[TaiXu Build] Removing non-ARM64 output directory: lib/$abi"
                 rm -rf -- "$abi_dir"
                 ;;
         esac
@@ -140,21 +140,21 @@ check_project_toolchain_declarations() {
     declared_ndk=$(grep -RhsE 'ndkVersion[^0-9]*[0-9]+(\.[0-9]+)+' "$project"/*.gradle "$project"/*.gradle.kts "$project"/app/*.gradle "$project"/app/*.gradle.kts "$project"/android/app/*.gradle "$project"/android/app/*.gradle.kts 2>/dev/null |
         sed -n 's/.*ndkVersion[^0-9]*\([0-9][0-9.]*\).*/\1/p' | head -n 1 || true)
     if test -n "$declared_ndk" && test -n "$expected_ndk" && test "$declared_ndk" != "$expected_ndk"; then
-        warn "项目声明 NDK $declared_ndk，构建将按工坊当前 NDK $expected_ndk 执行"
+        warn "Project declares NDK $declared_ndk; build will use the NDK currently configured in Workshop: $expected_ndk"
     fi
     declared_cmake=$(grep -RhsE 'cmake[^\n]*version[^0-9]*[0-9]+(\.[0-9]+)+' "$project"/*.gradle "$project"/*.gradle.kts "$project"/app/*.gradle "$project"/app/*.gradle.kts "$project"/android/app/*.gradle "$project"/android/app/*.gradle.kts 2>/dev/null |
         sed -n 's/.*version[^0-9]*\([0-9][0-9.]*\).*/\1/p' | head -n 1 || true)
     expected_cmake=$(${TAIXU_CMAKE_HOME:-/opt/taixu/tools/android-suite-offline/cmake}/bin/cmake --version 2>/dev/null |
         sed -n 's/^cmake version[[:space:]]*//p' | head -n 1 || true)
     if test -n "$declared_cmake" && test -n "$expected_cmake" && test "$declared_cmake" != "$expected_cmake"; then
-        warn "项目声明 CMake $declared_cmake，构建将按工坊当前 CMake $expected_cmake 执行"
+        warn "Project declares CMake $declared_cmake; build will use the CMake version currently configured in Workshop: $expected_cmake"
     fi
 }
 
 doctor() {
     project="${1:-}"
-    test -n "$project" || fail "用法: taixu-build doctor <项目目录>"
-    test -d "$project" || fail "项目目录不存在: $project"
+    test -n "$project" || fail "Usage: taixu-build doctor <project-dir>"
+    test -d "$project" || fail "Project directory does not exist: $project"
     keep_project_arm64_only "$project"
     need_exec /bin/sh "POSIX Shell"
     need_exec "$JAVA_HOME/bin/java" "JDK 17"
@@ -182,7 +182,7 @@ doctor() {
     export TAIXU_AAPT2_PATH
     ndk="${TAIXU_NDK_PATH:-${ANDROID_NDK_HOME:-/opt/taixu/toolchains/android/ndk}}"
     if [ "$has_native" = 1 ] || [ -f "$ndk/source.properties" ]; then
-        need_file "$ndk/source.properties" "固定 ARM64 NDK"
+        need_file "$ndk/source.properties" "Pinned ARM64 NDK"
         ndk_clang=$(find "$ndk/toolchains/llvm/prebuilt" \( -type f -o -type l \) -name clang -print -quit 2>/dev/null)
         ndk_strip=$(find "$ndk/toolchains/llvm/prebuilt" \( -type f -o -type l \) -name llvm-strip -print -quit 2>/dev/null)
         need_exec "$ndk_clang" "ARM64 NDK clang"
@@ -208,28 +208,28 @@ doctor() {
         cp /opt/taixu/scripts/taixu-release-signing.gradle "$GRADLE_USER_HOME/init.d/taixu-release-signing.gradle"
     fi
     grep -Fqx 'android.builder.sdkDownload=false' "$gradle_properties" 2>/dev/null ||
-        fail "Gradle SDK 自动下载未禁用，可能拉取 x86_64 主机工具"
+        fail "Gradle SDK auto-download is enabled and may download x86_64 host tools"
     wrapper_project="$project"
     test "$kind" = flutter && wrapper_project="$project/android"
     if test -f "$wrapper_project/gradlew" || test -d "$wrapper_project/gradle/wrapper"; then
         test -f "$wrapper_project/gradlew" -a -f "$wrapper_project/gradle/wrapper/gradle-wrapper.jar" -a \
             -f "$wrapper_project/gradle/wrapper/gradle-wrapper.properties" ||
-            warn "项目 Gradle Wrapper 不完整，将使用本地 Gradle 8.14.2"
+            warn "Project Gradle Wrapper is incomplete; using local Gradle 8.14.2"
     fi
     test -x "$GRADLE_HOME/bin/gradle" -o -d "$GRADLE_HOME/lib" -o -x "$wrapper_project/gradlew" -o -n "$(command -v gradle 2>/dev/null || true)" ||
-        fail "未找到 Gradle 8.14.2 或项目 Gradle Wrapper"
+        fail "Gradle 8.14.2 or the project Gradle Wrapper was not found"
     test "$kind" != android || test -f "$project/settings.gradle" -o -f "$project/settings.gradle.kts" ||
-        fail "不是可识别的 Android Gradle 工程 (缺少 settings.gradle/settings.gradle.kts)"
+        fail "Not a recognized Android Gradle project (settings.gradle/settings.gradle.kts is missing)"
     wrapper="$wrapper_project/gradle/wrapper/gradle-wrapper.properties"
     if test -f "$wrapper"; then
         wrapper_version=$(sed -n 's#.*gradle-\([0-9][0-9.]*\)-bin\.zip.*#\1#p' "$wrapper" | head -n 1)
         if test -n "$wrapper_version" && test "$wrapper_version" != "8.14.2"; then
-            warn "项目 Gradle Wrapper=$wrapper_version，本地基准=8.14.2；太墟构建入口将优先使用本地 Gradle"
+            warn "Project Gradle Wrapper=$wrapper_version; local baseline=8.14.2. The TaiXu build entry point will prefer local Gradle."
         fi
     fi
     compile_sdk=$(grep -RhsE 'compileSdk(Version)?[[:space:]]*[=( ]+[0-9]+' "$project"/*.gradle "$project"/*.gradle.kts "$project"/app/*.gradle "$project"/app/*.gradle.kts 2>/dev/null | grep -Eo '[0-9]+' | head -n 1)
     if test -n "$compile_sdk" && test "$compile_sdk" -gt 34; then
-        fail "项目 compileSdk=$compile_sdk，高于本地 Android Platform 34；请先由 Agent 对齐项目或安装对应 ARM64 平台资源"
+        fail "Project compileSdk=$compile_sdk exceeds local Android Platform 34. Ask the Agent to align the project or install the matching ARM64 platform resources first."
     fi
     if test "$kind" = flutter; then
         need_exec "$FLUTTER_HOME/bin/flutter" "Flutter SDK"
@@ -247,30 +247,30 @@ doctor() {
                 fi
             done
         fi
-        test -d "$project/android" || fail "Flutter 工程缺少 android 宿主目录"
+        test -d "$project/android" || fail "Flutter project is missing the Android host directory"
     elif test "$kind" = unknown; then
-        warn "无法识别项目类型，将只检查通用 Android 工具链"
+        warn "Unable to identify project type; checking only the general Android toolchain"
     fi
     if test "${TAIXU_OFFLINE:-0}" = 1; then
         if test "$kind" = flutter; then
             test -d "${PUB_CACHE:-/opt/taixu/cache/flutter-pub}/hosted" ||
-                fail "离线模式缺少 Flutter Pub 缓存，请先在线解析依赖"
+                fail "Flutter Pub cache is missing in offline mode; resolve dependencies online first"
         else
             test -d "${GRADLE_USER_HOME:-/root/.gradle}/caches/modules-2/files-2.1" ||
-                fail "离线模式缺少 Gradle 项目依赖缓存，请先在线解析依赖"
+                fail "Gradle project dependency cache is missing in offline mode; resolve dependencies online first"
         fi
     fi
     if test -x /opt/taixu/scripts/taixu-build-analyze.sh; then
         /bin/sh /opt/taixu/scripts/taixu-build-analyze.sh "$project" "$analyze_args" ||
-            fail "项目兼容分析失败"
+            fail "Project compatibility analysis failed"
     fi
-    echo "[TaiXu Build] OK: ARM64 构建环境已就绪 ($kind)"
+    echo "[TaiXu Build] OK: ARM64 build environment is ready ($kind)"
 }
 
 qemu_doctor() {
     project="$1"
     compat=/opt/taixu/compat/x86_64
-    test "$(uname -m)" = x86_64 || fail "--qemu 必须由太墟应用启动隔离 QEMU PRoot 会话，普通 ARM64 终端不能直接切换"
+    test "$(uname -m)" = x86_64 || fail "--qemu must be run by the TaiXu app in an isolated QEMU PRoot session; a regular ARM64 terminal cannot switch directly"
     need_exec "$compat/jdk-17/bin/java" "QEMU x86_64 JDK"
     need_exec "$compat/android-sdk/build-tools/35.0.0/aapt2" "QEMU x86_64 AAPT2"
     check_java_arch "$compat/jdk-17/bin/java" 3e00 "QEMU JDK"
@@ -283,27 +283,27 @@ qemu_doctor() {
     if test -f "$wrapper_project/gradlew" || test -d "$wrapper_project/gradle/wrapper"; then
         test -f "$wrapper_project/gradlew" -a -f "$wrapper_project/gradle/wrapper/gradle-wrapper.jar" -a \
             -f "$wrapper_project/gradle/wrapper/gradle-wrapper.properties" ||
-            warn "项目 Gradle Wrapper 不完整，将使用 QEMU 环境中的 Gradle 8.14.2"
+            warn "Project Gradle Wrapper is incomplete; using Gradle 8.14.2 from the QEMU environment"
     fi
     test -x "$compat/gradle-8.14.2/bin/gradle" -o -d "$compat/gradle-8.14.2/lib" -o -f "$wrapper_project/gradle/wrapper/gradle-wrapper.jar" ||
-        fail "QEMU 环境缺少 Gradle 8.14.2 或项目 Wrapper"
-    test -d "$project" || fail "项目目录不存在: $project"
+        fail "QEMU environment is missing Gradle 8.14.2 or the project Wrapper"
+    test -d "$project" || fail "Project directory does not exist: $project"
     if test "$kind" = flutter; then
         need_exec "$compat/flutter/bin/flutter" "QEMU Flutter SDK"
         need_exec "$compat/flutter/bin/cache/dart-sdk/bin/dart" "QEMU Dart SDK"
         check_elf_machine "$compat/flutter/bin/cache/dart-sdk/bin/dart" 3e00 "QEMU Dart SDK"
-        test -d "$project/android" || fail "Flutter 工程缺少 android 宿主目录"
+        test -d "$project/android" || fail "Flutter project is missing the Android host directory"
     elif test "$kind" = android; then
         test -f "$project/settings.gradle" -o -f "$project/settings.gradle.kts" ||
-            fail "不是可识别的 Android Gradle 工程 (缺少 settings.gradle/settings.gradle.kts)"
+            fail "Not a recognized Android Gradle project (settings.gradle/settings.gradle.kts is missing)"
     else
-        fail "无法识别项目类型"
+        fail "Unable to identify project type"
     fi
     compile_sdk=$(grep -RhsE 'compileSdk(Version)?[[:space:]]*[=( ]+[0-9]+' "$project"/*.gradle "$project"/*.gradle.kts "$project"/app/*.gradle "$project"/app/*.gradle.kts "$project"/android/app/*.gradle "$project"/android/app/*.gradle.kts 2>/dev/null | grep -Eo '[0-9]+' | head -n 1)
     if test -n "$compile_sdk" && test "$compile_sdk" -gt 34; then
-        fail "项目 compileSdk=$compile_sdk，高于 QEMU 环境 Android Platform 34；请先由 Agent 对齐项目或安装对应平台资源"
+        fail "Project compileSdk=$compile_sdk exceeds Android Platform 34 in the QEMU environment. Ask the Agent to align the project or install the matching platform resources first."
     fi
-    echo "[TaiXu Build] OK: QEMU x86_64 隔离构建环境已就绪"
+    echo "[TaiXu Build] OK: isolated QEMU x86_64 build environment is ready"
 }
 
 run_android() {
@@ -323,7 +323,7 @@ run_android() {
         /bin/sh /opt/taixu/scripts/build_android_qemu.sh "$project" "$task"; status=$?
         test "$status" -eq 0 || return "$status"
         apk=$(find "$project" -type f -name '*.apk' ! -name '*unaligned*' -exec ls -t {} + 2>/dev/null | head -n 1)
-        test -n "$apk" || fail "QEMU 构建完成但未找到 APK"
+        test -n "$apk" || fail "QEMU build completed but no APK was found"
         verify_artifact "$apk"
         return 0
     fi
@@ -334,7 +334,7 @@ run_android() {
     /bin/sh /opt/taixu/scripts/build_android.sh "$project" "$task"; status=$?
     test "$status" -eq 0 || return "$status"
     apk=$(find "$project" -type f -name '*.apk' ! -name '*unaligned*' -exec ls -t {} + 2>/dev/null | head -n 1)
-    test -n "$apk" || fail "构建完成但未找到 APK"
+    test -n "$apk" || fail "Build completed but no APK was found"
     verify_artifact "$apk"
 }
 
@@ -357,7 +357,7 @@ run_flutter() {
         /bin/sh /opt/taixu/scripts/build_flutter_qemu.sh "$project"; status=$?
         test "$status" -eq 0 || return "$status"
         apk=$(find "$project" -type f -name '*.apk' ! -name '*unaligned*' -exec ls -t {} + 2>/dev/null | head -n 1)
-        test -n "$apk" || fail "QEMU Flutter 构建完成但未找到 APK"
+        test -n "$apk" || fail "QEMU Flutter Build completed but no APK was found"
         verify_artifact "$apk"
         return 0
     fi
@@ -367,7 +367,7 @@ run_flutter() {
     /bin/sh /opt/taixu/scripts/build_flutter.sh "$project" "$target"; status=$?
     test "$status" -eq 0 || return "$status"
     apk=$(find "$project" -type f -name '*.apk' ! -name '*unaligned*' -exec ls -t {} + 2>/dev/null | head -n 1)
-    test -n "$apk" || fail "Flutter 构建完成但未找到 APK"
+    test -n "$apk" || fail "Flutter Build completed but no APK was found"
     verify_artifact "$apk"
 }
 
@@ -376,7 +376,7 @@ shift || true
 case "$command" in
     analyze)
         project="${1:-}"
-        test -n "$project" || fail "用法: taixu-build analyze <项目目录> [--offline]"
+        test -n "$project" || fail "Usage: taixu-build analyze <project-dir> [--offline]"
         shift || true
         exec /bin/sh /opt/taixu/scripts/taixu-build-analyze.sh "$project" "${1:-}"
         ;;
@@ -384,7 +384,7 @@ case "$command" in
         project="${1:-}"
         if test "${2:-}" = "--qemu"; then qemu_doctor "$project"; else doctor "$project"; fi
         ;;
-    android) test "$#" -ge 1 || fail "用法: taixu-build android <项目目录> [Gradle任务] [--qemu]"; run_android "$@" ;;
-    flutter) test "$#" -ge 1 || fail "用法: taixu-build flutter <项目目录> [Flutter参数] [--qemu]"; run_flutter "$@" ;;
-    *) fail "用法: taixu-build {doctor|android|flutter} ..." ;;
+    android) test "$#" -ge 1 || fail "Usage: taixu-build android <project-dir> [Gradle-task] [--qemu]"; run_android "$@" ;;
+    flutter) test "$#" -ge 1 || fail "Usage: taixu-build flutter <project-dir> [Flutter-args] [--qemu]"; run_flutter "$@" ;;
+    *) fail "Usage: taixu-build {doctor|android|flutter} ..." ;;
 esac
