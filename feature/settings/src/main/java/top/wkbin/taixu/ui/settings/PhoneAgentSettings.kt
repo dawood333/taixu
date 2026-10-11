@@ -141,7 +141,7 @@ fun PhoneAgentSettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Model name") },
                         placeholder = { Text("autoglm-phone") },
-                        supportingText = { Text("智谱的Phone Control Model名是 autoglm-phone") },
+                        supportingText = { Text("Zhipu's Phone Control model name is autoglm-phone") },
                         singleLine = true,
                     )
                     OutlinedTextField(
@@ -201,7 +201,7 @@ fun PhoneAgentSettingsScreen(
 
 private fun phoneAgentConfigError(baseUrl: String, model: String, apiKey: String): String? {
     val url = baseUrl.trim()
-    if (url.isBlank() || model.isBlank() || apiKey.isBlank()) return "Endpoint URL、Model name和密钥都要填写"
+    if (url.isBlank() || model.isBlank() || apiKey.isBlank()) return "Endpoint URL, model name, and API key are all required"
     val local = url.startsWith("http://127.0.0.1") || url.startsWith("http://localhost")
     if (!url.startsWith("https://") && !local) return "External endpoints must use https://"
     return null
