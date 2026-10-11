@@ -451,7 +451,7 @@ private fun BrowserGatesCard(gates: BrowserGateState, viewModel: SettingsViewMod
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
-            "内置浏览器服务的危险能力开关，默认全部Close；修改后需重启应用生效",
+            "Controls for risky capabilities in the built-in browser service. All are disabled by default; restart the app for changes to take effect.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -464,7 +464,7 @@ private fun BrowserGatesCard(gates: BrowserGateState, viewModel: SettingsViewMod
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             BrowserGateRow(
                 title = "Allow remote connections",
-                description = "允许局域网设备Connect浏览器 MCP 服务（绑定 0.0.0.0）；Close时仅限本机回环，仍强制 Bearer 认证",
+                description = "Allow LAN devices to connect to the browser MCP service (binds to 0.0.0.0). When disabled, only local loopback is allowed. Bearer authentication is always required.",
                 checked = gates.allowRemoteConnect,
                 onCheckedChange = viewModel::setBrowserAllowRemoteConnect,
             )
@@ -574,7 +574,7 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             BrowserGateRow(
                 title = "Enable controlled server",
-                description = "在本机启动独立的 MCP 服务端点；Close后立即停止监听",
+                description = "Start a standalone MCP endpoint on this device; disabling it stops listening immediately.",
                 checked = state.enabled,
                 onCheckedChange = viewModel::setAgentServerEnabled,
             )
@@ -583,13 +583,13 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     BrowserGateRow(
                         title = "Allow LAN connections",
-                        description = "绑定 0.0.0.0，同网段设备可Connect；Close时仅限本机回环，两种模式均强制 Bearer 认证",
+                        description = "Bind to 0.0.0.0 to allow devices on the same network to connect. When disabled, only local loopback is allowed. Bearer authentication is required in both modes.",
                         checked = state.allowRemote,
                         onCheckedChange = viewModel::setAgentServerAllowRemote,
                     )
                     BrowserGateRow(
                         title = "Allow writes and execution",
-                        description = "开放 write/edit/base/process/download 及 host 的写操作；Close时仅提供 read 与只读 host/memory 动作",
+                        description = "Enable write/edit/base/process/download and host write operations. When disabled, only read access and read-only host/memory actions are available.",
                         checked = state.allowWriteTools,
                         onCheckedChange = viewModel::setAgentServerAllowWriteTools,
                     )
@@ -665,7 +665,7 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                                     onClick = {
                                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                                         clipboard?.setPrimaryClip(ClipData.newPlainText("mcp_agent_token", state.token))
-                                        Toast.makeText(context, "令牌已复制", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Token copied", Toast.LENGTH_SHORT).show()
                                     },
                                     enabled = state.token.isNotBlank(),
                                     modifier = Modifier.size(24.dp),
@@ -680,25 +680,25 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             Text(
-                                "令牌持久Save，外部客户端可长期复用；重置后需同步更新客户端配置",
+                                "The token is stored persistently and can be reused by external clients. Update client configuration after resetting it.",
                                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f),
                             )
                             TextButton(onClick = viewModel::resetAgentServerToken) {
-                                Text("重置令牌", style = MaterialTheme.typography.labelSmall)
+                                Text("Reset token", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
 
                     Text(
-                        "外部客户端配置示例：在 MCP 配置中填写上述地址，并在请求头带 Authorization: Bearer <令牌>。",
+                        "External client example: enter the address above in your MCP configuration and include the Authorization: Bearer <token> request header.",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
 
                     Text(
-                        "启用后会显示一条常驻通知用于后台保活，避免 App 退到后台时Connect被系统掐断。",
+                        "When enabled, a persistent notification keeps the service alive in the background and helps prevent the system from terminating connections when the app is backgrounded.",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -733,7 +733,7 @@ private fun CopyableLine(label: String, value: String, context: Context) {
             onClick = {
                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                 clipboard?.setPrimaryClip(ClipData.newPlainText("mcp_agent_url", value))
-                Toast.makeText(context, "地址已复制", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Address copied", Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.size(24.dp),
         ) {
@@ -855,16 +855,16 @@ private fun McpServerItemCard(
 }
 
 /**
- * MCP 服务连通性状态小圆点：绿=在线 / 红=离线 / 转圈=检测中 / 灰=未知或未启用。
+ * MCP 服务连通性状态小圆点：绿=在线 / 红=Offline / 转圈=Checking / 灰=未知或Disabled。
  */
 @Composable
 private fun McpConnectionDot(state: McpConnectionState, enabled: Boolean) {
     val (color, label) = when {
-        !enabled -> MaterialTheme.colorScheme.outlineVariant to "未启用"
-        state == McpConnectionState.CHECKING -> MaterialTheme.colorScheme.tertiary to "检测中"
-        state == McpConnectionState.ONLINE -> successStatusColor() to "已连通"
-        state == McpConnectionState.OFFLINE -> MaterialTheme.colorScheme.error to "离线"
-        else -> MaterialTheme.colorScheme.outline to "未检测"
+        !enabled -> MaterialTheme.colorScheme.outlineVariant to "Disabled"
+        state == McpConnectionState.CHECKING -> MaterialTheme.colorScheme.tertiary to "Checking"
+        state == McpConnectionState.ONLINE -> successStatusColor() to "Connected"
+        state == McpConnectionState.OFFLINE -> MaterialTheme.colorScheme.error to "Offline"
+        else -> MaterialTheme.colorScheme.outline to "Not checked"
     }
     Box(
         modifier = Modifier
@@ -938,10 +938,10 @@ private fun McpServerDetailDialog(
                     )
                 }
 
-                // 启动命令 / URL 预览
+                // Launch command / URL 预览
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        if (server.transportType == McpTransportType.STDIO) "启动命令" else "服务端点 URL",
+                        if (server.transportType == McpTransportType.STDIO) "Launch command" else "Service endpoint URL",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -970,7 +970,7 @@ private fun McpServerDetailDialog(
                                 onClick = {
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                                     clipboard?.setPrimaryClip(ClipData.newPlainText("mcp_cmd", cmdText))
-                                    Toast.makeText(context, "命令已复制", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Command copied", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.size(24.dp),
                             ) {
@@ -988,7 +988,7 @@ private fun McpServerDetailDialog(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "MCP JSON 配置 (Cursor / Claude 格式)",
+                            "MCP JSON configuration (Cursor / Claude format)",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -996,11 +996,11 @@ private fun McpServerDetailDialog(
                             onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                                 clipboard?.setPrimaryClip(ClipData.newPlainText("mcp_json", jsonConfig))
-                                Toast.makeText(context, "JSON 配置已复制", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "JSON configuration copied", Toast.LENGTH_SHORT).show()
                             },
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
                         ) {
-                            Text("复制 JSON", style = MaterialTheme.typography.labelSmall)
+                            Text("Copy JSON", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     Surface(
@@ -1021,11 +1021,11 @@ private fun McpServerDetailDialog(
                     }
                 }
 
-                // OAuth 身份与授权
+                // OAuth Identity and authorization
                 if (server.authMode == McpAuthMode.OAUTH) {
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            "身份与授权",
+                            "Identity and authorization",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -1035,18 +1035,18 @@ private fun McpServerDetailDialog(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             val label = when (authState) {
-                                McpAuthState.Unauthenticated -> "未授权"
-                                McpAuthState.Authorizing -> "授权中…"
-                                is McpAuthState.Authorized -> "已授权"
-                                is McpAuthState.Error -> "授权失败"
-                                McpAuthState.Unsupported -> "不支持"
+                                McpAuthState.Unauthenticated -> "Not authorized"
+                                McpAuthState.Authorizing -> "Authorizing…"
+                                is McpAuthState.Authorized -> "Authorized"
+                                is McpAuthState.Error -> "Authorization failed"
+                                McpAuthState.Unsupported -> "Unsupported"
                             }
                             Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
                             when (authState) {
                                 McpAuthState.Unauthenticated, is McpAuthState.Error ->
-                                    Button(onClick = onAuthorize, enabled = server.oauthClientId.isNotBlank()) { Text("授权") }
+                                    Button(onClick = onAuthorize, enabled = server.oauthClientId.isNotBlank()) { Text("Authorize") }
                                 is McpAuthState.Authorized ->
-                                    OutlinedButton(onClick = onLogout) { Text("退出授权") }
+                                    OutlinedButton(onClick = onLogout) { Text("退出Authorize") }
                                 McpAuthState.Authorizing ->
                                     CircularProgressIndicator(modifier = Modifier.size(18.dp))
                                 McpAuthState.Unsupported -> Unit
@@ -1063,7 +1063,7 @@ private fun McpServerDetailDialog(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "沙箱连通性与工具探测",
+                            "Sandbox connectivity and tool discovery",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -1077,10 +1077,10 @@ private fun McpServerDetailDialog(
                                         testing = false
                                         res.onSuccess { tools ->
                                             discoveredTools = tools
-                                            Toast.makeText(context, "成功探测到 ${tools.size} 个工具", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Discovered ${tools.size} tools successfully", Toast.LENGTH_SHORT).show()
                                         }.onFailure { err ->
-                                            testError = err.message ?: "Connect失败"
-                                            Toast.makeText(context, "Connect失败：${err.message}", Toast.LENGTH_LONG).show()
+                                            testError = err.message ?: "Connection failed"
+                                            Toast.makeText(context, "Connection failed：${err.message}", Toast.LENGTH_LONG).show()
                                         }
                                     }
                                 }
@@ -1092,13 +1092,13 @@ private fun McpServerDetailDialog(
                                 CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 2.dp)
                                 Spacer(Modifier.width(6.dp))
                             }
-                            Text("探测工具", style = MaterialTheme.typography.labelSmall)
+                            Text("Discover tools", style = MaterialTheme.typography.labelSmall)
                         }
                     }
 
                     testError?.let {
                         Text(
-                            "探测失败: $it",
+                            "Discovery failed: $it",
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                             color = MaterialTheme.colorScheme.error,
                         )
@@ -1107,14 +1107,14 @@ private fun McpServerDetailDialog(
                     discoveredTools?.let { tools ->
                         if (tools.isEmpty()) {
                             Text(
-                                "该服务已连通，但未返回任何工具定义",
+                                "该服务Connected，但未返回任何工具定义",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         } else {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(
-                                    "已注册工具 (${tools.size}):",
+                                    "Registered tools (${tools.size}):",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.primary,
                                 )
@@ -1148,11 +1148,11 @@ private fun McpServerDetailDialog(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (!server.isBuiltin) {
                     TextButton(onClick = onDelete) {
-                        Text("Delete服务", color = MaterialTheme.colorScheme.error)
+                        Text("Delete service", color = MaterialTheme.colorScheme.error)
                     }
                 }
                 Button(onClick = onDismiss) {
-                    Text("完成")
+                    Text("Done")
                 }
             }
         },
@@ -1203,7 +1203,7 @@ private fun AddMcpServerDialog(
         onDismissRequest = onDismiss,
         title = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Add MCP 服务", fontWeight = FontWeight.Bold)
+                Text("Add MCP service", fontWeight = FontWeight.Bold)
                 SecondaryTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = Color.Transparent,
@@ -1212,12 +1212,12 @@ private fun AddMcpServerDialog(
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text("📝 表单模式", style = MaterialTheme.typography.labelMedium) },
+                        text = { Text("📝 Form mode", style = MaterialTheme.typography.labelMedium) },
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("📋 JSON 导入", style = MaterialTheme.typography.labelMedium) },
+                        text = { Text("📋 Import JSON", style = MaterialTheme.typography.labelMedium) },
                     )
                 }
             }
@@ -1230,26 +1230,26 @@ private fun AddMcpServerDialog(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (selectedTab == 0) {
-                    // 📝 表单模式
+                    // 📝 Form mode
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("服务名称") },
-                        placeholder = { Text("如: sqlite / github / fetch") },
+                        label = { Text("Service name") },
+                        placeholder = { Text("e.g. sqlite / github / fetch") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
                     OutlinedTextField(
                         value = description,
                         onValueChange = { description = it },
-                        label = { Text("描述（可选）") },
+                        label = { Text("Description (optional)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
 
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(
-                            "传输协议类型",
+                            "Transport protocol",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -1283,7 +1283,7 @@ private fun AddMcpServerDialog(
                                         color = if (isStdio) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                     Text(
-                                        "沙箱进程",
+                                        "Sandbox process",
                                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                         color = if (isStdio) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f) else MaterialTheme.colorScheme.outline,
                                     )
@@ -1309,7 +1309,7 @@ private fun AddMcpServerDialog(
                                         color = if (isSse) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                     Text(
-                                        "远程 HTTP",
+                                        "Remote HTTP",
                                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                                         color = if (isSse) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f) else MaterialTheme.colorScheme.outline,
                                     )
@@ -1322,14 +1322,14 @@ private fun AddMcpServerDialog(
                         OutlinedTextField(
                             value = command,
                             onValueChange = { command = it },
-                            label = { Text("执行命令（如 npx / uvx / python3）") },
+                            label = { Text("Command to run (e.g. npx / uvx / python3)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
                         OutlinedTextField(
                             value = argsStr,
                             onValueChange = { argsStr = it },
-                            label = { Text("参数（空格分隔）") },
+                            label = { Text("Arguments (space-separated)") },
                             placeholder = { Text("-y @modelcontextprotocol/server-sqlite") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
@@ -1338,7 +1338,7 @@ private fun AddMcpServerDialog(
                         OutlinedTextField(
                             value = serverUrl,
                             onValueChange = { serverUrl = it },
-                            label = { Text("HTTP / SSE 端点 URL") },
+                            label = { Text("HTTP / SSE endpoint URL") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -1349,7 +1349,7 @@ private fun AddMcpServerDialog(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text("OAuth 2.0 + PKCE", style = MaterialTheme.typography.labelMedium)
-                                Text("授权码模式；token 加密Save且不会导出", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("Authorize码模式；token 加密Save且不会导出", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Switch(checked = oauthEnabled, onCheckedChange = { oauthEnabled = it })
                         }
@@ -1357,21 +1357,21 @@ private fun AddMcpServerDialog(
                             OutlinedTextField(oauthClientId, { oauthClientId = it }, label = { Text("OAuth client ID") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                             OutlinedTextField(oauthAuthorizationEndpoint, { oauthAuthorizationEndpoint = it }, label = { Text("Authorization endpoint") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                             OutlinedTextField(oauthTokenEndpoint, { oauthTokenEndpoint = it }, label = { Text("Token endpoint") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                            OutlinedTextField(oauthScope, { oauthScope = it }, label = { Text("Scope（可选）") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-                            OutlinedTextField(oauthResource, { oauthResource = it }, label = { Text("Resource（可选）") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(oauthScope, { oauthScope = it }, label = { Text("Scope (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                            OutlinedTextField(oauthResource, { oauthResource = it }, label = { Text("Resource (optional)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                         }
                     }
                 } else {
                     // 📋 JSON 模式
                     Text(
-                        "直接粘贴 Claude Desktop / Cursor 标准配置：",
+                        "Paste a standard Claude Desktop / Cursor configuration:",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedTextField(
                         value = jsonText,
                         onValueChange = { jsonText = it },
-                        label = { Text("MCP JSON 配置") },
+                        label = { Text("MCP JSON configuration") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp),
@@ -1389,14 +1389,14 @@ private fun AddMcpServerDialog(
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
-                                "✅ 成功解析 ${list.size} 个服务: " + list.joinToString(", ") { it.name },
+                                "✅ Successfully parsed ${list.size} services: " + list.joinToString(", ") { it.name },
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                             )
                         }
                     } else {
-                        val errMsg = parsedServers.exceptionOrNull()?.message ?: "JSON 语法解析错误"
+                        val errMsg = parsedServers.exceptionOrNull()?.message ?: "JSON syntax error"
                         Text(
                             "❌ $errMsg",
                             style = MaterialTheme.typography.labelSmall,
@@ -1447,7 +1447,7 @@ private fun AddMcpServerDialog(
                     },
                     enabled = parsedServers.isSuccess && parsedServers.getOrNull()?.isNotEmpty() == true,
                 ) {
-                    Text("导入 (${parsedServers.getOrNull()?.size ?: 0} 个服务)")
+                    Text("Import (${parsedServers.getOrNull()?.size ?: 0} services)")
                 }
             }
         },
@@ -1460,13 +1460,13 @@ private fun AddMcpServerDialog(
 /** 解析用户粘贴的各类 MCP JSON 格式 */
 private fun parseMcpJson(rawJson: String): Result<List<McpServerConfig>> = runCatching {
     val trimmed = rawJson.trim()
-    if (trimmed.isBlank()) error("请输入 JSON 内容")
+    if (trimmed.isBlank()) error("Enter JSON content")
     val element = Json.parseToJsonElement(trimmed)
     val list = mutableListOf<McpServerConfig>()
     val rootObj = element.jsonObject
 
     if (rootObj.containsKey("mcpServers")) {
-        val serversObj = rootObj["mcpServers"]?.jsonObject ?: error("mcpServers 不是有效的 JSON 对象")
+        val serversObj = rootObj["mcpServers"]?.jsonObject ?: error("mcpServers is not a valid JSON object")
         for ((serverName, serverVal) in serversObj) {
             val sObj = serverVal.jsonObject
             val url = sObj["url"]?.jsonPrimitive?.contentOrNull.orEmpty()
@@ -1486,7 +1486,7 @@ private fun parseMcpJson(rawJson: String): Result<List<McpServerConfig>> = runCa
                 McpServerConfig(
                     id = "custom_${serverName.lowercase().replace(Regex("[^a-z0-9_]"), "_")}_${System.currentTimeMillis()}",
                     name = serverName,
-                    description = desc.ifBlank { if (isSse) "远程 HTTP 服务: $url" else "本地 Stdio: $command ${args.joinToString(" ")}" },
+                    description = desc.ifBlank { if (isSse) "Remote HTTP 服务: $url" else "Local Stdio: $command ${args.joinToString(" ")}" },
                     transportType = if (isSse) McpTransportType.SSE else McpTransportType.STDIO,
                     command = command,
                     args = args,
@@ -1513,12 +1513,12 @@ private fun parseMcpJson(rawJson: String): Result<List<McpServerConfig>> = runCa
         val desc = rootObj["description"]?.jsonPrimitive?.contentOrNull.orEmpty()
 
         val isSse = url.isNotBlank() || (command.isBlank() && rootObj.containsKey("url"))
-        if (command.isBlank() && url.isBlank()) error("配置中必须包含 command 或 url 字段")
+        if (command.isBlank() && url.isBlank()) error("Configuration must include a command or url field")
         list.add(
             McpServerConfig(
                 id = "custom_${name.lowercase().replace(Regex("[^a-z0-9_]"), "_")}_${System.currentTimeMillis()}",
                 name = name,
-                description = desc.ifBlank { if (isSse) "远程 HTTP 服务: $url" else "本地 Stdio: $command ${args.joinToString(" ")}" },
+                description = desc.ifBlank { if (isSse) "Remote HTTP 服务: $url" else "Local Stdio: $command ${args.joinToString(" ")}" },
                 transportType = if (isSse) McpTransportType.SSE else McpTransportType.STDIO,
                 command = command,
                 args = args,
@@ -1529,6 +1529,6 @@ private fun parseMcpJson(rawJson: String): Result<List<McpServerConfig>> = runCa
             )
         )
     }
-    if (list.isEmpty()) error("未找到有效的 MCP 服务配置")
+    if (list.isEmpty()) error("No valid MCP service configuration found")
     list
 }
