@@ -1,41 +1,41 @@
-﻿# Workflow：多步骤任务规划与进度推进
+# Workflow: Multi-Step Planning and Progress Tracking
 
-## 何时必须建 plan
+## When a plan is required
 
-当任务满足以下任一条件时，第一轮工具调用必须先执行 `plan(action="replace_active", goal=..., steps=[{"id":"1","title":"...","status":"in_progress"}, ...])`：
+For any of the following task types, the first tool call must create a plan using `plan(action="replace_active", goal=..., steps=[{"id":"1","title":"...","status":"in_progress"}, ...])`:
 
-1. **复杂开发与实现**：实现新功能、编写爬虫、模块重写、系统集成；
-2. **多步骤或跨文件操作**：预计需要 3 次以上工具调用或修改 2 个以上文件；
-3. **排错与构建排查**：编译失败排查、运行时崩溃分析、逆向分析；
-4. **服务安装与环境配置**：涉及多阶段命令执行与验证；
-5. **宿主自动化链路**：打开应用 → 等待前台 → 屏幕感知/点击 → 发广播/改设置等多步 Android 操作（优先复用可视化工作流或 `host` 工具，并在 plan 中标明特权前置条件）。
+1. **Complex development and implementation:** implementing a feature, writing a crawler, rewriting a module, or integrating systems.
+2. **Multi-step or cross-file work:** expected to require more than 3 tool calls or modify more than 2 files.
+3. **Troubleshooting and build investigation:** diagnosing compilation failures, runtime crashes, or reverse-engineering issues.
+4. **Service installation and environment setup:** work involving multiple stages of commands and verification.
+5. **Host automation sequences:** multi-step Android actions such as opening an app → waiting for it to become foreground → observing/tapping the screen → sending a broadcast or changing settings. Prefer reusable visual workflows or `host` tools, and note privilege prerequisites in the plan.
 
-*注意：简单单步或双步查询（如“读取文件查看版本号”、“执行单条查看命令”）无需建 plan。*
+*Simple one- or two-step queries (such as reading a file to check its version or running one inspection command) do not need a plan.*
 
-## 规划看板的标准生命周期
+## Standard lifecycle of the planning board
 
 ```text
-[开始] ──► plan(replace_active) ──► 渲染 UI 任务卡片
+[Start] ──► plan(replace_active) ──► Render task card in UI
                │
                ▼
-[执行] ──► 调用具体工具 (read/write/base/mcp/host/subagent)
+[Execute] ──► Call concrete tools (read/write/base/mcp/host/subagent)
                │
-               ├─► 当前步骤完成 ──► plan(advance, steps=[...])
-               ├─► 路线调整/新增步骤 ──► plan(replace_active, steps=[...])
-               └─► 遇到阻碍 ──► 停下反思，更新 plan 探索分支
+               ├─► Step complete ──► plan(advance, steps=[...])
+               ├─► Change approach/add steps ──► plan(replace_active, steps=[...])
+               └─► Blocker encountered ──► Pause, reflect, update plan, explore alternatives
                │
                ▼
-[收尾] ──► 实际验证结果 ──► plan(clear_active) ──► 总结交付
+[Finish] ──► Verify actual results ──► plan(clear_active) ──► Summarize delivery
 ```
 
-## 宿主能力提示（Shizuku / Root）
+## Host capability notes (Shizuku / Root)
 
-- 打开应用、发广播、改系统设置、GUI 点击滑动等，优先 `host(action=...)`；需要编排复用时引导用户使用可视化工作流 `HOST_ACTION` / `CONDITION_BRANCH`。
-- 特权动作前先 `host(action="status")` 确认模式；未授权时停止并说明，不要盲目重试。
-- 破坏性操作（清数据、冻结、改安全设置）必须先说明风险，必要时让用户确认。
+- For opening apps, sending broadcasts, changing system settings, and GUI taps/swipes, prefer `host(action=...)`. When the sequence should be reusable, guide the user to a visual workflow using `HOST_ACTION` / `CONDITION_BRANCH`.
+- Before privileged actions, call `host(action="status")` to confirm the mode. If authorization is missing, stop and explain; do not retry blindly.
+- Explain risks before destructive operations (clearing data, freezing apps, changing security settings), and ask the user for confirmation when necessary.
 
-## 严禁行为
+## Prohibited behavior
 
-- 严禁在无规划状态下对复杂任务盲目无序地试错调用工具；
-- 严禁在步骤完成后不同步更新看板进度；
-- 遇到错误时，严禁忽略 plan 盲目发起原样重试。
+- Do not blindly and chaotically call tools for complex tasks without a plan.
+- Do not leave the task board out of sync after completing a step.
+- After an error, do not ignore the plan and blindly retry the same call.
