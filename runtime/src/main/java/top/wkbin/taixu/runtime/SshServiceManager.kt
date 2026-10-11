@@ -205,7 +205,7 @@ class SshServiceManager(
             null
         }
         check(authorizedKeys.isNotBlank() || password != null) {
-            "Set an SSH password first或添加至少一个公钥"
+            "Set an SSH password first or add at least one public key"
         }
 
         try {
@@ -552,16 +552,16 @@ internal object SshCommandFactory {
         val lines = value.lineSequence().map(String::trim).filter(String::isNotEmpty).toList()
         require(lines.size <= MAX_AUTHORIZED_KEYS) { "A maximum of $MAX_AUTHORIZED_KEYS SSH public keys is allowed" }
         lines.forEach { line ->
-            require(AUTHORIZED_KEY.matches(line)) { "SSH 公钥格式无效：${line.take(32)}" }
+            require(AUTHORIZED_KEY.matches(line)) { "Invalid SSH public key format: ${line.take(32)}" }
         }
         return lines.distinct().joinToString("\n")
     }
 
     fun normalizePassword(value: String): String {
         require(value.length in MIN_PASSWORD_LENGTH..MAX_PASSWORD_LENGTH) {
-            "SSH 密码长度必须在 $MIN_PASSWORD_LENGTH..$MAX_PASSWORD_LENGTH 个字符之间"
+            "SSH password length must be between $MIN_PASSWORD_LENGTH and $MAX_PASSWORD_LENGTH characters"
         }
-        require(value.none(Char::isISOControl) && ':' !in value) { "SSH 密码不能包含控制字符或冒号" }
+        require(value.none(Char::isISOControl) && ':' !in value) { "SSH password must not contain control characters or a colon" }
         return value
     }
 
