@@ -1,13 +1,13 @@
-## 网页逆向行为准则（hook 工具族，需 allowHooks 开启）
+## Web reverse-engineering guidelines (hook tools; requires `allowHooks`)
 
-- 先观察后改写：新目标先用 `actions:[{"type":"log"}]` 观察请求/调用形态，确认目标精确后再加 mock/block/redirect/modify_headers 等改写动作；
-- 改写真实生效于页面：mock/block 会改变页面实际行为（可能破坏功能、触发站点风控），target glob 必须足够精确，勿用 `*` 全局改写；
-- 抓请求/响应体：hook_create 网络类规则设 `captureBody: true`，请求发生后用 `browser.network_detail(id)` 查看（id 来自 `browser.network_list` 输出末尾）；
-- 安全与清理：勿把密钥/敏感数据写进 mock body；逆向完成后用 `browser.hook_remove` 逐条或 `browser.hook_reset` 清空规则，避免污染后续页面行为。
+- Observe before modifying: for a new target, first use `actions:[{"type":"log"}]` to observe request/call patterns. After confirming the exact target, add rewrite actions such as mock/block/redirect/modify_headers.
+- Rewrites affect the live page: mock/block changes actual page behavior and may break features or trigger site anti-abuse controls. Keep target globs precise; do not use `*` for global rewriting.
+- Capture request/response bodies: set `captureBody: true` on network rules created with `hook_create`, then inspect them with `browser.network_detail(id)` after a request occurs. The ID is shown at the end of `browser.network_list` output.
+- Security and cleanup: never place secrets or sensitive data in mock bodies. After reverse engineering, remove rules individually with `browser.hook_remove` or clear them with `browser.hook_reset` to avoid affecting later page behavior.
 
-## CDP 动态调试行为准则（debug 工具族，需 allowCdp 开启）
+## CDP live-debugging guidelines (debug tools; requires `allowCdp`)
 
-- 调试前置：先 `browser.debug_attach`（tab 省略=当前活跃 tab）建立 CDP 会话，再 `browser.debug_set_breakpoint`；URL 支持后缀匹配（如 `app.js` 匹配任意以它结尾的脚本），line/column 为 0-based；
-- 暂停即冻结：断点触发后页面暂停，期间页内工具（evaluate/snapshot/click 等）会被拒绝；用 `browser.debug_state` 看调用栈、`browser.debug_scope` 看作用域变量、`browser.debug_eval` 在栈帧上求值（可读写局部变量）、`browser.debug_step` 单步（over/into/out）；
-- **铁律：调试结束必须 `browser.debug_resume`**（tab 省略=恢复全部），否则页面永久冻结；detach 前会自动 resume，但不要依赖；
-- Worker 级拦截：attach 后 hook 网络规则（log/block/redirect/mock/modify_headers）由引擎级 Fetch 拦截执行，覆盖 Worker/Service Worker 与注入式 hook 覆盖不到的子资源请求；断点在 detach 后重 attach 会自动重放，无需重建。
+- Before debugging, establish a CDP session with `browser.debug_attach` (omitting `tab` uses the active tab), then call `browser.debug_set_breakpoint`. URLs support suffix matching (for example, `app.js` matches any script ending with that name); line and column are 0-based.
+- A pause freezes the page: after a breakpoint hits, in-page tools such as evaluate/snapshot/click are rejected. Use `browser.debug_state` for the call stack, `browser.debug_scope` for scope variables, `browser.debug_eval` to evaluate in a stack frame (local variables can be read or written), and `browser.debug_step` to step over/into/out.
+- **Rule: always call `browser.debug_resume` when debugging ends** (omit `tab` to resume all tabs), or the page remains frozen. Detach automatically resumes, but do not rely on that.
+- Worker-level interception: after attach, network rules (log/block/redirect/mock/modify_headers) use engine-level Fetch interception, covering Worker/Service Worker and subresource requests that injected hooks cannot intercept. Breakpoints are replayed automatically after reattaching following a detach; they do not need to be recreated.
