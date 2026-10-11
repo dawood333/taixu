@@ -434,7 +434,7 @@ class EnvironmentDoctor(
                 category = DoctorCategory.DEV_RUNTIMES,
                 title = "Node.js Runtime",
                 status = DoctorStatus.WARNING,
-                summary = "未检测到 Node.js Runtime",
+                summary = "Node.js runtime not detected",
                 detail = "Agent tools such as OpenClaw and Claude Code require Node.js (v20 or later recommended)",
             )
         }
