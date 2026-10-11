@@ -25,7 +25,7 @@ import top.wkbin.taixu.runtime.gui.WorkflowGuiHudBridge
 
 /**
  * 工作流悬浮窗（药丸形）：状态指示 + 阶段文案 + 停止按钮。
- * 运行中：小进度圈/状态点 + "思考中/操作中" + 停止；结束后：状态色点 + 结果文案 + 关闭。
+ * While running: small progress indicator/status dot + “Thinking/Acting” + Stop; when finished: status-colored dot + result text + Close.
  */
 @Composable
 fun WorkflowHudOverlay(
@@ -41,12 +41,12 @@ fun WorkflowHudOverlay(
         else -> MaterialTheme.colorScheme.secondary
     }
     val phaseLabel = when (session.phase) {
-        WorkflowGuiHudBridge.Phase.THINKING -> "思考中"
-        WorkflowGuiHudBridge.Phase.ACTING -> "操作中"
-        WorkflowGuiHudBridge.Phase.SUCCESS -> "成功"
-        WorkflowGuiHudBridge.Phase.FAILED -> "失败"
-        WorkflowGuiHudBridge.Phase.CANCELLED -> "已停止"
-        WorkflowGuiHudBridge.Phase.IDLE -> "空闲"
+        WorkflowGuiHudBridge.Phase.THINKING -> "Thinking"
+        WorkflowGuiHudBridge.Phase.ACTING -> "Working"
+        WorkflowGuiHudBridge.Phase.SUCCESS -> "Succeeded"
+        WorkflowGuiHudBridge.Phase.FAILED -> "Failed"
+        WorkflowGuiHudBridge.Phase.CANCELLED -> "Stopped"
+        WorkflowGuiHudBridge.Phase.IDLE -> "Idle"
     }
 
     Surface(
@@ -100,7 +100,7 @@ fun WorkflowHudOverlay(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "停止",
+                        text = "Stop",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.error,
                         maxLines = 1,
