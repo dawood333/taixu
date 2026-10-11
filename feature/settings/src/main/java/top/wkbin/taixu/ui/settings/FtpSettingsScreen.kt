@@ -200,42 +200,42 @@ fun FtpSettingsScreen(
                             onCopy = { copyText(context, settings.port.toString(), "FTP port ${settings.port} copied") },
                         )
                         ParamRow(
-                            label = "本机主机 IP (Host - 手机其他 App 连接)",
+                            label = "Local host IP (for other apps on this phone)",
                             value = "127.0.0.1",
                             highlight = true,
-                            onCopy = { copyText(context, "127.0.0.1", "本机 IP (127.0.0.1) 已Copy") },
+                            onCopy = { copyText(context, "127.0.0.1", "Local IP (127.0.0.1) copied") },
                         )
                         ParamRow(
-                            label = "局域网主机 IP (Host - 电脑/外部设备连接)",
+                            label = "LAN host IP (for computers and external devices)",
                             value = settings.connectionHost,
-                            onCopy = { copyText(context, settings.connectionHost, "局域网 IP (${settings.connectionHost}) 已Copy") },
+                            onCopy = { copyText(context, settings.connectionHost, "LAN IP (${settings.connectionHost}) copied") },
                         )
                         ParamRow(
-                            label = "登录Username (Username)",
+                            label = "Login username",
                             value = settings.username,
-                            onCopy = { copyText(context, settings.username, "Username (${settings.username}) 已Copy") },
+                            onCopy = { copyText(context, settings.username, "Username (${settings.username}) copied") },
                         )
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
 
                         Text(
-                            text = "快速连接 URL：",
+                            text = "Quick-connect URL:",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                         ParamRow(
-                            label = "局域网 / 电脑访问 URL",
+                            label = "LAN / computer access URL",
                             value = settings.connectionUrl,
-                            onCopy = { copyText(context, settings.connectionUrl, "局域网 FTP 地址已Copy") },
+                            onCopy = { copyText(context, settings.connectionUrl, "LAN FTP address copied") },
                         )
                         ParamRow(
-                            label = "手机本机其他 App 访问 URL",
+                            label = "URL for other apps on this phone",
                             value = settings.localUrl,
-                            onCopy = { copyText(context, settings.localUrl, "本机 FTP 地址已Copy") },
+                            onCopy = { copyText(context, settings.localUrl, "Local FTP address copied") },
                         )
 
                         Text(
-                            text = "使用提示：在手机第三方文件管理器 (如 MT管理器/Solid Explorer/CX文件管理器) 中添加 FTP 时，主机填写 127.0.0.1，端口填 ${settings.port}；同一 Wi-Fi 下电脑连接主机填 ${settings.connectionHost}。",
+                            text = "Tip: When adding FTP in a third-party file manager on this phone (such as MT Manager, Solid Explorer, or CX File Explorer), use host 127.0.0.1 and port ${settings.port}. For a computer on the same Wi-Fi network, use host ${settings.connectionHost}.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -246,40 +246,40 @@ fun FtpSettingsScreen(
             if (vpnActive) {
                 item {
                     NoticeBanner(
-                        text = "检测到手机正处于 VPN 连接中，VPN 可能接管局域网流量导致外部设备无法连接。若连接超时请先暂停 VPN 或将本应用加入直连白名单。",
+                        text = "A VPN is active and may be routing LAN traffic, preventing external devices from connecting. If connections time out, pause the VPN or add this app to its bypass list.",
                         isError = true,
                     )
                 }
             }
 
             item {
-                SectionLabel("登录认证与权限")
+                SectionLabel("Login authentication and permissions")
                 SettingsGroup {
                     SettingsRow(
                         icon = RuntimeIconName.Admin,
-                        title = "登录Username",
-                        subtitle = "FTP 客户端连接时使用的Username",
+                        title = "Login username",
+                        subtitle = "Username used by FTP clients to connect",
                         value = settings.username,
                         onClick = { showUsernameDialog = true },
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     val passwordSubtitle = if (settings.passwordConfigured) {
-                        "Password已单独配置并加密保存，点击修改或清除"
+                        "A separate password is configured and stored encrypted. Tap to change or clear it."
                     } else if (settings.sshPasswordConfigured) {
-                        "未单独设置，已自动使用 SSH 登录Password"
+                        "No separate password is set; the SSH login password is used automatically."
                     } else {
-                        "未设置Password（免密登录，客户端Password留空或填任意内容即可）"
+                        "No password set (passwordless login; leave the client password blank or enter any value)."
                     }
                     val passwordValue = if (settings.passwordConfigured) {
-                        "已设置"
+                        "Configured"
                     } else if (settings.sshPasswordConfigured) {
-                        "同 SSH Password"
+                        "Same as SSH password"
                     } else {
-                        "免密"
+                        "Passwordless"
                     }
                     SettingsRow(
                         icon = RuntimeIconName.Key,
-                        title = "登录Password",
+                        title = "Login password",
                         subtitle = passwordSubtitle,
                         value = passwordValue,
                         onClick = { showPasswordDialog = true },
@@ -287,8 +287,8 @@ fun FtpSettingsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Shield,
-                        title = "允许匿名访问",
-                        subtitle = if (settings.anonymousEnabled) "外部客户端无需Username/Password即可登录" else "要求输入Username与Password认证",
+                        title = "Allow anonymous access",
+                        subtitle = if (settings.anonymousEnabled) "External clients can log in without a username or password" else "Require username and password authentication",
                         trailing = {
                             RuntimeSwitch(
                                 checked = settings.anonymousEnabled,
@@ -300,8 +300,8 @@ fun FtpSettingsScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRow(
                         icon = RuntimeIconName.Storage,
-                        title = "只读保护模式",
-                        subtitle = if (settings.readOnly) "只读模式生效：禁止外部写入、修改、重命名或删除文件" else "读写模式：允许外部自由上传、重命名与删除文件",
+                        title = "Read-only protection mode",
+                        subtitle = if (settings.readOnly) "Read-only mode is active: external clients cannot write, modify, rename, or delete files" else "Read/write mode: external clients may upload, rename, and delete files",
                         trailing = {
                             RuntimeSwitch(
                                 checked = settings.readOnly,
@@ -314,7 +314,7 @@ fun FtpSettingsScreen(
             }
 
             item {
-                SectionLabel("网络配置")
+                SectionLabel("Network configuration")
                 SettingsGroup {
                     Row(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -327,12 +327,12 @@ fun FtpSettingsScreen(
                         OutlinedTextField(
                             value = portText,
                             onValueChange = { portText = it.filter(Char::isDigit).take(5) },
-                            label = { Text("FTP 端口") },
+                            label = { Text("FTP port") },
                             isError = portText.isNotBlank() && !portValid,
                             supportingText = {
                                 Text(
-                                    if (portText.isNotBlank() && !portValid) "端口需在 1024–65535 范围内"
-                                    else "默认端口：2121（范围 1024–65535）",
+                                    if (portText.isNotBlank() && !portValid) "Port must be between 1024 and 65535"
+                                    else "Default port: 2121 (range 1024–65535)",
                                 )
                             },
                             singleLine = true,
@@ -350,7 +350,7 @@ fun FtpSettingsScreen(
                             onClick = { viewModel.savePort(portText) },
                             enabled = !busy && portValid && portText != settings.port.toString(),
                         ) {
-                            Text("保存")
+                            Text("Save")
                         }
                     }
                 }
@@ -358,7 +358,7 @@ fun FtpSettingsScreen(
 
             if (logs.isNotEmpty()) {
                 item {
-                    SectionLabel("最近访问日志")
+                    SectionLabel("Recent access log")
                     RuntimeCard(
                         modifier = Modifier.fillMaxWidth(),
                         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -404,7 +404,7 @@ private fun FtpPasswordDialog(
     val matches = password == confirmation
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (passwordConfigured) "修改 FTP 登录Password" else "设置 FTP 登录Password") },
+        title = { Text(if (passwordConfigured) "修改 FTP Login password" else "设置 FTP Login password") },
         text = {
             Column(
                 modifier = Modifier
@@ -413,7 +413,7 @@ private fun FtpPasswordDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    "Password将通过 Android Keystore 加密保存，外部客户端连接时需输入此Password。",
+                    "Password将通过 Android Keystore 加密Save，外部客户端连接时需输入此Password。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -446,7 +446,7 @@ private fun FtpPasswordDialog(
             RuntimeButton(
                 onClick = { onSave(password) },
                 enabled = password.length >= 4 && matches,
-            ) { Text("保存") }
+            ) { Text("Save") }
         },
         dismissButton = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -468,7 +468,7 @@ private fun FtpUsernameDialog(
     var username by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(currentUsername) }
     RuntimeAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("修改 FTP 登录Username") },
+        title = { Text("修改 FTP Login username") },
         text = {
             OutlinedTextField(
                 value = username,
@@ -483,7 +483,7 @@ private fun FtpUsernameDialog(
             RuntimeButton(
                 onClick = { onSave(username.trim().ifBlank { "root" }) },
                 enabled = username.isNotBlank(),
-            ) { Text("保存") }
+            ) { Text("Save") }
         },
         dismissButton = {
             RuntimeTextButton(onClick = onDismiss) { Text("取消") }
