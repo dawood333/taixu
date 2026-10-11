@@ -89,7 +89,7 @@ class AndroidAppManager(
 
     /**
      * 非特权模式下判断应用是否实际启用：getApplicationEnabledSetting 无需特殊权限即可读取
-     * 用户通过 pm disable-user / 设置页"停用"造成的禁用状态，弥补 ApplicationInfo.enabled
+     * disabled state caused by the user running pm disable-user or tapping “Disable” in Settings, supplementing ApplicationInfo.enabled
      * 只反映 manifest 默认值的不足。
      */
     private fun isEffectivelyEnabled(packageName: String, manifestDefault: Boolean): Boolean = runCatching {
