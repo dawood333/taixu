@@ -48,7 +48,7 @@ fun StatsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = "数据统计与用量分析",
+                title = "Usage statistics and analytics",
                 onBack = onBack,
             )
         },
@@ -67,10 +67,10 @@ fun StatsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 val presets = listOf(
-                    StatsDateRangePreset.ALL_TIME to "全部时间",
-                    StatsDateRangePreset.LAST_30_DAYS to "近30天",
-                    StatsDateRangePreset.PREVIOUS_MONTH to "上个月",
-                    StatsDateRangePreset.PREVIOUS_QUARTER to "上季度",
+                    StatsDateRangePreset.ALL_TIME to "All time",
+                    StatsDateRangePreset.LAST_30_DAYS to "Last 30 days",
+                    StatsDateRangePreset.PREVIOUS_MONTH to "Previous month",
+                    StatsDateRangePreset.PREVIOUS_QUARTER to "Previous quarter",
                 )
 
                 for ((preset, label) in presets) {
@@ -100,7 +100,7 @@ fun StatsScreen(
                 )
             }
 
-            // 加载失败：错误态 + 重试入口（复用模块内 RuntimeCard + 按钮模式）
+            // 加载失败：错误态 + Retry入口（复用模块内 RuntimeCard + 按钮模式）
             uiState.error?.let { errorMessage ->
                 Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                     RuntimeCard(modifier = Modifier.fillMaxWidth()) {
@@ -117,7 +117,7 @@ fun StatsScreen(
                             RuntimeButton(
                                 onClick = { viewModel.refresh() },
                             ) {
-                                Text("重试")
+                                Text("Retry")
                             }
                         }
                     }
@@ -129,7 +129,7 @@ fun StatsScreen(
                 Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
                     RuntimeCard(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = "暂无统计数据。开始使用 Agent 对话与工具后，这里会展示活跃度与 Token 用量。",
+                            text = "No statistics yet. Activity and token usage will appear here after you use Agent conversations and tools.",
                             modifier = Modifier.fillMaxWidth().padding(24.dp),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -145,33 +145,33 @@ fun StatsScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    // 1. 活跃度打卡热力图
+                    // 1. Activity heatmap
                     item {
-                        StatsSectionCard(title = "活跃度打卡热力图") {
+                        StatsSectionCard(title = "Activity heatmap") {
                             StatsHeatmap(days = snapshot.heatmap)
                         }
                     }
 
-                    // 2. 核心指标概览 6 宫格
+                    // 2. Key metrics overview 6 宫格
                     item {
-                        StatsSectionCard(title = "核心指标概览") {
+                        StatsSectionCard(title = "Key metrics overview") {
                             StatsMetricGrid(summary = snapshot.summary)
                         }
                     }
 
                     // 3. Token 用量趋势图表
                     item {
-                        StatsSectionCard(title = "Token 用量与消耗趋势") {
+                        StatsSectionCard(title = "Token usage and consumption trends") {
                             StatsUsageChart(days = snapshot.trend)
                         }
                     }
 
-                    // 4. 模型使用排行
+                    // 4. Model usage ranking
                     item {
                         StatsRankSection(
-                            title = "模型使用排行",
-                            leftHeader = "模型名称",
-                            rightHeader = "调用次数",
+                            title = "Model usage ranking",
+                            leftHeader = "Model",
+                            rightHeader = "Calls",
                             items = snapshot.modelRank,
                             icon = RuntimeIconName.Brain,
                         )
@@ -180,9 +180,9 @@ fun StatsScreen(
                     // 5. 助手 / 工程工作区排行
                     item {
                         StatsRankSection(
-                            title = "助手与工程排行",
-                            leftHeader = "工作区 / 助手",
-                            rightHeader = "使用频次",
+                            title = "Assistant and project ranking",
+                            leftHeader = "Workspace / Assistant",
+                            rightHeader = "Usage frequency",
                             items = snapshot.assistantRank,
                             icon = RuntimeIconName.Bot,
                         )
@@ -191,9 +191,9 @@ fun StatsScreen(
                     // 6. 热门话题排行
                     item {
                         StatsRankSection(
-                            title = "热门话题会话排行",
-                            leftHeader = "会话标题",
-                            rightHeader = "消息条数",
+                            title = "Popular conversation topics",
+                            leftHeader = "Conversation",
+                            rightHeader = "Messages",
                             items = snapshot.topicRank,
                             icon = RuntimeIconName.Chat,
                         )
