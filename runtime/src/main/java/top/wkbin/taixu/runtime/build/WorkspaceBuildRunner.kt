@@ -939,7 +939,6 @@ class WorkspaceBuildRunner(
             text.contains("主机工具不是可执行") ||
             text.contains("host tool is not an executable")
     }
-
     /** Write a complete APK into the public Download directory; returns the file actually written. */
     private fun copyApkAtomically(
         source: File,
@@ -981,7 +980,6 @@ class WorkspaceBuildRunner(
             temporary.delete()
         }
     }
-
     /** 用临时文件替换目标；覆盖失败（例如旧文件不可删除）返回 false。 */
     private fun replaceTarget(source: File, target: File): Boolean = try {
         Files.move(
@@ -993,7 +991,6 @@ class WorkspaceBuildRunner(
     } catch (_: Throwable) {
         false
     }
-
     private fun uniqueTarget(target: File): File {
         val dot = target.name.lastIndexOf('.')
         val base = if (dot > 0) target.name.substring(0, dot) else target.name
