@@ -190,7 +190,7 @@ fun AdbLogcatScreen(
             SectionHeader("Secure pairing and connection", "Keys are stored persistently in the app's private directory; after pairing once, the port does not need to be looked up again")
             RuntimeCard(Modifier.fillMaxWidth()) {
                 NoticeBanner(
-                    text = "💡 通知栏快捷配对推荐：Android 系统在开启「使用配对码配对设备」弹窗时，切出设置会关闭弹窗并使配对码失效。开启上方「Notification-shade pairing assistant」后，可在系统开发者选项弹窗中直接下拉通知栏输入 6-digit pairing code并提交，无需切屏！",
+                    text = "💡 Notification-shade pairing is recommended: when Android shows the “Pair device with pairing code” dialog, switching away from Settings closes it and invalidates the code. Enable the “Notification-shade pairing assistant” above to enter and submit the 6-digit pairing code directly from the notification shade without switching screens!",
                     isError = false,
                 )
                 Spacer(Modifier.height(10.dp))
