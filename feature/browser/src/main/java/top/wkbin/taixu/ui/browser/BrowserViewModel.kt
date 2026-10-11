@@ -41,7 +41,7 @@ class BrowserViewModel(
     private val _canGoBack = MutableStateFlow(false)
     private val _canGoForward = MutableStateFlow(false)
 
-    // 浏览器活动信号：agent/用户导航、tab 切换时递增，供聊天页提示"浏览器有新动态"
+    // Browser activity signal: increments on Agent/user navigation or tab switches so the chat page can show "New browser activity"
     private val _activityTick = MutableStateFlow(0L)
     // 面板可见性：只有浏览器面板真正被展示时才确保/补建活跃 tab，避免 app 启动即常驻 WebView
     private val _paneVisible = MutableStateFlow(false)
@@ -164,7 +164,7 @@ class BrowserViewModel(
                 browserPreferences.coBrowsingEnabled().collect { _coBrowsingEnabled.value = it }
             }
         }
-        // 浏览器活动信号：活跃 tab URL 变化 / tab 切换时递增（聊天页据此显示"浏览器有新动态"）
+        // Browser activity signal: increments when the active tab URL changes or tabs switch; the chat page uses it to show "New browser activity"
         viewModelScope.launch {
             var lastUrl = ""
             eventBus.url.collect { url ->
@@ -380,7 +380,7 @@ data class BrowserUiState(
     val tabs: List<BrowserTabUi>,
     val canGoBack: Boolean,
     val canGoForward: Boolean,
-    /** 浏览器活动信号（单调递增）：供聊天页在浏览器面板隐藏时提示"有新动态"。 */
+    /** Monotonically increasing browser activity signal used to notify the chat page of new activity while the browser panel is hidden. */
     val activityTick: Long = 0L,
 ) {
     companion object {
