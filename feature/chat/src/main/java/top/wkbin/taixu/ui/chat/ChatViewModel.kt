@@ -234,7 +234,7 @@ class ChatViewModel(
     val thinkingLive: StateFlow<Boolean> = harnessLoop.thinkingLive
     val workspace: StateFlow<String> = harnessLoop.workspace
     val projectType: StateFlow<String> = harnessLoop.projectType
-    /** 基于当前工作区内容自动推荐的 MCP 预设（已启用的已过滤），仅提示不自动启用。 */
+    /** MCP presets recommended from the current workspace contents; already-enabled presets are filtered out. Suggestions only; nothing is enabled automatically. */
     val mcpRecommendations: StateFlow<List<McpWorkspaceRecommender.Recommendation>> =
         harnessLoop.mcpRecommendations
 
@@ -245,7 +245,7 @@ class ChatViewModel(
     }
 
     private val _localHiddenSkillSuggestions = MutableStateFlow<Set<String>>(emptySet())
-    /** 已应用或忽略的技能进化建议 id；卡片从列表隐藏，转写消息本身保留。通过 DataStore 持久化防杀进程重复展示。 */
+    /** IDs of skill-evolution suggestions that were applied or dismissed. Their cards are hidden while transcript messages remain; DataStore persistence prevents them reappearing after process death. */
     val hiddenSkillSuggestions: StateFlow<Set<String>> = combine(
         settingsDataStore.dismissedSkillSuggestions,
         _localHiddenSkillSuggestions,
@@ -314,10 +314,10 @@ class ChatViewModel(
     val runtimeEvents: StateFlow<List<HarnessEvent>> = combine(
         harnessLoop.currentSessionId,
         _eventHistory,
-        // 把「消息列表」打包成 (revision, list) 再 distinctUntilChanged by revision：
-        // revision = 数量 + 末条 id，流式 token 增量不会改变它，因此上游发射被压缩为
+        // Package the message list as (revision, list), then apply distinctUntilChanged by revision:
+        // revision = count + last ID. Streaming token increments do not change it, so upstream emissions are reduced to
         // 「真正新增/替换了一条消息」才触发，避免每帧全量重合成上千条事件（聊久了变卡的主因）。
-        // 用 Pair 一起传下去，避免在 lambda 里读 messages.value 拿到过期值的时序问题。
+        // Pass the Pair downstream to avoid timing issues caused by reading a stale messages.value inside a lambda.
         messages.map { list -> (list.size to list.lastOrNull()?.id) to list }
             .distinctUntilChanged { a, b -> a.first == b.first },
     ) { sessionId, history, revisionAndList ->
