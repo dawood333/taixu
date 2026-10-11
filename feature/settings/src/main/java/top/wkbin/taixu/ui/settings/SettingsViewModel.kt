@@ -968,7 +968,7 @@ class SettingsViewModel(
                     _pendingSkillInspection.value = res.data
                 }
                 is AppResult.Failure -> {
-                    _skillArchiveMessage.value = "准备技能失败: ${res.error.message}"
+                    _skillArchiveMessage.value = "Failed to prepare skill: ${res.error.message}"
                     _skillArchiveMessageIsError.value = true
                 }
             }
@@ -992,11 +992,11 @@ class SettingsViewModel(
                         maxBytes = SkillPackageParser.MAX_ZIP_TOTAL_BYTES,
                         policy = BoundedStreamCopy.OverflowPolicy.ABORT,
                     )
-                } ?: error("无法读取所选 ZIP 文件")
+                } ?: error("Unable to read the selected ZIP file")
                 val inspection = installer.inspectZipBytes(bos.toByteArray(), fallbackId = "custom_zip")
                 _pendingSkillInspection.value = inspection
             } catch (e: Throwable) {
-                _skillArchiveMessage.value = "解析或审计技能包失败: ${e.message}"
+                _skillArchiveMessage.value = "Failed to parse or audit the skill package: ${e.message}"
                 _skillArchiveMessageIsError.value = true
             }
         }
@@ -1010,12 +1010,12 @@ class SettingsViewModel(
             try {
                 val skillsDir = File(pathManager.attachmentsDir, "skills").apply { mkdirs() }
                 val skill = installer.commitInstallation(inspection, skillsDir)
-                _skillArchiveMessage.value = "技能“${skill.name}”已通过端侧静态审查并成功安装！"
+                _skillArchiveMessage.value = "Skill “${skill.name}” passed on-device static review and was installed successfully!"
                 _skillArchiveMessageIsError.value = false
                 _pendingSkillInspection.value = null
                 loadClawHubMarket()
             } catch (e: Throwable) {
-                _skillArchiveMessage.value = "安装失败: ${e.message}"
+                _skillArchiveMessage.value = "Installation failed: ${e.message}"
                 _skillArchiveMessageIsError.value = true
             } finally {
                 _isCommittingInstallation.value = false
@@ -1110,13 +1110,13 @@ class SettingsViewModel(
         val skill = AgentSkill(
             id = id,
             name = trimmedName,
-            description = description.trim().ifBlank { "自定义技能" },
+            description = description.trim().ifBlank { "Custom skill" },
             systemPrompt = trimmedPrompt,
             triggerCommand = command?.trim()?.takeIf { it.isNotBlank() }?.let { if (it.startsWith("/")) it else "/$it" },
             iconName = "Code",
             isEnabled = true,
             isBuiltin = false,
-            category = "自定义",
+            category = "Custom",
         )
         viewModelScope.launch { agentSkillRepository.addCustom(skill) }
     }
@@ -1137,17 +1137,17 @@ class SettingsViewModel(
             uris.forEach { uri ->
                 runCatching { importSingleSkillArchive(uri) }
                     .onSuccess { successes += it }
-                    .onFailure { failures += it.message ?: "Skill 压缩包导入失败" }
+                    .onFailure { failures += it.message ?: "Failed to import skill archive" }
             }
             if (failures.isEmpty()) {
                 _skillArchiveMessageIsError.value = false
-                _skillArchiveMessage.value = if (successes.size == 1) successes.first() else "批量导入完成，共 ${successes.size} 个：\n${successes.joinToString("\n")}"
+                _skillArchiveMessage.value = if (successes.size == 1) successes.first() else "Bulk import complete (${successes.size}):\n${successes.joinToString("\n")}"
             } else if (successes.isEmpty()) {
                 _skillArchiveMessageIsError.value = true
-                _skillArchiveMessage.value = if (failures.size == 1) failures.first() else "批量导入失败，共 ${failures.size} 个：\n${failures.joinToString("\n")}"
+                _skillArchiveMessage.value = if (failures.size == 1) failures.first() else "Bulk import failed (${failures.size}):\n${failures.joinToString("\n")}"
             } else {
                 _skillArchiveMessageIsError.value = true
-                _skillArchiveMessage.value = "批量导入完成：成功 ${successes.size} 个，失败 ${failures.size} 个\n\n成功：\n${successes.joinToString("\n")}\n\n失败：\n${failures.joinToString("\n")}"
+                _skillArchiveMessage.value = "Bulk import complete: ${successes.size} succeeded, ${failures.size} failed\n\nSucceeded:\n${successes.joinToString("\n")}\n\nFailed:\n${failures.joinToString("\n")}"
             }
         }
     }
@@ -1159,14 +1159,14 @@ class SettingsViewModel(
                 .onSuccess { imported ->
                     _skillArchiveMessageIsError.value = false
                     _skillArchiveMessage.value = when (imported.size) {
-                        0 -> "目录扫描完成，未发现新的 Skill（已导入的不会重复注册）"
-                        1 -> "目录扫描完成，导入 1 个：“${imported.first().name}”"
-                        else -> "目录扫描完成，共导入 ${imported.size} 个：\n${imported.joinToString("\n") { "· ${it.name}" }}"
+                        0 -> "Directory scan complete; no new skills found (previously imported skills are not registered again)"
+                        1 -> "Directory scan complete; imported 1 skill: “${imported.first().name}”"
+                        else -> "Directory scan complete; imported ${imported.size} skills:\n${imported.joinToString("\n") { "· ${it.name}" }}"
                     }
                 }
                 .onFailure {
                     _skillArchiveMessageIsError.value = true
-                    _skillArchiveMessage.value = it.message ?: "Skill 目录扫描失败"
+                    _skillArchiveMessage.value = it.message ?: "Skill directory scan failed"
                 }
         }
     }
@@ -1180,18 +1180,18 @@ class SettingsViewModel(
     fun importSkillsFromTree(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                val treeRoot = DocumentFile.fromTreeUri(application, uri) ?: error("无法访问所选目录")
+                val treeRoot = DocumentFile.fromTreeUri(application, uri) ?: error("Unable to access the selected directory")
                 val targetRoot = File(pathManager.attachmentsDir, "skills").apply { mkdirs() }
                 val copied = importDocumentTree(treeRoot, targetRoot)
-                check(copied > 0) { "所选目录及子目录中未发现包含 SKILL.md 的 Skill 文件夹" }
+                check(copied > 0) { "No skill folders containing SKILL.md were found in the selected directory or its subdirectories" }
                 val imported = agentSkillRepository.syncFromDirectories(skillScanRoots())
-                "自选目录导入完成，发现并注册 ${imported.size} 个 Skill"
+                "Custom directory import complete; found and registered ${imported.size} skills"
             }.onSuccess {
                 _skillArchiveMessageIsError.value = false
                 _skillArchiveMessage.value = it
             }.onFailure {
                 _skillArchiveMessageIsError.value = true
-                _skillArchiveMessage.value = it.message ?: "自选目录导入失败"
+                _skillArchiveMessage.value = it.message ?: "Custom directory import failed"
             }
         }
     }
@@ -1263,11 +1263,11 @@ class SettingsViewModel(
                 ZipInputStream(source).use { zip ->
                     var entry = zip.nextEntry
                     while (entry != null) {
-                        check(++entryCount <= MAX_SKILL_ARCHIVE_ENTRIES) { "Skill 压缩包文件数量超过 $MAX_SKILL_ARCHIVE_ENTRIES 个" }
+                        check(++entryCount <= MAX_SKILL_ARCHIVE_ENTRIES) { "Skill archive contains more than $MAX_SKILL_ARCHIVE_ENTRIES files" }
                         val relative = entry.name.replace('\\', '/')
-                        check(relative.isNotBlank() && !relative.startsWith('/')) { "Skill 压缩包包含非法路径" }
+                        check(relative.isNotBlank() && !relative.startsWith('/')) { "Skill archive contains an invalid path" }
                         val out = File(target, relative)
-                        require(out.canonicalPath.startsWith(target.canonicalPath + File.separator)) { "Skill 压缩包包含非法路径" }
+                        require(out.canonicalPath.startsWith(target.canonicalPath + File.separator)) { "Skill archive contains an invalid path" }
                         if (entry.isDirectory) {
                             out.mkdirs()
                         } else {
@@ -1280,8 +1280,8 @@ class SettingsViewModel(
                                     if (read < 0) break
                                     entryBytes += read
                                     totalBytes += read
-                                    check(entryBytes <= MAX_SKILL_ENTRY_BYTES) { "Skill 单个文件不能超过 8 MB" }
-                                    check(totalBytes <= MAX_SKILL_ARCHIVE_BYTES) { "Skill 解压后总大小不能超过 32 MB" }
+                                    check(entryBytes <= MAX_SKILL_ENTRY_BYTES) { "Individual skill files must not exceed 8 MB" }
+                                    check(totalBytes <= MAX_SKILL_ARCHIVE_BYTES) { "Extracted skill archive must not exceed 32 MB in total" }
                                     output.write(buffer, 0, read)
                                 }
                             }
@@ -1292,22 +1292,22 @@ class SettingsViewModel(
                         entry = zip.nextEntry
                     }
                 }
-            } ?: error("无法读取 Skill 压缩包")
+            } ?: error("Unable to read skill archive")
             val promptFile = target.walkTopDown()
                 .maxDepth(3)
                 .filter { it.isFile && it.name.lowercase() in setOf("skill.md", "prompt.md") }
                 .singleOrNull()
-                ?: error("压缩包内未找到 SKILL.md")
+                ?: error("SKILL.md was not found in the archive")
             val markdown = promptFile.readText().trim()
-            require(markdown.isNotBlank()) { "SKILL.md 为空" }
+            require(markdown.isNotBlank()) { "SKILL.md is empty" }
             val skillName = AgentSkillRepository.extractSkillMetadata(markdown, "name")
                 ?: markdown.lineSequence().firstOrNull { it.startsWith("# ") }?.removePrefix("# ")?.trim()
                 ?: promptFile.parentFile?.name
                 ?: id
-            val description = AgentSkillRepository.extractSkillMetadata(markdown, "description") ?: "从压缩包导入的 Skill"
+            val description = AgentSkillRepository.extractSkillMetadata(markdown, "description") ?: "Skill imported from archive"
             val guestPath = "/attachments/skills/$id"
-            val prompt = markdown + "\n\n【Skill 资源目录】$guestPath\n如需执行该 Skill 附带的脚本，请先检查脚本内容与参数，再从此目录调用。"
-            agentSkillRepository.addCustom(AgentSkill(id, skillName, description, prompt, isBuiltin = false, category = "自定义", resourcePath = target.absolutePath))
+            val prompt = markdown + "\n\n[Skill resource directory] $guestPath\nBefore running scripts bundled with this skill, inspect their contents and arguments, then invoke them from this directory."
+            agentSkillRepository.addCustom(AgentSkill(id, skillName, description, prompt, isBuiltin = false, category = "Custom", resourcePath = target.absolutePath))
             return "Skill“$skillName”导入成功，脚本资源位于 $guestPath"
         } catch (error: Throwable) {
             target?.let(::deleteOwnedSkillDirectory)
@@ -1369,7 +1369,7 @@ class SettingsViewModel(
             val profile = AgentSubagent(
                 id = normalizedId,
                 name = trimmedName,
-                description = description.trim().ifBlank { "自定义子智能体角色" },
+                description = description.trim().ifBlank { "Custom子智能体角色" },
                 systemPrompt = trimmedPrompt,
                 defaultModelId = normalizedDefaultModelId,
                 defaultModelVariant = normalizedDefaultModelId?.let {
@@ -1701,14 +1701,14 @@ class SettingsViewModel(
     }
 
     /**
-     * 新增自定义挂载绑定。保存前做与运行时一致的安全校验（StorageMountBinding.validationError），
+     * 新增Custom挂载绑定。保存前做与运行时一致的安全校验（StorageMountBinding.validationError），
      * 拒绝越界路径（容器路径必须在 /mnt 或 /sdcard 内、宿主路径必须在共享存储内），
      * 避免历史版本"先入库、会话启动时才崩"的问题再次发生。
      */
     fun addCustomMountBinding(name: String, hostPath: String, guestPath: String): Result<Unit> {
         val binding = StorageMountBinding(
             id = UUID.randomUUID().toString(),
-            name = name.trim().ifBlank { "自定义挂载" },
+            name = name.trim().ifBlank { "Custom挂载" },
             hostPath = hostPath.trim(),
             guestPath = if (guestPath.trim().startsWith("/")) guestPath.trim() else "/${guestPath.trim()}",
             enabled = true,
