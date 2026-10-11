@@ -28,7 +28,7 @@ SSL_CONTEXT.verify_mode = ssl.CERT_NONE
 
 
 def http_get(url, headers=None, timeout=DEFAULT_TIMEOUT):
-    """发起 HTTP GET 请求并返回文本内容。"""
+    """Send an HTTP GET request and return the response text."""
     req_headers = {"User-Agent": USER_AGENT}
     if headers:
         req_headers.update(headers)
@@ -43,7 +43,7 @@ def http_get(url, headers=None, timeout=DEFAULT_TIMEOUT):
 
 
 def strip_html_tags(text):
-    """剥离 HTML 标签，解码 HTML 实体并规范化空白。"""
+    """Strip HTML tags, decode HTML entities, and normalize whitespace."""
     if not text:
         return ""
     # 移除 script 和 style
@@ -62,7 +62,7 @@ def strip_html_tags(text):
 # ============================== 搜索引擎实现 ==============================
 
 def search_baidu(query, limit=5):
-    """Baidu 网页搜索。"""
+    """Baidu web search."""
     encoded_query = urllib.parse.quote(query)
     url = f"https://www.baidu.com/s?wd={encoded_query}&rn={max(limit, 10)}"
     html_content = http_get(url, headers={
@@ -85,7 +85,7 @@ def search_baidu(query, limit=5):
             results.append({
                 "title": title,
                 "url": link,
-                "snippet": snippet or "无摘要",
+                "snippet": snippet or "No snippet",
             })
         if len(results) >= limit:
             break
@@ -104,7 +104,7 @@ def search_baidu(query, limit=5):
 
 
 def search_bing(query, limit=5):
-    """Bing 网页搜索。"""
+    """Bing web search."""
     encoded_query = urllib.parse.quote(query)
     url = f"https://cn.bing.com/search?q={encoded_query}&count={max(limit, 10)}"
     html_content = http_get(url, headers={
@@ -125,7 +125,7 @@ def search_bing(query, limit=5):
             results.append({
                 "title": title,
                 "url": link,
-                "snippet": snippet or "无摘要",
+                "snippet": snippet or "No snippet",
             })
         if len(results) >= limit:
             break
@@ -134,7 +134,7 @@ def search_bing(query, limit=5):
 
 
 def search_duckduckgo(query, limit=5):
-    """DuckDuckGo HTML 免 API 搜索。"""
+    """DuckDuckGo HTML search without an API key."""
     encoded_query = urllib.parse.quote(query)
     url = f"https://html.duckduckgo.com/html/?q={encoded_query}"
     html_content = http_get(url)
@@ -167,10 +167,10 @@ def search_duckduckgo(query, limit=5):
 # ============================== MCP 工具分发 ==============================
 
 def tool_web_search(args):
-    """执行网络检索并返回格式化结果。"""
+    """Run a web search and return formatted results."""
     query = (args.get("query") or args.get("q") or "").strip()
     if not query:
-        return False, "缺少参数：query"
+        return False, "Missing parameter: query"
 
     engine = (args.get("engine") or os.environ.get("DEFAULT_SEARCH_ENGINE") or "baidu").lower().strip()
     try:
@@ -191,7 +191,7 @@ def tool_web_search(args):
         else:
             results = search_baidu(query, limit)
     except Exception as e:
-        error_msg = f"{engine} 搜索异常: {e}"
+        error_msg = f"{engine} search error: {e}"
 
     # 若首选引擎失败或无结果，自动回退到 Bing / Baidu 交叉重试
     if not results:
@@ -212,24 +212,24 @@ def tool_web_search(args):
                 continue
 
     if not results:
-        return False, f"未搜索到与「{query}」相关的结果。" + (f" ({error_msg})" if error_msg else "")
+        return False, f"No results found for “{query}”." + (f" ({error_msg})" if error_msg else "")
 
-    output_lines = [f"### 搜索结果（关键词：{query}，共 {len(results)} 条）：\n"]
+    output_lines = [f"### Search results (query: {query}, {len(results)} results):\n"]
     for idx, item in enumerate(results, start=1):
         output_lines.append(f"{idx}. **[{item['title']}]({item['url']})**")
         if item.get("snippet"):
             output_lines.append(f"   > {item['snippet']}\n")
         else:
-            output_lines.append(f"   链接: {item['url']}\n")
+            output_lines.append(f"   Link: {item['url']}\n")
 
     return True, "\n".join(output_lines)
 
 
 def tool_fetch_content(args):
-    """抓取指定 URL 网页并提取正文内容。"""
+    """Fetch a URL and extract the page's main text."""
     url = (args.get("url") or "").strip()
     if not url:
-        return False, "缺少参数：url"
+        return False, "Missing parameter: url"
     if not (url.startswith("http://") or url.startswith("https://")):
         url = "https://" + url
 
@@ -242,37 +242,37 @@ def tool_fetch_content(args):
         raw_html = http_get(url, timeout=12)
         text = strip_html_tags(raw_html)
         if len(text) > max_length:
-            text = text[:max_length] + "\n\n...[正文过长已截断]..."
-        return True, f"### 网页内容提取（{url}）：\n\n{text}"
+            text = text[:max_length] + "\n\n...[content truncated due to length]..."
+        return True, f"### Extracted page content ({url}):\n\n{text}"
     except Exception as e:
-        return False, f"抓取网页正文失败 ({url}): {e}"
+        return False, f"Failed to fetch page content ({url}): {e}"
 
 
 TOOLS = {
     "web_search": {
-        "description": "免 API Key 的网络搜索工具，支持百度、Bing 等多引擎搜索，返回标题、摘要与链接",
+        "description": "Web search tool requiring no API key. Supports multiple engines such as Baidu and Bing and returns titles, snippets, and links",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "query": {"type": "string", "description": "搜索关键词或自然语言问题"},
+                "query": {"type": "string", "description": "Search keywords or a natural-language question"},
                 "engine": {
                     "type": "string",
-                    "description": "搜索引擎选择（可选：baidu / bing / duckduckgo，默认 baidu）",
+                    "description": "Search engine (optional: baidu / bing / duckduckgo; default: baidu)",
                     "enum": ["baidu", "bing", "duckduckgo"]
                 },
-                "limit": {"type": "integer", "description": "返回结果数量（默认 5，范围 1-15）"},
+                "limit": {"type": "integer", "description": "Number of results to return (default 5, range 1–15)"},
             },
             "required": ["query"],
         },
         "handler": tool_web_search,
     },
     "fetch_web_content": {
-        "description": "抓取目标网页链接的正文内容并自动清洗为易读文本",
+        "description": "Fetch the main content of a webpage and clean it into readable text",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "url": {"type": "string", "description": "目标网页 URL（以 http:// 或 https:// 开头）"},
-                "max_length": {"type": "integer", "description": "返回最大字符数（默认 6000）"},
+                "url": {"type": "string", "description": "Target webpage URL (must start with http:// or https://)"},
+                "max_length": {"type": "integer", "description": "Maximum number of characters to return (default 6000)"},
             },
             "required": ["url"],
         },
@@ -322,13 +322,13 @@ def handle_line(line):
         spec = TOOLS.get(name)
         if spec is None:
             return rpc_response(req_id, {
-                "content": [{"type": "text", "text": f"未知工具: {name}"}],
+                "content": [{"type": "text", "text": f"Unknown tool: {name}"}],
                 "isError": True,
             })
         try:
             ok, text = spec["handler"](args)
         except Exception as e:
-            ok, text = False, f"工具执行异常: {e}"
+            ok, text = False, f"Tool execution error: {e}"
         return rpc_response(req_id, {
             "content": [{"type": "text", "text": text}],
             "isError": not ok,
