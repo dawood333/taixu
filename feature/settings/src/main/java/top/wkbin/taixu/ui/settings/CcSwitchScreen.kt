@@ -633,7 +633,7 @@ private fun AgentCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // 右侧状态徽章与操作按钮（已完全去掉"一键切源"按钮）
+            // Right-side status badge and action buttons (the one-tap provider-switch button has been removed)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
