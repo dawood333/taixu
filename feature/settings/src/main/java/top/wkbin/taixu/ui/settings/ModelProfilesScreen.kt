@@ -119,7 +119,7 @@ fun ModelProfilesScreen(
                     RuntimeIconButton(
                         onClick = {
                             if (models.isEmpty()) {
-                                Toast.makeText(context, "暂无Model Profiles可导出", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "No model profiles to export", Toast.LENGTH_SHORT).show()
                             } else {
                                 showExportAllDialog = true
                             }
@@ -162,7 +162,7 @@ fun ModelProfilesScreen(
                     importing = false
                     result.fold(
                         onSuccess = { count ->
-                            Toast.makeText(context, "成功导入 $count 个Model Profiles", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Successfully imported $count model profiles", Toast.LENGTH_SHORT).show()
                             showImportDialog = false
                         },
                         onFailure = { _ ->
@@ -177,8 +177,8 @@ fun ModelProfilesScreen(
     // 批量导出弹窗
     if (showExportAllDialog) {
         ModelExportDialog(
-            title = "批量导出Model Profiles",
-            subtitle = "准备导出 ${models.size} 个Model Profiles配置",
+            title = "Bulk export model profiles",
+            subtitle = "Preparing to export ${models.size} model profile configurations",
             onDismiss = { showExportAllDialog = false },
             onGenerateJson = { includeKeys ->
                 viewModel.exportAllProfilesJson(includeKeys)
@@ -189,7 +189,7 @@ fun ModelProfilesScreen(
     // 单项导出弹窗
     singleExportModel?.let { targetModel ->
         ModelExportDialog(
-            title = "导出Model Profiles配置",
+            title = "Export model profile configuration",
             subtitle = "Model: ${targetModel.name} (${targetModel.provider})",
             defaultFileName = "taixu_model_${targetModel.name.replace(" ", "_")}.json",
             onDismiss = { singleExportModel = null },
@@ -209,7 +209,7 @@ fun ModelProfilesScreen(
                     Text("DeleteModel Profiles", fontWeight = FontWeight.Bold)
                 }
             },
-            text = { Text("确定要DeleteModel Profiles「${target.name}」吗？此操作将同时清理该模型保存的 API Key。") },
+            text = { Text("Delete model profile “${target.name}”? This also removes the API key saved for this model.") },
             confirmButton = {
                 RuntimeButton(
                     onClick = {
@@ -253,7 +253,7 @@ private fun ModelProfilesContent(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     RuntimeIcon(RuntimeIconName.Plus, Modifier.size(16.dp), MaterialTheme.colorScheme.onPrimary)
-                    Text("新增Model Profiles", fontWeight = FontWeight.Bold)
+                    Text("Add model profile", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -266,7 +266,7 @@ private fun ModelProfilesContent(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     IconTile(RuntimeIconName.Model, color = MaterialTheme.colorScheme.primary, size = 42.dp)
-                    Text("暂无Model Profiles", style = MaterialTheme.typography.titleMedium)
+                    Text("No model profiles yet", style = MaterialTheme.typography.titleMedium)
                     Text(
                         "Tap Add above or import OpenAI, DeepSeek, Claude, or local model configuration from the top-right menu",
                         style = MaterialTheme.typography.bodySmall,
@@ -381,7 +381,7 @@ private fun ModelProfileCard(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 RuntimeIcon(RuntimeIconName.Edit, Modifier.size(16.dp))
-                                Text("Edit档案")
+                                Text("Edit profile")
                             }
                         },
                         onClick = {
@@ -393,7 +393,7 @@ private fun ModelProfileCard(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 RuntimeIcon(RuntimeIconName.OpenInNew, Modifier.size(16.dp))
-                                Text("导出为 JSON")
+                                Text("Export as JSON")
                             }
                         },
                         onClick = {
@@ -420,7 +420,7 @@ private fun ModelProfileCard(
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 RuntimeIcon(RuntimeIconName.Trash, Modifier.size(16.dp), MaterialTheme.colorScheme.error)
-                                Text("Delete档案", color = MaterialTheme.colorScheme.error)
+                                Text("Delete profile", color = MaterialTheme.colorScheme.error)
                             }
                         },
                         onClick = {
@@ -460,7 +460,7 @@ private fun ModelProfileCard(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f),
                     ) {
                         Text(
-                            text = "+${modelList.size - 3} 更多",
+                            text = "+${modelList.size - 3} more",
                             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -480,8 +480,8 @@ private fun ModelProfileCard(
             if (model.baseUrl.isNotBlank()) add(model.baseUrl)
             if (model.apiKeyCount > 0) add("${model.apiKeyCount} Key")
             if (model.requestsPerMinutePerKey > 0) add("${model.requestsPerMinutePerKey} RPM/Key")
-            explicitCtxTokens?.let { add("${formatProfileContextWindow(it)} 上下文") }
-            autoCtxTokens?.let { add("自动 ${formatProfileContextWindow(it)} 上下文") }
+            explicitCtxTokens?.let { add("${formatProfileContextWindow(it)} context") }
+            autoCtxTokens?.let { add("自动 ${formatProfileContextWindow(it)} context") }
         }.joinToString(" • ")
 
         if (metadataSummary.isNotBlank()) {
