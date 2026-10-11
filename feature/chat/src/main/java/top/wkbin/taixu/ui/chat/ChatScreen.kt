@@ -295,7 +295,7 @@ fun ChatScreen(
 
     // 🌟 1. Follow scrolling when sending messages and streaming output.
     // Follow streaming output only when the user is already near the bottom; do not interrupt when they scroll up to read history.
-    // 重新滑回底部（或新发消息）后恢复自动跟随。
+    // Resume automatic following when they return to the bottom or send a new message.
     LaunchedEffect(messages.size, lastMessageSignature) {
         if (messages.isNotEmpty()) {
             delay(30)
@@ -314,9 +314,9 @@ fun ChatScreen(
         }
     }
 
-    // 🌟 2. 软键盘弹起时自动平滑滚动定位到最后一条消息。
-    // delay 之后必须重新读 totalItemsCount：IME insets 会触发 relayout，
-    // 未测量完成时 count 为 0，animateScrollToItem(-1) 会直接崩。
+    // 🌟 2. Smoothly scroll to the last message when the soft keyboard opens.
+    // Read totalItemsCount again after the delay because IME insets trigger a relayout.
+    // Before measurement finishes, count may be zero and animateScrollToItem(-1) would crash.
     LaunchedEffect(isImeVisible) {
         if (!isImeVisible) return@LaunchedEffect
         delay(80)
