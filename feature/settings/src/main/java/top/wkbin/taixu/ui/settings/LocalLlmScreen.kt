@@ -74,7 +74,7 @@ fun LocalLlmScreen(
 
     var showDownloadDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showPathDialog by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    // 待确认Delete的模型文件名（破坏性操作二次确认）
+    // 待Confirm delete的模型文件名（破坏性操作二次确认）
     var pendingDeleteModel by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
 
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -233,7 +233,7 @@ fun LocalLlmScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             RuntimeIcon(RuntimeIconName.Info, Modifier.size(23.dp), MaterialTheme.colorScheme.primary)
-                            Text("Local LLM 推理", style = MaterialTheme.typography.titleMedium)
+                            Text("Local LLM inference", style = MaterialTheme.typography.titleMedium)
                         }
                         Text(
                             "Run GGUF models in the Linux sandbox using llama.cpp; inference data stays on the device. Supports resumable downloads from HTTPS/Hugging Face URLs and importing files through the phone's file picker.",
@@ -304,8 +304,8 @@ fun LocalLlmScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             RuntimeIcon(RuntimeIconName.Model, Modifier.size(44.dp), MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f))
-                            Text("暂无模型", style = MaterialTheme.typography.titleSmall)
-                            Text("使用上方按钮下载或导入 GGUF 模型", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("No models yet", style = MaterialTheme.typography.titleSmall)
+                            Text("Use the buttons above to download or import a GGUF model", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -359,7 +359,7 @@ private fun MobileModelPresetCard(
                     },
                 ) {
                     Text(
-                        if (suitable) "适合本机" else "内存不足",
+                        if (suitable) "Suitable for this device" else "Insufficient memory",
                         modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         color = if (suitable) {
@@ -383,7 +383,7 @@ private fun MobileModelPresetCard(
                         ModelSpecChip(formatBytes(preset.downloadBytes))
                     }
                     Text(
-                        "建议设备内存 ${formatRam(preset.minimumDeviceRamBytes)} 以上",
+                        "Recommended device RAM: at least ${formatRam(preset.minimumDeviceRamBytes)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -398,7 +398,7 @@ private fun MobileModelPresetCard(
                         Modifier.size(16.dp),
                     )
                     Spacer(Modifier.size(4.dp))
-                    Text(if (alreadyDownloaded) "已下载" else "下载")
+                    Text(if (alreadyDownloaded) "Downloaded" else "Download")
                 }
             }
         }
@@ -442,9 +442,9 @@ private fun ServiceStatusCard(
                 Surface(modifier = Modifier.size(10.dp), shape = RoundedCornerShape(50), color = color) {}
                 Text(
                     when (serviceState) {
-                        LocalLlmServiceState.Stopped -> "未运行"
-                        is LocalLlmServiceState.Starting -> "正在启动 · ${serviceState.fileName}"
-                        is LocalLlmServiceState.Running -> "运行中 · ${serviceState.fileName}"
+                        LocalLlmServiceState.Stopped -> "Not running"
+                        is LocalLlmServiceState.Starting -> "Starting · ${serviceState.fileName}"
+                        is LocalLlmServiceState.Running -> "Running · ${serviceState.fileName}"
                         is LocalLlmServiceState.Failed -> "Failed to start"
                     },
                     style = MaterialTheme.typography.titleMedium,
@@ -461,7 +461,7 @@ private fun ServiceStatusCard(
             Text(
                 running?.endpoint ?: when (serviceState) {
                     is LocalLlmServiceState.Failed -> serviceState.message
-                    else -> "选择下方模型Start service；启动成功后会自动设为当前对话模型"
+                    else -> "Select a model below and start the service; once started, it becomes the current conversation model automatically"
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -513,7 +513,7 @@ private fun ModelCard(
                     RuntimeIcon(RuntimeIconName.Play, Modifier.size(17.dp))
                     if (isStarting) {
                         Spacer(Modifier.size(4.dp))
-                        Text("启动中")
+                        Text("Starting")
                     }
                 }
             }
@@ -544,16 +544,16 @@ private fun DownloadModelDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text("粘贴以 .gguf 结尾的 HTTPS 直链。Hugging Face 文件页请复制 Download 链接。")
+                Text("Paste a direct HTTPS URL ending in .gguf. On Hugging Face file pages, copy the Download link.")
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("GGUF 下载地址") },
+                    label = { Text("GGUF Download地址") },
                     placeholder = { Text("https://.../model.gguf") },
                     isError = url.isNotBlank() && !urlValid,
                     supportingText = {
                         if (url.isNotBlank() && !urlValid) {
-                            Text("请输入以 http(s):// 开头且指向 .gguf 文件的直链")
+                            Text("Enter a direct URL beginning with http(s):// that points to a .gguf file")
                         }
                     },
                     singleLine = false,
@@ -562,14 +562,14 @@ private fun DownloadModelDialog(
                 OutlinedTextField(
                     value = sha256,
                     onValueChange = { sha256 = it },
-                    label = { Text("SHA-256（可选）") },
+                    label = { Text("SHA-256 (optional)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
         confirmButton = {
-            RuntimeButton(onClick = { onDownload(url, sha256.ifBlank { null }) }, enabled = urlValid) { Text("开始下载") }
+            RuntimeButton(onClick = { onDownload(url, sha256.ifBlank { null }) }, enabled = urlValid) { Text("开始Download") }
         },
         dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("Cancel") } },
     )
@@ -592,15 +592,15 @@ private fun ImportPathDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text("输入应用可读取的绝对路径，例如 /storage/emulated/0/Download/model.gguf。受 Android 存储权限限制时请改用“Choose file”。")
+                Text("Enter an absolute path readable by the app, e.g. /storage/emulated/0/Download/model.gguf. If Android storage permissions prevent access, use “Choose file” instead.")
                 OutlinedTextField(
                     value = path,
                     onValueChange = { path = it },
-                    label = { Text("GGUF 文件路径") },
+                    label = { Text("GGUF file path") },
                     isError = path.isNotBlank() && !pathValid,
                     supportingText = {
                         if (path.isNotBlank() && !pathValid) {
-                            Text("路径需指向 .gguf 模型文件")
+                            Text("The path must point to a .gguf model file")
                         }
                     },
                     singleLine = false,
@@ -609,7 +609,7 @@ private fun ImportPathDialog(
             }
         },
         confirmButton = {
-            RuntimeButton(onClick = { onImport(path) }, enabled = pathValid) { Text("导入") }
+            RuntimeButton(onClick = { onImport(path) }, enabled = pathValid) { Text("Import") }
         },
         dismissButton = { RuntimeTextButton(onClick = onDismiss) { Text("Cancel") } },
     )
@@ -635,19 +635,19 @@ private fun DeleteModelConfirmDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Delete模型 $fileName？",
+                text = "Delete model $fileName?",
                 style = MaterialTheme.typography.titleMedium,
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
-                    text = "• 将从沙箱中Delete该 GGUF 模型文件，释放对应存储空间",
+                    text = "• This will delete the GGUF model file from the sandbox and free its storage space",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "• Delete后需要重新下载或导入才能再次使用",
+                    text = "• Delete后需要重新Download或Import才能再次使用",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -663,7 +663,7 @@ private fun DeleteModelConfirmDialog(
                 ),
             ) {
                 Text(
-                    text = if (countdown > 0) "确认Delete (" + countdown + "s)" else "确认Delete",
+                    text = if (countdown > 0) "Confirm delete (" + countdown + "s)" else "Confirm delete",
                     color = if (countdown == 0) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onError.copy(alpha = 0.6f),
                 )
             }
