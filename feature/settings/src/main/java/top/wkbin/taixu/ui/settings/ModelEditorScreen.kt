@@ -528,7 +528,7 @@ private fun ModelEditorContent(
                             }
                         }
                         Text(
-                            text = if (provider.group == ProviderGroup.LOCAL) "Local沙箱轻量模型端点" else "OpenAI / Claude-compatible API",
+                            text = if (provider.group == ProviderGroup.LOCAL) "Lightweight local sandbox model endpoint" else "OpenAI / Claude-compatible API",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -698,7 +698,7 @@ private fun ModelEditorContent(
                                             modifier = Modifier
                                                 .minimumInteractiveComponentSize()
                                                 .size(28.dp),
-                                            contentDescription = if (isRevealed) "隐藏密钥" else "显示密钥",
+                                            contentDescription = if (isRevealed) "Hide secret" else "Show secret",
                                         ) {
                                             RuntimeIcon(
                                                 name = if (isRevealed) RuntimeIconName.VisibilityOff else RuntimeIconName.Visibility,
@@ -725,7 +725,7 @@ private fun ModelEditorContent(
                                     modifier = Modifier
                                         .minimumInteractiveComponentSize()
                                         .size(36.dp),
-                                    contentDescription = "移除该密钥",
+                                    contentDescription = "Remove this secret",
                                 ) {
                                     RuntimeIcon(
                                         name = RuntimeIconName.Close,
@@ -737,7 +737,7 @@ private fun ModelEditorContent(
                         }
                     }
 
-                    // 添加备用 Key / 批量导入
+                    // 添加备用 Key / Bulk import
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -750,7 +750,7 @@ private fun ModelEditorContent(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 RuntimeIcon(RuntimeIconName.Plus, Modifier.size(14.dp), MaterialTheme.colorScheme.primary)
-                                Text("+ 备用 Key", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text("+ Backup key", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
                         RuntimeOutlinedButton(
@@ -761,13 +761,13 @@ private fun ModelEditorContent(
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 RuntimeIcon(RuntimeIconName.Download, Modifier.size(14.dp), MaterialTheme.colorScheme.primary)
-                                Text("批量导入", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text("Bulk import", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
                     }
 
                     Text(
-                        text = "密钥将加密Save在Local Android Keystore 中，明文不落库。",
+                        text = "Secrets are encrypted and stored in the local Android Keystore; plaintext is never persisted.",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -775,7 +775,7 @@ private fun ModelEditorContent(
             }
         }
 
-        // ---- 4. 模型选择与定制 ----
+        // ---- 4. Model selection and customization ----
         item {
             RuntimeCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -795,7 +795,7 @@ private fun ModelEditorContent(
                         ) {
                             RuntimeIcon(RuntimeIconName.Brain, Modifier.size(18.dp), MaterialTheme.colorScheme.primary)
                             Text(
-                                text = "模型选择与定制",
+                                text = "Model selection and customization",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
@@ -807,7 +807,7 @@ private fun ModelEditorContent(
                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                             ) {
                                 Text(
-                                    text = "已选 $totalSelectedCount 个模型",
+                                    text = "$totalSelectedCount models selected",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -825,13 +825,13 @@ private fun ModelEditorContent(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "候选模型（点击勾选，支持多选）",
+                                text = "Available models (tap to select; multiple selection supported)",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                             if (candidateCount > 20) {
                                 Text(
-                                    text = "共 $candidateCount 个",
+                                    text = "$candidateCount total",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -842,7 +842,7 @@ private fun ModelEditorContent(
                             value = modelSearchQuery,
                             onValueChange = { modelSearchQuery = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("搜索Model name或 ID") },
+                            placeholder = { Text("Search model name or ID") },
                             singleLine = true,
                             shape = compactFieldShape,
                             colors = fieldColors,
@@ -858,7 +858,7 @@ private fun ModelEditorContent(
                                 if (modelSearchQuery.isNotEmpty()) {
                                     RuntimeIconButton(
                                         onClick = { modelSearchQuery = "" },
-                                        contentDescription = "清空模型搜索",
+                                        contentDescription = "Clear model search",
                                     ) {
                                         RuntimeIcon(
                                             name = RuntimeIconName.Close,
@@ -870,7 +870,7 @@ private fun ModelEditorContent(
                             },
                             supportingText = {
                                 if (modelSearchQuery.isNotBlank()) {
-                                    Text("找到 ${filteredCandidateModels.size} / $candidateCount 个模型")
+                                    Text("Found ${filteredCandidateModels.size} of $candidateCount models")
                                 }
                             },
                         )
@@ -878,7 +878,7 @@ private fun ModelEditorContent(
                         // 流式布局自动横向换行；限制最大高度，模型过多时区域内部滚动，避免撑爆单 item 导致底部黑屏
                         if (filteredCandidateModels.isEmpty()) {
                             Text(
-                                text = "没有匹配的模型，可清空搜索或在下方手动填写Model ID",
+                                text = "No matching models. Clear the search or enter a model ID manually below.",
                                 modifier = Modifier.padding(vertical = 8.dp),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -937,8 +937,8 @@ private fun ModelEditorContent(
                         value = customModelInput,
                         onValueChange = { customModelInput = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Model ID（可选，逗号分隔额外模型）") },
-                        placeholder = { Text("例如：gpt-4.5-preview, claude-3-7-sonnet") },
+                        label = { Text("Model IDs (optional; separate additional models with commas)") },
+                        placeholder = { Text("e.g. gpt-4.5-preview, claude-3-7-sonnet") },
                         singleLine = true,
                         shape = compactFieldShape,
                         colors = fieldColors,
@@ -947,7 +947,7 @@ private fun ModelEditorContent(
             }
         }
 
-        // ---- 5. 推理与上下文调优 (Collapsible) ----
+        // ---- 5. Inference and context tuning (Collapsible) ----
         item {
             RuntimeCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -964,11 +964,11 @@ private fun ModelEditorContent(
                         RuntimeIcon(RuntimeIconName.Speed, Modifier.size(18.dp), MaterialTheme.colorScheme.primary)
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                "推理与上下文调优",
+                                "Inference and context tuning",
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             )
                             Text(
-                                "Temperature、Max Tokens、上下文容量与思考模式",
+                                "Temperature, max tokens, context window, and reasoning mode",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -994,7 +994,7 @@ private fun ModelEditorContent(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text("Temperature (随机性)", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                                    Text("Temperature (randomness)", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                                     Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)) {
                                         Text(
                                             text = String.format("%.2f", temperature),
@@ -1012,9 +1012,9 @@ private fun ModelEditorContent(
                                     modifier = Modifier.fillMaxWidth(),
                                 )
                                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    PresetChip("0.2 精准", temperature == 0.2f) { temperature = 0.2f }
-                                    PresetChip("0.7 平衡", temperature == 0.7f) { temperature = 0.7f }
-                                    PresetChip("1.2 创意", temperature == 1.2f) { temperature = 1.2f }
+                                    PresetChip("0.2 Precise", temperature == 0.2f) { temperature = 0.2f }
+                                    PresetChip("0.7 Balanced", temperature == 0.7f) { temperature = 0.7f }
+                                    PresetChip("1.2 Creative", temperature == 1.2f) { temperature = 1.2f }
                                 }
                             }
 
@@ -1032,9 +1032,9 @@ private fun ModelEditorContent(
                                     singleLine = true,
                                     isError = maxTokensInvalid || tokenWindowInvalid,
                                     supportingText = if (maxTokensInvalid) {
-                                        { Text("请输入大于 0 的整数，或留空使用默认值") }
+                                        { Text("Enter a positive integer, or leave blank to use the default") }
                                     } else if (tokenWindowInvalid) {
-                                        { Text("不能大于上下文上限") }
+                                        { Text("Cannot exceed the context window limit") }
                                     } else null,
                                     shape = compactFieldShape,
                                     colors = fieldColors,
@@ -1044,18 +1044,18 @@ private fun ModelEditorContent(
                                     value = contextTokensText,
                                     onValueChange = { contextTokensText = it.filter(Char::isDigit) },
                                     modifier = Modifier.weight(1f),
-                                    label = { Text("上下文上限") },
-                                    placeholder = { Text(autoContextTokens?.let(::formatContextWindow) ?: "留空自动") },
+                                    label = { Text("Context window limit") },
+                                    placeholder = { Text(autoContextTokens?.let(::formatContextWindow) ?: "Leave blank for automatic") },
                                     singleLine = true,
                                     isError = contextTokensInvalid || tokenWindowInvalid,
                                     supportingText = if (contextTokensInvalid) {
-                                        { Text("请输入大于 0 的整数，或留空自动适配") }
+                                        { Text("请输入大于 0 的整数，或Leave blank for automatic适配") }
                                     } else if (tokenWindowInvalid) {
-                                        { Text("不能大于当前上下文上限（自动 ${autoContextTokens?.let(::formatContextWindow) ?: "全局预算"}）") }
+                                        { Text("不能大于当前Context window limit（自动 ${autoContextTokens?.let(::formatContextWindow) ?: "全局预算"}）") }
                                     } else if (contextTokensText.isBlank() && autoContextTokens != null) {
-                                        { Text("留空自动适配：${formatContextWindow(autoContextTokens)}") }
+                                        { Text("Leave blank for automatic适配：${formatContextWindow(autoContextTokens)}") }
                                     } else if (contextTokensText.isBlank()) {
-                                        { Text("留空使用全局兜底预算") }
+                                        { Text("Leave blank to use the global fallback budget") }
                                     } else null,
                                     shape = compactFieldShape,
                                     colors = fieldColors,
@@ -1070,7 +1070,7 @@ private fun ModelEditorContent(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text("Top P (核采样)", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                                    Text("Top P (nucleus sampling)", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
                                     Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)) {
                                         Text(
                                             text = String.format("%.2f", topP),
@@ -1089,20 +1089,20 @@ private fun ModelEditorContent(
                                 )
                             }
 
-                            // 推理思考模式
+                            // Reasoning mode
                             ExposedDropdownMenuBox(
                                 expanded = reasoningModeMenu,
                                 onExpandedChange = { reasoningModeMenu = !reasoningModeMenu },
                             ) {
                                 OutlinedTextField(
                                     value = when (reasoningModeText) {
-                                        "enabled" -> "开启深度推理（模型深入思考）"
-                                        else -> "跟随模型默认"
+                                        "enabled" -> "Enable deep reasoning (let the model think more deeply)"
+                                        else -> "Use model default"
                                     },
                                     onValueChange = {},
                                     modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                                     readOnly = true,
-                                    label = { Text("推理思考模式") },
+                                    label = { Text("Reasoning mode") },
                                     shape = compactFieldShape,
                                     colors = fieldColors,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(reasoningModeMenu) },
@@ -1111,11 +1111,11 @@ private fun ModelEditorContent(
                                     expanded = reasoningModeMenu,
                                     onDismissRequest = { reasoningModeMenu = false },
                                 ) {
-                                    DropdownMenuItem(text = { Text("跟随模型默认") }, onClick = {
+                                    DropdownMenuItem(text = { Text("Use model default") }, onClick = {
                                         reasoningModeText = "auto"
                                         reasoningModeMenu = false
                                     })
-                                    DropdownMenuItem(text = { Text("开启深度推理（模型深入思考）") }, onClick = {
+                                    DropdownMenuItem(text = { Text("Enable deep reasoning (let the model think more deeply)") }, onClick = {
                                         reasoningModeText = "enabled"
                                         reasoningModeMenu = false
                                     })
@@ -1495,7 +1495,7 @@ private fun BatchImportKeysDialog(
         title = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RuntimeIcon(RuntimeIconName.Key, Modifier.size(20.dp), MaterialTheme.colorScheme.primary)
-                Text("批量导入密钥", fontWeight = FontWeight.Bold)
+                Text("Bulk import密钥", fontWeight = FontWeight.Bold)
             }
         },
         text = {
