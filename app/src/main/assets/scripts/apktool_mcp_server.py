@@ -246,19 +246,19 @@ TOOLS = {
             "type": "object",
             "properties": {
                 "project_dir": {"type": "string", "description": "Absolute path to the unpacked project directory"},
-                "pattern": {"type": "string", "description": "搜索关键词或正则模式"},
+                "pattern": {"type": "string", "description": "Search keyword or regular expression"},
             },
             "required": ["project_dir", "pattern"],
         },
         "handler": tool_search_smali,
     },
     "sign_apk": {
-        "description": "对生成的 APK 执行 zipalign 内存对齐与 V2/V3 签名（内置调试密钥库）",
+        "description": "Run zipalign alignment and V2/V3 signing on the generated APK (using the built-in debug keystore)",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "apk_path": {"type": "string", "description": "待签名的 APK 路径"},
-                "output_apk": {"type": "string", "description": "签名后的 APK 输出路径（可选）"},
+                "apk_path": {"type": "string", "description": "Path to the APK to sign"},
+                "output_apk": {"type": "string", "description": "Output path for the signed APK (optional)"},
             },
             "required": ["apk_path"],
         },
@@ -274,7 +274,7 @@ def rpc_response(req_id, result):
 
 
 def handle_line(line):
-    """处理单行 JSON-RPC 请求，返回响应 dict（或 None 表示忽略）。"""
+    """Handle one JSON-RPC request line and return a response dict (or None to ignore it)."""
     line = line.strip()
     if not line:
         return None
@@ -308,13 +308,13 @@ def handle_line(line):
         spec = TOOLS.get(name)
         if spec is None:
             return rpc_response(req_id, {
-                "content": [{"type": "text", "text": "未知工具: {}".format(name)}],
+                "content": [{"type": "text", "text": "Unknown tool: {}".format(name)}],
                 "isError": True,
             })
         try:
             ok, text = spec["handler"](args)
         except Exception as e:  # noqa: BLE001
-            ok, text = False, "工具Execution error: {}".format(e)
+            ok, text = False, "Tool execution error: {}".format(e)
         return rpc_response(req_id, {
             "content": [{"type": "text", "text": text}],
             "isError": not ok,
