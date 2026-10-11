@@ -122,7 +122,7 @@ internal fun CollapsibleChatWorkbenchStrip(
 
     val (runModeLabelRes, runModeColor) = when (runMode) {
         RunMode.BUILD -> R.string.chat_run_mode_build to Color(0xFF546E7A)
-        // 规划模式用紫色以区别于审批模式的三色，并提示"当前只看不动"
+        // Planning mode uses purple to distinguish it from the three approval-mode colors and indicates that it is currently read-only.
         RunMode.PLAN -> R.string.chat_run_mode_plan to Color(0xFF7B1FA2)
     }
 
@@ -435,7 +435,7 @@ internal fun SubagentResultSheet(
         state.messages.filterIsInstance<ToolResult>().associateBy { it.toolCallId }
     }
     // 悬挂工具调用（发起但没落结果）说明 lane 是被超时/异常打断的，最后一条助手文本只是中途独白，
-    // 不是结论——标题与提示要换掉，避免把"Let me verify…"这类过程话当成最终成果。
+    // This is not a conclusion: update the title and hint so process narration such as “Let me verify…” is not mistaken for the final result.
     val interrupted = branch.faulted || state.messages.filterIsInstance<ToolCall>()
         .any { it.id !in toolResults.keys }
     var processExpanded by rememberSaveable(branchUiKey(branch)) { mutableStateOf(false) }
@@ -928,7 +928,7 @@ internal class RoundGroup(
     val entries = mutableListOf<TimelineEntry>()
 }
 
-/** 轮内条目：展开详情时从 [messages] 回查 payload。 */
+/** An entry within a turn: look up its payload in [messages] when details are expanded. */
 internal sealed interface TimelineEntry {
     val timestamp: Long
 
