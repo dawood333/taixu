@@ -246,7 +246,7 @@ class GitManager(
                     sb.toString().take(20_000)
                 }
             }
-        }.getOrDefault("无法读取提交详情")
+        }.getOrDefault("Unable to read commit details")
     }
 
     private fun formatCommitDiff(walk: RevWalk, repo: Repository, commit: RevCommit): String {
@@ -278,7 +278,7 @@ class GitManager(
         runCatching {
             withGit(hostPath) { git ->
                 git.reset().call()
-                GitOpResult.Ok("已取消全部暂存")
+                GitOpResult.Ok("All files unstaged")
             }
         }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
     }
@@ -293,14 +293,14 @@ class GitManager(
             withGit(hostPath) { git ->
                 val changes = listChanges(hostPath)
                 val change = changes.firstOrNull { it.path == path }
-                    ?: return@withGit GitOpResult.Failed("文件不在改动列表：$path")
+                    ?: return@withGit GitOpResult.Failed("File is not in the change list: $path")
                 if (change.changeType == ChangeType.UNTRACKED) {
                     val target = File(File(hostPath).canonicalFile, path)
                     if (target.exists()) target.delete()
-                    GitOpResult.Ok("已DeletedUntracked文件 $path")
+                    GitOpResult.Ok("Deleted untracked file $path")
                 } else {
                     git.checkout().addPath(path).call()
-                    GitOpResult.Ok("已还原 $path")
+                    GitOpResult.Ok("Restored $path")
                 }
             }
         }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
@@ -368,14 +368,14 @@ class GitManager(
     suspend fun createTag(hostPath: String, name: String, message: String): GitOpResult =
         withContext(Dispatchers.IO) {
             runCatching {
-                if (name.isBlank()) return@withContext GitOpResult.Failed("标签名不能为空")
+                if (name.isBlank()) return@withContext GitOpResult.Failed("Tag name cannot be empty")
                 withGit(hostPath) { git ->
                     if (message.isBlank()) {
                         git.tag().setName(name.trim()).call()
                     } else {
                         git.tag().setName(name.trim()).setMessage(message.trim()).call()
                     }
-                    GitOpResult.Ok("已创建标签 ${name.trim()}")
+                    GitOpResult.Ok("Created tag ${name.trim()}")
                 }
             }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
         }
@@ -384,7 +384,7 @@ class GitManager(
         runCatching {
             withGit(hostPath) { git ->
                 git.tagDelete().setTags(name).call()
-                GitOpResult.Ok("已Deleted标签 $name")
+                GitOpResult.Ok("Deleted tag $name")
             }
         }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
     }
@@ -628,10 +628,10 @@ class GitManager(
                     repo.config.setString("branch", localName, "remote", "origin")
                     repo.config.setString("branch", localName, "merge", "refs/heads/$localName")
                     repo.config.save()
-                    GitOpResult.Ok("已切换到 $localName（跟踪 ${branch.shortName}）")
+                    GitOpResult.Ok("Switched to $localName (tracking ${branch.shortName})")
                 } else {
                     git.checkout().setName(branch.shortName).call()
-                    GitOpResult.Ok("已切换到 ${branch.shortName}")
+                    GitOpResult.Ok("Switched to ${branch.shortName}")
                 }
             }
         }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
@@ -645,7 +645,7 @@ class GitManager(
                         .setName(name)
                         .setStartPoint(if (fromCurrent) Constants.HEAD else "origin/${git.repository.branch}")
                         .call()
-                    GitOpResult.Ok("已创建分支 $name")
+                    GitOpResult.Ok("Created branch $name")
                 }
             }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
         }
@@ -655,9 +655,9 @@ class GitManager(
             withGit(hostPath) { git ->
                 val results = git.branchDelete().setBranchNames(branch.fullName).call()
                 if (results.isEmpty()) {
-                    GitOpResult.Failed("未能Deleted ${branch.shortName}（可能包含未合并提交）")
+                    GitOpResult.Failed("Could not delete ${branch.shortName} (it may contain unmerged commits)")
                 } else {
-                    GitOpResult.Ok("已Deleted分支 ${branch.shortName}")
+                    GitOpResult.Ok("Deleted branch ${branch.shortName}")
                 }
             }
         }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
@@ -687,9 +687,9 @@ class GitManager(
                 withGit(hostPath) { git ->
                     val repo = git.repository
                     if (repo.findRef(Constants.HEAD)?.isSymbolic != true) {
-                        return@withGit GitOpResult.Failed("当前处于分离头指针状态，请先切回分支再推送")
+                        return@withGit GitOpResult.Failed("HEAD is detached. Check out a branch before pushing.")
                     }
-                    val branch = repo.branch ?: return@withGit GitOpResult.Failed("无法确定当前分支")
+                    val branch = repo.branch ?: return@withGit GitOpResult.Failed("Unable to determine the current branch")
                     val results = git.push()
                         .setRemote("origin")
                         .setRefSpecs(RefSpec("refs/heads/$branch:refs/heads/$branch"))
@@ -700,9 +700,9 @@ class GitManager(
                     val ok = updates.count { it.status == RemoteRefUpdate.Status.OK || it.status == RemoteRefUpdate.Status.UP_TO_DATE }
                     val rejected = updates.filter { it.status != RemoteRefUpdate.Status.OK && it.status != RemoteRefUpdate.Status.UP_TO_DATE }
                     when {
-                        updates.isEmpty() -> GitOpResult.Ok("推送完成（无变更）")
-                        rejected.isEmpty() -> GitOpResult.Ok("已推送 $branch → origin（$ok 个引用）")
-                        else -> GitOpResult.Failed("推送被拒绝：${rejected.first().status}" + rejected.firstOrNull()?.message.orEmpty().let { if (it.isBlank()) "" else " · $it" })
+                        updates.isEmpty() -> GitOpResult.Ok("Push completed (no changes)")
+                        rejected.isEmpty() -> GitOpResult.Ok("Pushed $branch → origin ($ok refs)")
+                        else -> GitOpResult.Failed("Push rejected: ${rejected.first().status}" + rejected.firstOrNull()?.message.orEmpty().let { if (it.isBlank()) "" else " · $it" })
                     }
                 }
             }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
@@ -715,7 +715,7 @@ class GitManager(
                 withGit(hostPath) { git ->
                     val repo = git.repository
                     ensureUserIdent(repo)
-                    val branch = repo.branch ?: return@withGit GitOpResult.Failed("无法确定当前分支")
+                    val branch = repo.branch ?: return@withGit GitOpResult.Failed("Unable to determine the current branch")
                     val tracking = BranchConfig(repo.config, branch).trackingBranch
                     val cmd = git.pull().setRemote("origin")
                     if (tracking == null) cmd.setRemoteBranchName(branch)
@@ -726,14 +726,14 @@ class GitManager(
                     val merge = result.mergeResult
                     when (merge?.mergeStatus) {
                         MergeResult.MergeStatus.ALREADY_UP_TO_DATE ->
-                            GitOpResult.Ok("已是最新，无需拉取")
+                            GitOpResult.Ok("Already up to date; nothing to pull")
                         MergeResult.MergeStatus.FAST_FORWARD ->
-                            GitOpResult.Ok("已拉取并快进到 ${merge.newHead?.name()?.take(7)}")
+                            GitOpResult.Ok("Pulled and fast-forwarded to ${merge.newHead?.name()?.take(7)}")
                         MergeResult.MergeStatus.MERGED ->
-                            GitOpResult.Ok("已拉取并合并（产生合并提交）")
+                            GitOpResult.Ok("Pulled and merged (created a merge commit)")
                         MergeResult.MergeStatus.CONFLICTING ->
-                            GitOpResult.Failed("拉取完成但存在Conflict（${merge.conflicts.size} 个文件），请手动解决")
-                        else -> GitOpResult.Ok("拉取完成")
+                            GitOpResult.Failed("Pull completed with conflicts in ${merge.conflicts.size} files; resolve them manually")
+                        else -> GitOpResult.Ok("Pull completed")
                     }
                 }
             }.getOrElse { GitOpResult.Failed(friendlyError(it)) }
@@ -774,19 +774,19 @@ class GitManager(
         fun friendlyError(e: Throwable): String = when (e) {
             is GitNotARepoException -> "NOT_A_GIT_REPO"
             is RepositoryNotFoundException -> "NOT_A_GIT_REPO"
-            is CannotDeleteCurrentBranchException -> "不能Deleted当前所在的分支，请先切换到其他分支"
-            is CheckoutConflictException -> "工作区有未提交改动与目标分支Conflict，请先提交或暂存"
-            is RefAlreadyExistsException -> "分支已存在"
-            is InvalidRemoteException -> "未配置 origin 远程仓库，无法推送/拉取"
+            is CannotDeleteCurrentBranchException -> "Cannot delete the currently checked-out branch; switch to another branch first"
+            is CheckoutConflictException -> "Uncommitted workspace changes conflict with the target branch; commit or stash them first"
+            is RefAlreadyExistsException -> "Branch already exists"
+            is InvalidRemoteException -> "The origin remote is not configured; cannot push or pull"
             is TransportException -> {
                 val message = e.message.orEmpty()
                 when {
                     message.contains("not authorized", true) || message.contains("Authentication", true) ->
-                        "认证失败：请在凭据设置中配置该仓库 host 的 用户名 + Personal Access Token"
+                        "Authentication failed. In credential settings, configure a username and Personal Access Token for this repository host."
                     message.contains("Support for password authentication was removed", true) ->
-                        "GitHub 已停用密码认证：请使用 Personal Access Token 作为密码"
+                        "GitHub no longer supports password authentication; use a Personal Access Token as the password."
                     message.contains("not found", true) ->
-                        "远程仓库不存在或无访问权限（私有仓库需配置 Token）"
+                        "Remote repository does not exist or access is denied (private repositories require a token)."
                     else -> message.ifBlank { e.toString() }
                 }
             }
