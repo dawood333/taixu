@@ -3,7 +3,7 @@
   "providers": [
     {
       "id": "custom",
-      "name": "自定义 OpenAI 兼容接口",
+      "name": "Custom OpenAI-Compatible Endpoint",
       "group": "CUSTOM",
       "baseUrl": "",
       "modelsUrl": "",
@@ -11,7 +11,7 @@
     },
     {
       "id": "custom_anthropic",
-      "name": "自定义 Anthropic 兼容接口",
+      "name": "Custom Anthropic-Compatible Endpoint",
       "group": "CUSTOM",
       "baseUrl": "",
       "modelsUrl": "",
@@ -46,7 +46,7 @@
     },
     {
       "id": "zhipu",
-      "name": "智谱 GLM",
+      "name": "Zhipu GLM",
       "group": "CHINA",
       "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
       "modelsUrl": "https://open.bigmodel.cn/api/paas/v4/models",
@@ -58,7 +58,7 @@
     },
     {
       "id": "doubao",
-      "name": "字节豆包 (火山方舟)",
+      "name": "ByteDance Doubao (Volcengine Ark)",
       "group": "CHINA",
       "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
       "modelsUrl": "https://ark.cn-beijing.volces.com/api/v3/models",
@@ -98,7 +98,7 @@
     },
     {
       "id": "qwen",
-      "name": "阿里云百炼 / Qwen",
+      "name": "Alibaba Cloud Bailian / Qwen",
       "group": "CHINA",
       "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
       "modelsUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1/models",
@@ -125,7 +125,7 @@
     },
     {
       "id": "minimax",
-      "name": "MiniMax 中国",
+      "name": "MiniMax China",
       "group": "CHINA",
       "baseUrl": "https://api.minimaxi.com/v1",
       "modelsUrl": "https://api.minimaxi.com/v1/models",
@@ -138,7 +138,7 @@
     },
     {
       "id": "siliconflow",
-      "name": "硅基流动",
+      "name": "SiliconFlow",
       "group": "CHINA",
       "baseUrl": "https://api.siliconflow.cn/v1",
       "modelsUrl": "https://api.siliconflow.cn/v1/models",
@@ -152,7 +152,7 @@
     },
     {
       "id": "modelscope",
-      "name": "魔搭 ModelScope",
+      "name": "ModelScope",
       "group": "CHINA",
       "baseUrl": "https://api-inference.modelscope.cn/v1",
       "modelsUrl": "https://api-inference.modelscope.cn/v1/models"
@@ -234,7 +234,7 @@
     },
     {
       "id": "llamacpp",
-      "name": "llama.cpp 沙箱离线模型",
+      "name": "llama.cpp Sandbox Offline Model",
       "group": "LOCAL",
       "baseUrl": "http://127.0.0.1:8080/v1",
       "modelsUrl": "http://127.0.0.1:8080/v1/models",
@@ -248,7 +248,7 @@
     },
     {
       "id": "ollama",
-      "name": "Ollama 本地",
+      "name": "Ollama Local",
       "group": "LOCAL",
       "baseUrl": "http://127.0.0.1:11434/v1",
       "modelsUrl": "http://127.0.0.1:11434/api/tags",
@@ -264,7 +264,7 @@
     },
     {
       "id": "lmstudio",
-      "name": "LM Studio 本地",
+      "name": "LM Studio Local",
       "group": "LOCAL",
       "baseUrl": "http://127.0.0.1:1234/v1",
       "modelsUrl": "http://127.0.0.1:1234/v1/models",
@@ -272,7 +272,7 @@
     },
     {
       "id": "vllm",
-      "name": "vLLM 本地",
+      "name": "vLLM Local",
       "group": "LOCAL",
       "baseUrl": "http://127.0.0.1:8000/v1",
       "modelsUrl": "http://127.0.0.1:8000/v1/models",
