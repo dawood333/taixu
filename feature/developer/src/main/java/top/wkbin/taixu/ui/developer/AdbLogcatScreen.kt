@@ -52,12 +52,12 @@ import top.wkbin.taixu.ui.components.StatusBadge
 import top.wkbin.taixu.ui.developer.LocalizedText as Text
 
 /**
- * 独立的无线 ADB 与日志抓取工作台页面。
+ * 独立的Wireless ADB & Log Capture工作台页面。
  *
  * 提供：
  * 1. mDNS 自动发现端点展示与自动重连状态；
  * 2. TLS + SPAKE2 一键安全配对（只需在系统无线调试输入一次配对码）；
- * 3. Logcat 多维过滤（包名/Tag/优先级/关键词/行数）与实时抓取预览；
+ * 3. Logcat 多维过滤（包名/Tag/优先级/关键词/Line count）与实时抓取预览；
  * 4. 日志复制与设备缓冲区清空。
  */
 @Composable
@@ -91,7 +91,7 @@ fun AdbLogcatScreen(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = { RuntimeTopBar("无线 ADB 与日志抓取", onBack) },
+        topBar = { RuntimeTopBar("Wireless ADB & Log Capture", onBack) },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -113,14 +113,14 @@ fun AdbLogcatScreen(
                         color = if (connected != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("内置无线 ADB 客户端", style = MaterialTheme.typography.titleMedium)
+                        Text("Built-in wireless ADB client", style = MaterialTheme.typography.titleMedium)
                         Text(
                             when (val current = adbState) {
-                                EmbeddedAdbManager.ConnectionState.Disconnected -> "未连接"
-                                EmbeddedAdbManager.ConnectionState.Discovering -> "正在通过 mDNS 自动发现调试端口…"
-                                EmbeddedAdbManager.ConnectionState.Pairing -> "正在安全配对…"
-                                EmbeddedAdbManager.ConnectionState.Connecting -> "正在建立 ADB 连接…"
-                                is EmbeddedAdbManager.ConnectionState.Connected -> "已连接：${current.host}:${current.port}"
+                                EmbeddedAdbManager.ConnectionState.Disconnected -> "Disconnected"
+                                EmbeddedAdbManager.ConnectionState.Discovering -> "Discovering the debug port via mDNS…"
+                                EmbeddedAdbManager.ConnectionState.Pairing -> "Pairing securely…"
+                                EmbeddedAdbManager.ConnectionState.Connecting -> "Establishing ADB connection…"
+                                is EmbeddedAdbManager.ConnectionState.Connected -> "Connected: ${current.host}:${current.port}"
                                 is EmbeddedAdbManager.ConnectionState.Failed -> current.message
                             },
                             style = MaterialTheme.typography.bodySmall,
@@ -135,12 +135,12 @@ fun AdbLogcatScreen(
                     }
                     StatusBadge(
                         text = when (adbState) {
-                            is EmbeddedAdbManager.ConnectionState.Connected -> "已连接"
-                            EmbeddedAdbManager.ConnectionState.Discovering -> "探测中"
-                            EmbeddedAdbManager.ConnectionState.Pairing -> "配对中"
-                            EmbeddedAdbManager.ConnectionState.Connecting -> "连接中"
-                            is EmbeddedAdbManager.ConnectionState.Failed -> "异常"
-                            EmbeddedAdbManager.ConnectionState.Disconnected -> "未就绪"
+                            is EmbeddedAdbManager.ConnectionState.Connected -> "Connected"
+                            EmbeddedAdbManager.ConnectionState.Discovering -> "Discovering"
+                            EmbeddedAdbManager.ConnectionState.Pairing -> "Pairing"
+                            EmbeddedAdbManager.ConnectionState.Connecting -> "Connecting"
+                            is EmbeddedAdbManager.ConnectionState.Failed -> "Error"
+                            EmbeddedAdbManager.ConnectionState.Disconnected -> "Not ready"
                         },
                         color = when (adbState) {
                             is EmbeddedAdbManager.ConnectionState.Connected -> MaterialTheme.colorScheme.secondary
@@ -157,7 +157,7 @@ fun AdbLogcatScreen(
 
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    "mDNS 自动探测：发现配对端点 ${adbDiscovery.pairingEndpoints.size} 个 · 连接端点 ${adbDiscovery.connectEndpoints.size} 个",
+                    "mDNS discovery: ${adbDiscovery.pairingEndpoints.size} pairing endpoints · ${adbDiscovery.connectEndpoints.size} connection endpoints",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -170,11 +170,11 @@ fun AdbLogcatScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "通知栏配对助手",
+                            "Notification-shade pairing assistant",
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
                         )
                         Text(
-                            "在系统通知栏常驻展示配对码输入框，支持免切屏快捷输入",
+                            "Keep a pairing-code input field in the notification shade for quick entry without switching screens",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -187,10 +187,10 @@ fun AdbLogcatScreen(
             }
 
             // ── 2. 配对与重连控制台 ──────────────────────────────────────────
-            SectionHeader("安全配对与连接", "密钥持久化保存在应用私有目录；完成一次配对后无需再查端口")
+            SectionHeader("Secure pairing and connection", "Keys are stored persistently in the app's private directory; after pairing once, the port does not need to be looked up again")
             RuntimeCard(Modifier.fillMaxWidth()) {
                 NoticeBanner(
-                    text = "💡 通知栏快捷配对推荐：Android 系统在开启「使用配对码配对设备」弹窗时，切出设置会关闭弹窗并使配对码失效。开启上方「通知栏配对助手」后，可在系统开发者选项弹窗中直接下拉通知栏输入 6 位配对码并提交，无需切屏！",
+                    text = "💡 通知栏快捷配对推荐：Android 系统在开启「使用配对码配对设备」弹窗时，切出设置会关闭弹窗并使配对码失效。开启上方「Notification-shade pairing assistant」后，可在系统开发者选项弹窗中直接下拉通知栏输入 6-digit pairing code并提交，无需切屏！",
                     isError = false,
                 )
                 Spacer(Modifier.height(10.dp))
@@ -203,12 +203,12 @@ fun AdbLogcatScreen(
                             }
                             context.startActivity(intent)
                         }.onFailure {
-                            Toast.makeText(context, "无法直接打开开发者选项，请在系统设置中手动开启", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Could not open Developer options directly. Enable them manually in system Settings.", Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("前往系统开发者选项（开启无线调试）")
+                    Text("Open system Developer options (enable Wireless debugging)")
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -218,18 +218,18 @@ fun AdbLogcatScreen(
                         value = pairingCode,
                         onValueChange = { value -> pairingCode = value.filter(Char::isDigit).take(6) },
                         modifier = Modifier.weight(1.1f),
-                        label = { Text("6 位配对码") },
-                        placeholder = { Text("例如：123456") },
-                        supportingText = { Text("首次配对时填入") },
+                        label = { Text("6-digit pairing code") },
+                        placeholder = { Text("e.g. 123456") },
+                        supportingText = { Text("Enter this during initial pairing") },
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = explicitPort,
                         onValueChange = { value -> explicitPort = value.filter(Char::isDigit).take(5) },
                         modifier = Modifier.weight(0.9f),
-                        label = { Text("连接端口（可选）") },
-                        placeholder = { Text("如：41235") },
-                        supportingText = { Text("留空由 mDNS 探测") },
+                        label = { Text("Connection port (optional)") },
+                        placeholder = { Text("e.g. 41235") },
+                        supportingText = { Text("Leave blank to discover via mDNS") },
                         singleLine = true,
                     )
                 }
@@ -241,14 +241,14 @@ fun AdbLogcatScreen(
                         enabled = !adbBusy && pairingCode.length == 6 && (adbDiscovery.pairingEndpoints.isNotEmpty() || explicitPort.isNotBlank()),
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text("完成配对并连接")
+                        Text("Pair and connect")
                     }
                     OutlinedButton(
                         onClick = { viewModel.connectWirelessAdb(explicitPort.toIntOrNull()) },
                         enabled = !adbBusy && (adbDiscovery.connectEndpoints.isNotEmpty() || explicitPort.isNotBlank() || adbState is EmbeddedAdbManager.ConnectionState.Connected),
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text(if (explicitPort.isNotBlank()) "连接指定端口" else "重新连接")
+                        Text(if (explicitPort.isNotBlank()) "Connect to specified port" else "Reconnect")
                     }
                 }
 
@@ -259,7 +259,7 @@ fun AdbLogcatScreen(
                         enabled = !adbBusy,
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                     ) {
-                        Text("重新探测端口", style = MaterialTheme.typography.labelSmall)
+                        Text("Rediscover port", style = MaterialTheme.typography.labelSmall)
                     }
                 }
 
@@ -274,13 +274,13 @@ fun AdbLogcatScreen(
             }
 
             // ── 3. 日志抓取工作台 ───────────────────────────────────────────
-            SectionHeader("Logcat 日志抓取", "指定目标应用包名、Tag 与过滤条件，就地抓取与分析运行日志")
+            SectionHeader("Logcat capture", "Capture and analyze runtime logs using the target package name, tag, and filters")
             RuntimeCard(Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = logcatPackage,
                     onValueChange = { logcatPackage = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("目标应用包名（留空抓取全系统）") },
+                    label = { Text("Target app package name (leave blank to capture the whole system)") },
                     singleLine = true,
                 )
                 Spacer(Modifier.height(6.dp))
@@ -289,13 +289,13 @@ fun AdbLogcatScreen(
                         onClick = { logcatPackage = "top.wkbin.taixu" },
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                     ) {
-                        Text("填入太墟", style = MaterialTheme.typography.labelSmall)
+                        Text("Use TaiXu", style = MaterialTheme.typography.labelSmall)
                     }
                     OutlinedButton(
                         onClick = { logcatPackage = "" },
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                     ) {
-                        Text("全系统日志", style = MaterialTheme.typography.labelSmall)
+                        Text("System-wide logs", style = MaterialTheme.typography.labelSmall)
                     }
                 }
                 Spacer(Modifier.height(10.dp))
@@ -305,14 +305,14 @@ fun AdbLogcatScreen(
                         value = logcatTag,
                         onValueChange = { logcatTag = it },
                         modifier = Modifier.weight(1f),
-                        label = { Text("Tag 过滤（可选）") },
+                        label = { Text("Tag filter (optional)") },
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = logcatLines,
                         onValueChange = { logcatLines = it.filter(Char::isDigit).take(4) },
                         modifier = Modifier.weight(0.6f),
-                        label = { Text("行数") },
+                        label = { Text("Line count") },
                         singleLine = true,
                     )
                 }
@@ -322,12 +322,12 @@ fun AdbLogcatScreen(
                     value = logcatKeyword,
                     onValueChange = { logcatKeyword = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("关键词过滤（可选，忽略大小写）") },
+                    label = { Text("Keyword filter (optional, case-insensitive)") },
                     singleLine = true,
                 )
                 Spacer(Modifier.height(10.dp))
 
-                Text("日志等级", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Log level", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(4.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf('V' to "Verbose", 'D' to "Debug", 'I' to "Info", 'W' to "Warn", 'E' to "Error", 'F' to "Fatal").forEach { (priority, _) ->
@@ -366,19 +366,19 @@ fun AdbLogcatScreen(
                         enabled = connected != null && !adbBusy,
                         modifier = Modifier.weight(1f),
                     ) {
-                        Text("抓取日志")
+                        Text("Capture logs")
                     }
                     OutlinedButton(
                         onClick = viewModel::clearDeviceLogcat,
                         enabled = connected != null && !adbBusy,
                     ) {
-                        Text("清空缓冲区")
+                        Text("Clear buffer")
                     }
                 }
 
                 if (logcatOutput.isNotBlank()) {
                     Spacer(Modifier.height(14.dp))
-                    Text("抓取结果", style = MaterialTheme.typography.labelLarge)
+                    Text("Capture results", style = MaterialTheme.typography.labelLarge)
                     Spacer(Modifier.height(6.dp))
                     Surface(
                         modifier = Modifier
@@ -406,22 +406,22 @@ fun AdbLogcatScreen(
                         onClick = {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             clipboard.setPrimaryClip(ClipData.newPlainText("Logcat", logcatOutput))
-                            Toast.makeText(context, "日志已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Logs copied to clipboard", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text("复制完整日志")
+                        Text("Copy full log")
                     }
                 }
             }
 
             // ── 4. 沙箱 CLI 与 Agent 联动说明 ──────────────────────────────
-            SectionHeader("沙箱终端与 Agent 联动", "在 Linux 命令行或 AI 对话中直接调用")
+            SectionHeader("Sandbox terminal and Agent integration", "Call directly from the Linux command line or an AI conversation")
             RuntimeCard(Modifier.fillMaxWidth()) {
                 Text(
-                    "• 终端命令：已预置 logcat-grabber <包名>、logcat-tail <包名> 与 logcat-export <包名> <路径>\n" +
-                    "• 宿主接口：通过 taixu-host logcat 跨沙箱直接调用\n" +
-                    "• AI 协同：在智枢对话中直接吩咐 Agent“帮我抓取崩溃日志”，将自动调用 host.logcat 工具分析排查",
+                    "• Terminal commands: logcat-grabber <package>, logcat-tail <package>, and logcat-export <package> <path> are preconfigured.\n" +
+                    "• Host interface: call across the sandbox with taixu-host logcat.\n" +
+                    "• AI integration: ask the Agent in chat to “capture crash logs”; it will call the host.logcat tool automatically for analysis.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
