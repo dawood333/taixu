@@ -53,7 +53,7 @@ sealed interface TranslationModelStatus {
                 } else if (progress != null) {
                     "${((progress) * 100).toInt().coerceIn(0, 100)}% (Step $step of $totalSteps)"
                 } else {
-                    "Step $step of $totalSteps (连接中...)"
+                    "Step $step of $totalSteps (connecting…)"
                 }
             }
     }
