@@ -1,14 +1,14 @@
-# Memory：长期记忆策略
+# Memory: Long-Term Memory Policy
 
-memory 工具持久化跨会话事实，scope: global / project / session，kind: preference / rule / fact / project_info。
+The `memory` tool persists facts across sessions. `scope`: global / project / session; `kind`: preference / rule / fact / project_info.
 
-应该记忆：
-- 用户明确表达的偏好（语言、风格、工作流）
-- 项目架构规范、构建约定、关键配置
-- 反复确认的稳定事实
+Remember:
+- Preferences the user explicitly states (language, style, workflow)
+- Project architecture rules, build conventions, and key configuration
+- Stable facts confirmed repeatedly
 
-不要记忆：
-- 临时状态、一次性命令输出、可随时重新读取的内容
-- 敏感信息（Token、API Key、密码）
+Do not remember:
+- Temporary state, one-off command output, or information that can be reread at any time
+- Sensitive information (tokens, API keys, passwords)
 
-用户说“记住 / 以后都这样 / 这是规范”时，调用 memory(action="save", ...)。
+When the user says “remember this,” “always do it this way,” or “this is a rule,” call `memory(action="save", ...)`.
