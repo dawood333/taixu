@@ -23,13 +23,13 @@ data class PermissionStep(
  * 品牌定义与识别模型
  */
 enum class OemBrand(val id: String, val label: String, val osName: String) {
-    XIAOMI("xiaomi", "小米 / Redmi", "HyperOS / MIUI"),
-    HUAWEI("huawei", "华为 / 荣耀", "HarmonyOS / MagicOS"),
+    XIAOMI("xiaomi", "Xiaomi / Redmi", "HyperOS / MIUI"),
+    HUAWEI("huawei", "Huawei / Honor", "HarmonyOS / MagicOS"),
     VIVO("vivo", "vivo / iQOO", "OriginOS / Funtouch"),
-    OPPO("oppo", "OPPO / 一加 / realme", "ColorOS / RealmeUI"),
-    MEIZU("meizu", "魅族", "Flyme"),
-    SAMSUNG("samsung", "三星", "One UI"),
-    GENERIC("generic", "原生 / 其他品牌", "AOSP / Android");
+    OPPO("oppo", "OPPO / OnePlus / realme", "ColorOS / RealmeUI"),
+    MEIZU("meizu", "Meizu", "Flyme"),
+    SAMSUNG("samsung", "Samsung", "One UI"),
+    GENERIC("generic", "Stock Android / Other brands", "AOSP / Android");
 
     companion object {
         fun detect(): OemBrand {
@@ -67,32 +67,32 @@ enum class KeepaliveTopic(
 ) {
     AUTOSTART(
         id = "autostart",
-        title = "自启动与后台唤醒",
-        subtitle = "允许系统在开机或后台需要时自动拉起沙箱与 Agent 服务",
+        title = "Autostart and background wake-up",
+        subtitle = "Allow the system to start the sandbox and Agent services automatically at boot or when needed in the background",
         icon = RuntimeIconName.Cpu,
     ),
     BATTERY_UNRESTRICTED(
         id = "battery_unrestricted",
-        title = "电池优化无限制",
-        subtitle = "豁免系统省电策略与 Doze 模式，防止息屏后 PRoot 进程被冻结",
+        title = "Unrestricted battery optimization",
+        subtitle = "Exempt TaiXu from system power-saving policies and Doze so PRoot processes are not frozen when the screen turns off",
         icon = RuntimeIconName.Battery,
     ),
     LOCK_RECENTS(
         id = "lock_recents",
-        title = "多任务卡片加锁",
-        subtitle = "在最近任务列表中锁定太墟，防止一键清理时杀死前台服务",
+        title = "Lock the app in Recents",
+        subtitle = "Lock TaiXu in the Recents list to prevent one-tap cleanup from killing foreground services",
         icon = RuntimeIconName.Shield,
     ),
     FLOATING_OVERLAY(
         id = "floating_overlay",
-        title = "悬浮窗与后台弹出",
-        subtitle = "允许在后台运行时弹出构建完成或 Agent 交互通知与窗口",
+        title = "Overlay and background pop-ups",
+        subtitle = "Allow build-completion and Agent interaction notifications/windows to appear while the app is in the background",
         icon = RuntimeIconName.Terminal,
     ),
     NOTIFICATION(
         id = "notification",
-        title = "通知与前台常驻",
-        subtitle = "保持前台保活服务通知栏显示，确保 Linux 运行时最高优先级存活",
+        title = "Notifications and foreground service",
+        subtitle = "Keep the foreground-service notification visible so the Linux runtime can remain at the highest available process priority",
         icon = RuntimeIconName.Chat,
     ),
 }
@@ -106,70 +106,70 @@ object PermissionGuideRepository {
         return when (topic) {
             KeepaliveTopic.AUTOSTART -> when (brand) {
                 OemBrand.XIAOMI -> listOf(
-                    PermissionStep("进入「应用设置」", "打开系统【设置】 ➔ 【应用设置】 ➔ 【授权管理】 ➔ 【自启动管理】。"),
-                    PermissionStep("开启「太墟」自启动", "在应用列表中找到【太墟 (TaiXu)】，将自启动开关切换为【开启】。"),
-                    PermissionStep("允许应用间互相唤醒", "点击进入太墟详情，开启【允许关联启动 / 被其他应用唤醒】（HyperOS 推荐）。"),
+                    PermissionStep("Open App settings", "Open system Settings ➔ App settings ➔ Permission management ➔ Autostart management."),
+                    PermissionStep("Enable TaiXu autostart", "Find TaiXu in the app list and turn Autostart on."),
+                    PermissionStep("Allow apps to wake each other", "Open TaiXu's app details and enable “Allow associated launch / Allow other apps to wake this app” (recommended on HyperOS)."),
                 )
                 OemBrand.HUAWEI -> listOf(
-                    PermissionStep("打开「应用启动管理」", "进入【手机管家】 ➔ 【应用启动管理】。"),
-                    PermissionStep("切换为手动管理", "找到【太墟】，关闭「自动管理」开关，在弹出的窗口中开启全部三项：【允许自启动】、【允许关联启动】和【允许后台活动】。"),
+                    PermissionStep("Open App Launch Management", "Open Phone Manager ➔ App Launch Management."),
+                    PermissionStep("Switch to manual management", "Find TaiXu, turn off Auto-manage, then enable all three options in the dialog: Allow autostart, Allow associated launch, and Allow background activity."),
                 )
                 OemBrand.VIVO -> listOf(
-                    PermissionStep("打开「自启动权限」", "进入系统【设置】 ➔ 【应用与权限】 ➔ 【权限管理】 ➔ 【权限】标签页 ➔ 【自启动】。"),
-                    PermissionStep("开启太墟自启动", "找到【太墟】并开启自启动允许。"),
-                    PermissionStep("开启高耗电后台运行", "在【设置】 ➔ 【电池】 ➔ 【后台高耗电】中，勾选允许太墟继续在后台运行。"),
+                    PermissionStep("Open Autostart permissions", "Open system Settings ➔ Apps & permissions ➔ Permission management ➔ Permissions tab ➔ Autostart."),
+                    PermissionStep("Enable TaiXu autostart", "Find TaiXu and allow autostart."),
+                    PermissionStep("Allow high-power background activity", "In Settings ➔ Battery ➔ High-power background activity, allow TaiXu to keep running in the background."),
                 )
                 OemBrand.OPPO -> listOf(
-                    PermissionStep("进入「自启动管理」", "进入系统【设置】 ➔ 【应用】 ➔ 【自启动管理】。"),
-                    PermissionStep("允许自启动与关联启动", "找到【太墟】，打开【允许自启动】与【允许关联启动】开关。"),
+                    PermissionStep("Open Autostart management", "Open system Settings ➔ Apps ➔ Autostart management."),
+                    PermissionStep("Allow autostart and associated launch", "Find TaiXu and enable Allow autostart and Allow associated launch."),
                 )
                 OemBrand.MEIZU -> listOf(
-                    PermissionStep("打开「后台管理」", "进入【手机管家】 ➔ 【权限管理】 ➔ 【后台管理】。"),
-                    PermissionStep("保持后台运行", "将【太墟】设置为【允许后台运行】或【保持后台唤醒】。"),
+                    PermissionStep("Open Background management", "Open Phone Manager ➔ Permission management ➔ Background management."),
+                    PermissionStep("Allow background execution", "Set TaiXu to Allow background execution or Keep awake in background."),
                 )
                 OemBrand.SAMSUNG -> listOf(
-                    PermissionStep("检查「自动运行应用程序」", "进入【设置】 ➔ 【电池】 ➔ 【后台使用限制】。"),
-                    PermissionStep("移出休眠列表", "确保太墟没有在「深度休眠应用程序」中，并加入【从不休眠的应用程序】列表。"),
+                    PermissionStep("Check automatic app launch", "Open Settings ➔ Battery ➔ Background usage restrictions."),
+                    PermissionStep("Remove from the sleeping-app list", "Make sure TaiXu is not listed under Deep sleeping apps and add it to Never sleeping apps."),
                 )
                 OemBrand.GENERIC -> listOf(
-                    PermissionStep("检查系统启动项", "在系统设置应用详情中，检查是否有「自启动」或「开机启动」权限并予以放行。"),
+                    PermissionStep("Check system startup permissions", "In the app details in system Settings, look for Autostart or Launch at boot permissions and allow them."),
                 )
             }
             KeepaliveTopic.BATTERY_UNRESTRICTED -> when (brand) {
                 OemBrand.XIAOMI -> listOf(
-                    PermissionStep("应用详情省电策略", "长按太墟桌面图标 ➔ 【应用信息】 ➔ 下滑找到【省电策略】。"),
-                    PermissionStep("设为「无限制」", "选择【无限制】（不限制后台活动，最利于 PRoot 编译与 Agent 长思考）。"),
+                    PermissionStep("App battery policy", "Long-press the TaiXu icon ➔ App info ➔ scroll down to Battery policy."),
+                    PermissionStep("Set to Unrestricted", "Choose Unrestricted (does not limit background activity and is best for PRoot builds and long Agent tasks)."),
                 )
                 OemBrand.HUAWEI -> listOf(
-                    PermissionStep("忽略电池优化", "进入【设置】 ➔ 【应用】 ➔ 【权限管理】 ➔ 右上角菜单【特殊访问权限】 ➔ 【电池优化】。"),
-                    PermissionStep("设为「不允许优化」", "下拉筛选「所有应用」，找到【太墟】，设为【不允许】。"),
+                    PermissionStep("Ignore battery optimization", "Open Settings ➔ Apps ➔ Permission management ➔ top-right menu Special access ➔ Battery optimization."),
+                    PermissionStep("Set to Not optimized", "Select All apps, find TaiXu, and set it to Not optimized."),
                 )
                 OemBrand.VIVO -> listOf(
-                    PermissionStep("后台高耗电允许", "进入【设置】 ➔ 【电池】 ➔ 【后台耗电管理】。"),
-                    PermissionStep("开启高耗电运行", "找到【太墟】，选择【允许高耗电后台运行】。"),
+                    PermissionStep("Allow high-power background activity", "Open Settings ➔ Battery ➔ Background power management."),
+                    PermissionStep("Allow high-power background execution", "Find TaiXu and select Allow high-power background execution."),
                 )
                 OemBrand.OPPO -> listOf(
-                    PermissionStep("电池耗电管理", "长按太墟图标 ➔ 【应用详情】 ➔ 【耗电管理】。"),
-                    PermissionStep("开启所有后台选项", "勾选【允许完全后台行为】、【允许唤醒前台】并关闭「深度省电优化」。"),
+                    PermissionStep("Battery usage management", "Long-press the TaiXu icon ➔ App details ➔ Battery usage management."),
+                    PermissionStep("Enable all background options", "Enable Allow full background activity and Allow foreground wake-up, and disable Deep power-saving optimization."),
                 )
                 OemBrand.SAMSUNG -> listOf(
-                    PermissionStep("电池使用模式", "进入系统【设置】 ➔ 【应用程序】 ➔ 【太墟】 ➔ 【电池】。"),
-                    PermissionStep("设为「不受限制」", "由默认的「已优化」切换为【不受限制】（Unrestricted）。"),
+                    PermissionStep("Battery usage mode", "Open system Settings ➔ Apps ➔ TaiXu ➔ Battery."),
+                    PermissionStep("Set to Unrestricted", "Change the setting from Optimized to Unrestricted."),
                 )
                 else -> listOf(
-                    PermissionStep("忽略电池优化", "进入应用信息 ➔ 【电池】 ➔ 设为【无限制】或申请忽略系统电池优化。"),
+                    PermissionStep("Ignore battery optimization", "Open App info ➔ Battery ➔ choose Unrestricted or request exemption from system battery optimization."),
                 )
             }
             KeepaliveTopic.LOCK_RECENTS -> listOf(
-                PermissionStep("进入多任务后台", "从屏幕底部上滑悬停（或点击多任务导航键），进入多任务卡片视图。"),
-                PermissionStep("锁定太墟卡片", "长按太墟任务卡片（或向下拉动卡片），点击出现的小锁 🔒 图标进行锁定，防止一键清理后台时被系统杀死。"),
+                PermissionStep("Open the Recents screen", "Swipe up from the bottom and hold (or tap the Recents navigation button) to open the task-card view."),
+                PermissionStep("Lock the TaiXu app card", "Long-press the TaiXu task card (or swipe the card down) and tap the 🔒 lock icon to prevent the system from killing it during one-tap cleanup."),
             )
             KeepaliveTopic.FLOATING_OVERLAY -> listOf(
-                PermissionStep("开启悬浮窗 / 显示在其他应用上层", "进入【应用信息】 ➔ 【高级】 ➔ 【显示在其他应用上层 / 悬浮窗】，切换为【允许】。"),
-                PermissionStep("后台弹出界面权限", "对于小米/vivo等系统，在【权限管理】中开启【后台弹出界面】或【桌面快捷方式】权限。"),
+                PermissionStep("Enable overlay / display over other apps", "Open App info ➔ Advanced ➔ Display over other apps / Overlay, then set it to Allow."),
+                PermissionStep("Background pop-up permission", "On Xiaomi, vivo, and similar systems, enable Background pop-up windows or Home-screen shortcuts under Permission management."),
             )
             KeepaliveTopic.NOTIFICATION -> listOf(
-                PermissionStep("允许通知与前台服务常驻", "确保太墟拥有通知权限，太墟会在启动 PRoot 沙箱与 Agent 循环时启动前台常驻服务，保障系统进程优先级。"),
+                PermissionStep("Allow notifications and persistent foreground service", "Ensure TaiXu has notification permission. It starts a persistent foreground service while launching the PRoot sandbox and Agent loop to help preserve process priority."),
             )
         }
     }
