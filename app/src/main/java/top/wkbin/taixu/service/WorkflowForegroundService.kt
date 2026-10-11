@@ -45,7 +45,7 @@ class WorkflowForegroundService : Service() {
     private var collecting = false
     /** 当前向 RuntimeLifecycleSupervisor 持有的保活租约（工作流运行时持有）。 */
     private var powerLease: ProcessingPowerLease? = null
-    /** 出现过运行中状态的 executionId：用于检测"运行中 → 终态"迁移，终态通知只发一次。 */
+    /** 出现过Running状态的 executionId：用于检测"Running → 终态"迁移，终态通知只发一次。 */
     private val seenRunning = mutableSetOf<String>()
     /** 进度通知节流：executionId → 上次发布时间。 */
     private val lastProgressPostAt = mutableMapOf<String, Long>()
@@ -56,20 +56,20 @@ class WorkflowForegroundService : Service() {
             val manager = getSystemService(NotificationManager::class.java)
             // 进度渠道低优先级（静默常驻）；结果渠道高优先级（完成/失败可感知）
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "工作流后台运行", NotificationManager.IMPORTANCE_LOW).apply {
-                    description = "展示工作流后台执行进度"
+                NotificationChannel(CHANNEL_ID, "Workflow running in background", NotificationManager.IMPORTANCE_LOW).apply {
+                    description = "Shows workflow execution progress in the background"
                     enableVibration(false)
                     setSound(null, null)
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 },
             )
             manager.createNotificationChannel(
-                NotificationChannel(RESULT_CHANNEL_ID, "工作流结果", NotificationManager.IMPORTANCE_HIGH).apply {
-                    description = "工作流运行完成、失败或被停止时的提醒"
+                NotificationChannel(RESULT_CHANNEL_ID, "Workflow results", NotificationManager.IMPORTANCE_HIGH).apply {
+                    description = "Notification when a workflow completes, fails, or is stopped"
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 },
             )
-        }.onFailure { Log.w(TAG, "创建通知渠道失败", it) }
+        }.onFailure { Log.w(TAG, "Failed to create notification channel", it) }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -85,7 +85,7 @@ class WorkflowForegroundService : Service() {
                             .filter { it.status !in WorkflowRunManager.TERMINAL }
                             .forEach { runManager.cancel(it.executionId) }
                     }
-                }.onFailure { Log.w(TAG, "取消工作流失败", it) }
+                }.onFailure { Log.w(TAG, "Failed to cancel workflow", it) }
                 return START_NOT_STICKY
             }
             else -> {
@@ -178,8 +178,8 @@ class WorkflowForegroundService : Service() {
 
     private fun runningNotification(): Notification = NotificationCompat.Builder(this, CHANNEL_ID)
         .setSmallIcon(R.drawable.taixu_notification)
-        .setContentTitle("工作流运行中")
-        .setContentText("后台保活进行中")
+        .setContentTitle("Workflow running")
+        .setContentText("Background keep-alive active")
         .setOngoing(true)
         .setOnlyAlertOnce(true)
         .setAutoCancel(false)
@@ -192,7 +192,7 @@ class WorkflowForegroundService : Service() {
         val nodeTitle = active?.let { (id, _) ->
             state.definition.nodes.firstOrNull { it.id == id }?.title ?: id
         }.orEmpty()
-        val detail = active?.value?.progressMessage?.takeIf { it.isNotBlank() } ?: "运行中"
+        val detail = active?.value?.progressMessage?.takeIf { it.isNotBlank() } ?: "Running"
         val stopPending = PendingIntent.getService(
             this,
             runNotificationId(state.executionId),
@@ -203,7 +203,7 @@ class WorkflowForegroundService : Service() {
         )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.taixu_notification)
-            .setContentTitle("太墟 · ${state.definition.name}")
+            .setContentTitle("TaiXu · ${state.definition.name}")
             .setContentText(if (nodeTitle.isNotBlank()) "$nodeTitle · $detail" else detail)
             .setContentIntent(openRunIntent(state.executionId))
             .setOngoing(true)
@@ -223,13 +223,13 @@ class WorkflowForegroundService : Service() {
 
     private fun terminalNotification(state: WorkflowRuntimeState): Notification {
         val (title, text) = when (state.status) {
-            WorkflowRunStatus.SUCCESS -> "工作流完成" to "${state.definition.name} 全部节点执行成功"
-            WorkflowRunStatus.FAILED -> "工作流失败" to "${state.definition.name}：${state.error ?: "执行失败"}"
-            else -> "工作流已停止" to "${state.definition.name}：${state.error ?: "已取消"}"
+            WorkflowRunStatus.SUCCESS -> "Workflow completed" to "All nodes in ${state.definition.name} completed successfully"
+            WorkflowRunStatus.FAILED -> "Workflow failed" to "${state.definition.name}: ${state.error ?: "Execution failed"}"
+            else -> "Workflow stopped" to "${state.definition.name}: ${state.error ?: "Cancelled"}"
         }
         return NotificationCompat.Builder(this, RESULT_CHANNEL_ID)
             .setSmallIcon(R.drawable.taixu_notification)
-            .setContentTitle("太墟 · $title")
+            .setContentTitle("TaiXu · $title")
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(openRunIntent(state.executionId))
@@ -241,17 +241,17 @@ class WorkflowForegroundService : Service() {
 
     private fun safeStartForeground(id: Int, notification: Notification) {
         runCatching { startForeground(id, notification) }
-            .onFailure { Log.w(TAG, "startForeground 失败", it) }
+            .onFailure { Log.w(TAG, "startForeground failed", it) }
     }
 
     private fun stopForegroundSafely(flag: Int) {
         runCatching { stopForeground(flag) }
-            .onFailure { Log.w(TAG, "stopForeground 失败", it) }
+            .onFailure { Log.w(TAG, "stopForeground failed", it) }
     }
 
     private fun safeNotify(id: Int, notification: Notification) {
         runCatching { getSystemService(NotificationManager::class.java).notify(id, notification) }
-            .onFailure { Log.w(TAG, "发布通知失败", it) }
+            .onFailure { Log.w(TAG, "Failed to post notification", it) }
     }
 
     private fun runNotificationId(executionId: String): Int =
@@ -279,12 +279,12 @@ class WorkflowForegroundService : Service() {
                 ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
                 PackageManager.PERMISSION_GRANTED
             ) {
-                Log.w(TAG, "通知权限未授权，跳过工作流前台保活服务（运行继续）")
+                Log.w(TAG, "Notification permission not granted; skipping workflow foreground keep-alive service (workflow continues)")
                 return
             }
             runCatching {
                 context.startForegroundService(Intent(context, WorkflowForegroundService::class.java))
-            }.onFailure { Log.w(TAG, "启动工作流前台服务失败", it) }
+            }.onFailure { Log.w(TAG, "Failed to start workflow foreground service", it) }
         }
     }
 }
