@@ -202,7 +202,7 @@ internal fun ProjectCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.End,
             ) {
-                // 只有可编译运行工程（Android / Flutter）显示"Run on device"按钮；逆向/通用工程走终端
+                // Only buildable/runnable projects (Android / Flutter) show the "Run on device" button; reverse-engineering and generic projects use the terminal.
                 if (project.projectType == ProjectType.ANDROID ||
                     project.projectType == ProjectType.FLUTTER
                 ) {
