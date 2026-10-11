@@ -401,7 +401,7 @@ internal fun AssistantBubble(
     val context = LocalContext.current
     // 生成图判定：live（流式进行中）直接跳过扫描 —— 此时 base64 尚未写完，扫描必然 miss，
     // 却会在每个流式分片对整段（可能数 MB）文本跑一次 contains。改为仅在流结束后的稳定文本上判定，
-    // 缓存键也随之从「含 text.length」收敛为「按 message.id」，避免键随每帧变化导致缓存永久失效。
+    // The cache key was simplified from including text.length to using message.id, preventing per-frame key changes from permanently invalidating the cache.
     val generatedImagePayload = remember(message.id, live) {
         if (live) {
             false
@@ -490,7 +490,7 @@ internal fun AssistantBubble(
                 MarkdownText(
                     markdown = message.text,
                     modifier = Modifier.fillMaxWidth(),
-                    // 缓存键只用 message.id：流式期间每帧 text.length 都会变，把长度编进键会让
+                    // Use only message.id as the cache key: text.length changes on every streaming frame, so including it would
                     // 缓存形同失效。大文本 LRU 在 MarkdownText 内用内容指纹校验，同一 id 换正文不会串味。
                     contentCacheKey = "assistant:${message.id}",
                 )
