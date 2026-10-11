@@ -20,10 +20,10 @@ def response(req_id, result=None, error=None):
 def tool_specs():
     text = {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}
     return [
-        {"name": "read_query", "description": "执行 SELECT 查询", "inputSchema": text},
-        {"name": "write_query", "description": "执行 INSERT、UPDATE、DELETE 或 CREATE 语句", "inputSchema": text},
-        {"name": "list_tables", "description": "列出 SQLite 数据库中的表", "inputSchema": {"type": "object", "properties": {}}},
-        {"name": "describe_table", "description": "查看指定数据表结构", "inputSchema": {"type": "object", "properties": {"table_name": {"type": "string"}}, "required": ["table_name"]}},
+        {"name": "read_query", "description": "Execute a SELECT query", "inputSchema": text},
+        {"name": "write_query", "description": "Execute an INSERT, UPDATE, DELETE, or CREATE statement", "inputSchema": text},
+        {"name": "list_tables", "description": "List tables in the SQLite database", "inputSchema": {"type": "object", "properties": {}}},
+        {"name": "describe_table", "description": "Inspect the schema of a specified table", "inputSchema": {"type": "object", "properties": {"table_name": {"type": "string"}}, "required": ["table_name"]}},
     ]
 
 
@@ -33,13 +33,13 @@ def call_tool(db_path, name, args):
         if name == "read_query":
             query = str(args.get("query", "")).strip()
             if not query.lower().startswith(("select", "with", "pragma", "explain")):
-                raise ValueError("read_query 只允许 SELECT/WITH/PRAGMA/EXPLAIN")
+                raise ValueError("read_query only allows SELECT/WITH/PRAGMA/EXPLAIN")
             rows = [dict(row) for row in db.execute(query)]
             return json.dumps(rows, ensure_ascii=False)
         if name == "write_query":
             query = str(args.get("query", "")).strip()
             if not query or query.lower().startswith(("select", "pragma")):
-                raise ValueError("write_query 需要写入或 DDL 语句")
+                raise ValueError("write_query requires a write or DDL statement")
             cursor = db.execute(query)
             db.commit()
             return json.dumps({"affected_rows": cursor.rowcount}, ensure_ascii=False)
@@ -49,10 +49,10 @@ def call_tool(db_path, name, args):
         if name == "describe_table":
             table = str(args.get("table_name", "")).strip()
             if not table or any(ch not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_" for ch in table):
-                raise ValueError("table_name 无效")
+                raise ValueError("Invalid table_name")
             rows = db.execute("PRAGMA table_info(\"" + table + "\")").fetchall()
             return json.dumps([dict(row) for row in rows], ensure_ascii=False)
-        raise ValueError("未知工具: " + name)
+        raise ValueError("Unknown tool: " + name)
 
 
 def main():
