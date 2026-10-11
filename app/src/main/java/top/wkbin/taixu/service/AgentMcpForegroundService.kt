@@ -26,7 +26,7 @@ import top.wkbin.taixu.lifecycle.RuntimeLifecycleSupervisor
  * 避免 App 退到后台后被系统冻结/息屏休眠，导致外部 AI 客户端的连接被静默掐断。
  *
  * 前台类型用 `specialUse` 而非 `dataSync`：dataSync 在 Android 15+ 有 6 小时硬超时，
- * 会周期性掐断外部客户端；被控端要的是"用户开着就一直可用"。
+ * 会周期性掐断外部客户端；被控端要的是"remain available as long as the user leaves it enabled"。
  */
 class AgentMcpForegroundService : Service() {
 
@@ -53,12 +53,12 @@ class AgentMcpForegroundService : Service() {
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 },
             )
-        }.onFailure { Log.w(TAG, "创建通知渠道失败", it) }
+        }.onFailure { Log.w(TAG, "Failed to create notification channel", it) }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         runCatching { startForeground(NOTIFICATION_ID, notification()) }
-            .onFailure { Log.w(TAG, "startForeground 失败", it) }
+            .onFailure { Log.w(TAG, "startForeground failed", it) }
         acquireLease()
         return START_STICKY
     }
@@ -112,7 +112,7 @@ class AgentMcpForegroundService : Service() {
                 ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
                 PackageManager.PERMISSION_GRANTED
             ) {
-                Log.w(TAG, "通知权限未授权，跳过 MCP 被控端前台保活服务")
+                Log.w(TAG, "Notification permission not granted; skipping MCP controlled-server foreground keep-alive service")
                 return
             }
             runCatching {
@@ -120,13 +120,13 @@ class AgentMcpForegroundService : Service() {
                     context,
                     Intent(context, AgentMcpForegroundService::class.java),
                 )
-            }.onFailure { Log.w(TAG, "启动 MCP 被控端前台服务失败", it) }
+            }.onFailure { Log.w(TAG, "Failed to start MCP controlled-server foreground service", it) }
         }
 
         /** 停止常驻服务。用 stopService 而非 startService+ACTION：后台态下也可安全调用。 */
         fun stop(context: Context) {
             runCatching { context.stopService(Intent(context, AgentMcpForegroundService::class.java)) }
-                .onFailure { Log.w(TAG, "停止 MCP 被控端前台服务失败", it) }
+                .onFailure { Log.w(TAG, "Failed to stop MCP controlled-server foreground service", it) }
         }
     }
 }
