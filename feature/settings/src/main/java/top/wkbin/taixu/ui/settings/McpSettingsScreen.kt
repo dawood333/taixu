@@ -228,7 +228,7 @@ fun McpSettingsScreen(
                 item(key = "mcp_section_custom") {
                     McpSectionHeader(
                         title = "Custom & third-party MCP",
-                        subtitle = "通过「Add service」导入的外部 MCP 服务，可 @ 唤醒",
+                        subtitle = "External MCP services imported with “Add service”; mention them with @ to invoke them",
                         count = customServers.size,
                     )
                 }
@@ -288,7 +288,7 @@ fun McpSettingsScreen(
             onDismissRequest = { pendingDeleteServerId = null },
             title = { Text("Delete MCP service", fontWeight = FontWeight.Bold) },
             text = {
-                Text("确定要Delete「${server.name}」吗？Delete后将停止向智枢 Agent 注入该服务的工具能力；Core system MCP 重新开启即可恢复。")
+                Text("Delete “${server.name}”? This stops injecting the service's tools into the Agent hub. Re-enable Core System MCP to restore them.")
             },
             confirmButton = {
                 Button(
@@ -369,7 +369,7 @@ private fun LocalMcpDiscoveryDialog(
                         ) {
                             CircularProgressIndicator(Modifier.size(20.dp))
                             Spacer(Modifier.width(10.dp))
-                            Text("正在Scan local host服务…", style = MaterialTheme.typography.bodyMedium)
+                            Text("Scanning local host services…", style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                     is LocalMcpDiscoveryState.Error -> {
@@ -398,14 +398,14 @@ private fun LocalMcpDiscoveryDialog(
                                                 overflow = TextOverflow.Ellipsis,
                                             )
                                             Text(
-                                                "已验证 · ${detected.toolCount} 个工具",
+                                                "Verified · ${detected.toolCount} tools",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             )
                                         }
                                         Spacer(Modifier.width(8.dp))
                                         if (detected.server.id in addedIds) {
-                                            Text("已添加", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                            Text("Added", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                                         } else {
                                             OutlinedButton(
                                                 onClick = {
@@ -413,7 +413,7 @@ private fun LocalMcpDiscoveryDialog(
                                                     addedIds = addedIds + detected.server.id
                                                 },
                                                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                            ) { Text("添加", style = MaterialTheme.typography.labelSmall) }
+                                            ) { Text("Add", style = MaterialTheme.typography.labelSmall) }
                                         }
                                     }
                                 }
@@ -426,15 +426,15 @@ private fun LocalMcpDiscoveryDialog(
         confirmButton = {
             when (state) {
                 LocalMcpDiscoveryState.Scanning -> Unit
-                else -> Button(onClick = onRetry) { Text("重新探测") }
+                else -> Button(onClick = onRetry) { Text("Probe again") }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("关闭") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
     )
 }
 
 /**
- * 浏览器 MCP 安全门禁卡片：内置浏览器服务的危险能力开关（最小权限，默认全关）。
+ * Browser MCP security gates卡片：内置浏览器服务的危险能力开关（最小权限，默认全关）。
  * 门禁为引擎池级/工具快照级配置，修改后需重启应用生效。
  */
 @Composable
@@ -446,12 +446,12 @@ private fun BrowserGatesCard(gates: BrowserGateState, viewModel: SettingsViewMod
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
-            "浏览器 MCP 安全门禁",
+            "Browser MCP security gates",
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
-            "内置浏览器服务的危险能力开关，默认全部关闭；修改后需重启应用生效",
+            "内置浏览器服务的危险能力开关，默认全部Close；修改后需重启应用生效",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -463,32 +463,32 @@ private fun BrowserGatesCard(gates: BrowserGateState, viewModel: SettingsViewMod
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             BrowserGateRow(
-                title = "远程Connect",
-                description = "允许局域网设备Connect浏览器 MCP 服务（绑定 0.0.0.0）；关闭时仅限本机回环，仍强制 Bearer 认证",
+                title = "Allow remote connections",
+                description = "允许局域网设备Connect浏览器 MCP 服务（绑定 0.0.0.0）；Close时仅限本机回环，仍强制 Bearer 认证",
                 checked = gates.allowRemoteConnect,
                 onCheckedChange = viewModel::setBrowserAllowRemoteConnect,
             )
             BrowserGateRow(
-                title = "页面 JS 执行",
-                description = "允许 Agent 在页面上下文执行任意 JavaScript（browser.evaluate）",
+                title = "Page JavaScript execution",
+                description = "Allow the Agent to execute arbitrary JavaScript in the page context (browser.evaluate).",
                 checked = gates.allowEvalJs,
                 onCheckedChange = viewModel::setBrowserAllowEvalJs,
             )
             BrowserGateRow(
-                title = "注入式 Hook",
-                description = "允许注入脚本拦截/改写页面网络请求与 JS 函数（log/block/redirect/mock）",
+                title = "Injected hooks",
+                description = "Allow injected scripts to intercept or rewrite page network requests and JavaScript functions (log/block/redirect/mock).",
                 checked = gates.allowHooks,
                 onCheckedChange = viewModel::setBrowserAllowHooks,
             )
             BrowserGateRow(
-                title = "CDP 调试（断点）",
-                description = "允许通过 DevTools 协议 attach 页面：真断点、暂停时读写变量、Worker 级请求拦截；开启会暴露本进程 DevTools socket（同设备其他应用理论上可连），仅在受控环境使用",
+                title = "CDP debugging (breakpoints)",
+                description = "Allow attaching to pages through the DevTools protocol: real breakpoints, variable inspection/modification while paused, and Worker-level request interception. This exposes the process's DevTools socket, which other apps on the device could potentially access; use only in a controlled environment.",
                 checked = gates.allowCdp,
                 onCheckedChange = viewModel::setBrowserAllowCdp,
             )
             BrowserGateRow(
-                title = "页面调试面板（vConsole）",
-                description = "在每个页面注入 vConsole 浮动面板（console / 网络 / 存储），供人工浏览时排查；与 Agent 工具门禁无关，重启后对新开 tab 生效",
+                title = "Page debugging panel (vConsole)",
+                description = "Inject a floating vConsole panel (console/network/storage) into each page for manual debugging. This is independent of Agent tool permissions and applies to newly opened tabs after restart.",
                 checked = gates.allowVConsole,
                 onCheckedChange = viewModel::setBrowserAllowVConsole,
             )
@@ -556,12 +556,12 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
-            "服务端（被控方）",
+            "Server (controlled side)",
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
-            "让外部 AI 客户端（Claude Desktop / Cursor 等）通过 MCP 控制本机：读写工作区文件、执行沙箱命令、操作宿主应用",
+            "Allow external AI clients (such as Claude Desktop or Cursor) to control this device through MCP: read/write workspace files, run sandbox commands, and interact with the host app.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -573,8 +573,8 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             BrowserGateRow(
-                title = "启用被控端",
-                description = "在本机启动独立的 MCP 服务端点；关闭后立即停止监听",
+                title = "Enable controlled server",
+                description = "在本机启动独立的 MCP 服务端点；Close后立即停止监听",
                 checked = state.enabled,
                 onCheckedChange = viewModel::setAgentServerEnabled,
             )
@@ -582,14 +582,14 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
             AnimatedVisibility(visible = state.enabled) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     BrowserGateRow(
-                        title = "允许局域网Connect",
-                        description = "绑定 0.0.0.0，同网段设备可Connect；关闭时仅限本机回环，两种模式均强制 Bearer 认证",
+                        title = "Allow LAN connections",
+                        description = "绑定 0.0.0.0，同网段设备可Connect；Close时仅限本机回环，两种模式均强制 Bearer 认证",
                         checked = state.allowRemote,
                         onCheckedChange = viewModel::setAgentServerAllowRemote,
                     )
                     BrowserGateRow(
-                        title = "允许写入与执行",
-                        description = "开放 write/edit/base/process/download 及 host 的写操作；关闭时仅提供 read 与只读 host/memory 动作",
+                        title = "Allow writes and execution",
+                        description = "开放 write/edit/base/process/download 及 host 的写操作；Close时仅提供 read 与只读 host/memory 动作",
                         checked = state.allowWriteTools,
                         onCheckedChange = viewModel::setAgentServerAllowWriteTools,
                     )
@@ -601,12 +601,12 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                             portText = input.filter { it.isDigit() }.take(5)
                             portText.toIntOrNull()?.let(viewModel::setAgentServerPort)
                         },
-                        label = { Text("监听端口") },
+                        label = { Text("Listening port") },
                         singleLine = true,
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                         ),
-                        supportingText = { Text("默认 8890；被占用时自动顺延 10 个相邻端口", style = MaterialTheme.typography.bodySmall) },
+                        supportingText = { Text("Default: 8890; if occupied, automatically tries the next 10 consecutive ports.", style = MaterialTheme.typography.bodySmall) },
                         modifier = Modifier.fillMaxWidth(),
                     )
 
@@ -623,23 +623,23 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                                     .background(if (running) successStatusColor() else MaterialTheme.colorScheme.outline),
                             )
                             Text(
-                                if (running) "运行中 · 监听 ${boundPort}" else "已停止",
+                                if (running) "Running · listening on ${boundPort}" else "Stopped",
                                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                         val loopbackUrl = "http://127.0.0.1:$boundPort/mcp"
                         val lanUrl = lanIp?.let { "http://$it:$boundPort/mcp" }
-                        CopyableLine(label = "本机地址", value = loopbackUrl, context = context)
+                        CopyableLine(label = "Local address", value = loopbackUrl, context = context)
                         if (state.allowRemote && lanUrl != null) {
-                            CopyableLine(label = "局域网地址", value = lanUrl, context = context)
+                            CopyableLine(label = "LAN address", value = lanUrl, context = context)
                         }
                     }
 
                     // 持久化令牌
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            "访问令牌（Bearer）",
+                            "Access token (Bearer)",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -654,7 +654,7 @@ private fun AgentServerCard(state: AgentServerState, viewModel: SettingsViewMode
                                 horizontalArrangement = Arrangement.SpaceBetween,
                             ) {
                                 Text(
-                                    text = state.token.ifBlank { "启用后自动生成" },
+                                    text = state.token.ifBlank { "Generated automatically when enabled" },
                                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 11.sp),
                                     color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f),
@@ -1203,7 +1203,7 @@ private fun AddMcpServerDialog(
         onDismissRequest = onDismiss,
         title = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("添加 MCP 服务", fontWeight = FontWeight.Bold)
+                Text("Add MCP 服务", fontWeight = FontWeight.Bold)
                 SecondaryTabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = Color.Transparent,
@@ -1435,7 +1435,7 @@ private fun AddMcpServerDialog(
                     enabled = name.isNotBlank() && (transport != McpTransportType.STDIO || command.isNotBlank()) &&
                         (!oauthEnabled || (oauthClientId.isNotBlank() && oauthAuthorizationEndpoint.isNotBlank() && oauthTokenEndpoint.isNotBlank())),
                 ) {
-                    Text("添加")
+                    Text("Add")
                 }
             } else {
                 Button(
