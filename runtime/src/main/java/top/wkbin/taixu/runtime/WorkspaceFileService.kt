@@ -73,40 +73,40 @@ class WorkspaceFileService(
         check(directory.mkdirs()) { "Unable to create directory" }
     }
 
-    suspend fun renameItem(projectName: String, oldRelativePath: String, newName: String): AppResult<Unit> = ioResult("重命名失败") {
+    suspend fun renameItem(projectName: String, oldRelativePath: String, newName: String): AppResult<Unit> = ioResult("Rename failed") {
         val safeName = newName.trim()
-        require(safeName.isNotBlank() && safeName !in setOf(".", "..") && '/' !in safeName && '\\' !in safeName) { "新名称不合法" }
+        require(safeName.isNotBlank() && safeName !in setOf(".", "..") && '/' !in safeName && '\\' !in safeName) { "Invalid new name" }
         val file = resolve(projectName, oldRelativePath)
         val root = projectRoot(projectName).canonicalFile
-        check(file.canonicalFile != root) { "不能通过此接口重命名工作区根目录" }
+        check(file.canonicalFile != root) { "The workspace root cannot be renamed through this interface" }
         val target = File(file.parentFile, safeName)
-        require(isInside(root, target.canonicalFile)) { "重命名目标路径越界" }
-        check(!target.exists()) { "目标已存在：$safeName" }
-        check(file.renameTo(target)) { "重命名失败" }
+        require(isInside(root, target.canonicalFile)) { "Rename target path is outside the allowed workspace" }
+        check(!target.exists()) { "Target already exists: $safeName" }
+        check(file.renameTo(target)) { "Rename failed" }
     }
 
-    suspend fun deleteItem(projectName: String, relativePath: String): AppResult<Unit> = ioResult("删除失败") {
+    suspend fun deleteItem(projectName: String, relativePath: String): AppResult<Unit> = ioResult("Delete failed") {
         val file = resolve(projectName, relativePath)
-        check(file.canonicalFile != projectRoot(projectName).canonicalFile) { "不能通过此接口删除工作区根目录" }
-        if (file.isDirectory) SafeFileTree.delete(file) else check(file.delete()) { "删除文件失败" }
+        check(file.canonicalFile != projectRoot(projectName).canonicalFile) { "The workspace root cannot be deleted through this interface" }
+        if (file.isDirectory) SafeFileTree.delete(file) else check(file.delete()) { "Failed to delete file" }
     }
 
     private suspend fun projectRoot(projectName: String): File {
         if (projectName == "sdcard") File("/storage/emulated/0").takeIf { it.exists() }?.let { return it }
-        require(isValidProjectName(projectName)) { "项目名称无效：$projectName" }
-        val entity = workspaceRepository.findByName(projectName) ?: error("项目不存在：$projectName")
-        return File(entity.path).also { check(it.isDirectory) { "关联目录不存在：$projectName" } }
+        require(isValidProjectName(projectName)) { "Invalid project name: $projectName" }
+        val entity = workspaceRepository.findByName(projectName) ?: error("Project does not exist: $projectName")
+        return File(entity.path).also { check(it.isDirectory) { "Associated directory does not exist: $projectName" } }
     }
 
     private suspend fun resolve(projectName: String, relativePath: String, allowMissing: Boolean = false): File {
         val root = projectRoot(projectName)
         val trimmed = relativePath.trim().removePrefix("/workspace/$projectName").removePrefix("/sdcard").removePrefix("/")
         val segments = trimmed.split('/', '\\').filter { it.isNotEmpty() && it != "." }
-        require(segments.none { it == ".." }) { "路径包含越界操作符 (..)" }
+        require(segments.none { it == ".." }) { "Path contains a traversal segment (..)" }
         val candidate = segments.fold(root) { parent, segment -> File(parent, segment) }
         val canonical = candidate.canonicalFile
-        require(isInside(root.canonicalFile, canonical)) { "路径越界：$relativePath" }
-        if (!allowMissing) require(candidate.exists()) { "目标不存在：${displayPath(projectName, relativePath)}" }
+        require(isInside(root.canonicalFile, canonical)) { "Path escapes the allowed workspace: $relativePath" }
+        if (!allowMissing) require(candidate.exists()) { "Target does not exist: ${displayPath(projectName, relativePath)}" }
         return candidate
     }
 
@@ -121,7 +121,7 @@ class WorkspaceFileService(
         return when {
             isInside(internal, canonical) -> "/workspace/${canonical.toRelativeString(internal).replace(File.separatorChar, '/')}"
             isInside(shared, canonical) -> "/sdcard/${canonical.toRelativeString(shared).replace(File.separatorChar, '/')}"
-            else -> error("目录不在可关联空间内")
+            else -> error("Directory is outside the allowed workspace area")
         }.trimEnd('/')
     }
 
