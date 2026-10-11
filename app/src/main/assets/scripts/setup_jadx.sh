@@ -1,11 +1,11 @@
 #!/bin/sh
 # ==============================================================================
 # TaiXu (LinuxAIRuntime) - JADX-CLI Reverse Engineering Suite Setup
-# 加固版：多镜像重试下载、解包产物完整性校验（bin + lib）、Java 运行时预检。
+# Hardened setup: retry downloads across mirrors, verify extracted bin/lib contents, and check the Java runtime first.
 # ==============================================================================
 set -e
 
-echo "==> [TaiXu] 正在初始化 JADX-CLI 逆向审计工具包..."
+echo "==> [TaiXu] Initializing the JADX-CLI reverse-engineering toolkit..."
 
 mkdir -p /opt/jadx /usr/local/bin /usr/bin /tmp 2>/dev/null || true
 
@@ -23,33 +23,33 @@ https://gh-proxy.com/https://github.com/skylot/jadx/releases/download/${JADX_VER
 https://github.com/skylot/jadx/releases/download/${JADX_VERSION}/jadx-${JADX_VERSION}.zip
 "
 
-# Java 运行时预检（jadx 是 Java 程序，无 JVM 时给出明确指引而非静默失败）
+# Check the Java runtime first (jadx is a Java application; provide clear guidance instead of failing silently when no JVM is available).
 JAVA_OK=0
 if command -v java >/dev/null 2>&1 || [ -x /usr/lib/jvm/java-17-openjdk-arm64/bin/java ] || [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
     JAVA_OK=1
 fi
 if [ "$JAVA_OK" -ne 1 ]; then
-    echo "==> [TaiXu] ⚠️ 未检测到 Java 运行时，JADX 需要 JVM 才能运行。"
-    echo "==> [TaiXu] 💡 请确保已装配「Android & 移动全栈开发套件 → Android 核心基础环境」(OpenJDK 17)。"
+    echo "==> [TaiXu] ⚠️ Java runtime not detected; JADX requires a JVM."
+    echo "==> [TaiXu] 💡 Ensure the Android & Mobile Full-Stack Development Suite → Android Core Environment (OpenJDK 17) is installed."
 fi
 
-# 下载 + 解压（含产物校验，失败自动重试一轮）
+# Download and extract (verify the artifacts and retry once on failure)
 download_and_extract() {
     rm -f /tmp/jadx.zip
     for url in $JADX_URLS; do
-        echo "==> [TaiXu] 正在拉取 JADX-CLI ${JADX_VERSION} ($url)..."
+        echo "==> [TaiXu] Downloading JADX-CLI ${JADX_VERSION} ($url)..."
         if curl -fsSL -m 300 "$url" -o /tmp/jadx.zip 2>/dev/null && [ -s /tmp/jadx.zip ]; then
-            echo "==> [TaiXu] 下载完成 ($(wc -c < /tmp/jadx.zip) 字节)，正在解压到 /opt/jadx/..."
+            echo "==> [TaiXu] Download complete ($(wc -c < /tmp/jadx.zip) bytes); extracting to /opt/jadx/..."
             rm -rf /opt/jadx/bin /opt/jadx/lib
             if (unzip -qo /tmp/jadx.zip -d /opt/jadx/ 2>/dev/null || \
                 python3 -c 'import zipfile; zipfile.ZipFile("/tmp/jadx.zip").extractall("/opt/jadx/")' 2>/dev/null || \
                 busybox unzip /tmp/jadx.zip -d /opt/jadx/ 2>/dev/null || true); then
-                # 完整性校验：必须同时存在启动脚本与 lib 下的核心 jar
+                # Integrity check: both the launcher script and core JARs under lib must exist
                 if [ -f /opt/jadx/bin/jadx ] && ls /opt/jadx/lib/jadx-*.jar >/dev/null 2>&1; then
                     rm -f /tmp/jadx.zip
                     return 0
                 fi
-                echo "==> [TaiXu] ⚠️ 解压产物不完整 (缺少 bin/jadx 或 lib/jadx-*.jar)，尝试下一个镜像..."
+                echo "==> [TaiXu] ⚠️ Extracted package is incomplete (bin/jadx or lib/jadx-*.jar is missing); trying the next mirror..."
             fi
             rm -f /tmp/jadx.zip
         fi
@@ -59,17 +59,17 @@ download_and_extract() {
 
 if [ ! -x /opt/jadx/bin/jadx ] || ! ls /opt/jadx/lib/jadx-*.jar >/dev/null 2>&1; then
     if ! download_and_extract; then
-        echo "==> [TaiXu] ❌ JADX 下载失败：所有镜像均不可用，请检查网络后重新装配（可稍后在终端执行 /bin/sh /opt/taixu/scripts/setup_jadx.sh 重试）"
+        echo "==> [TaiXu] ❌ JADX download failed: all mirrors are unavailable. Check the network and run setup again (or retry later with /bin/sh /opt/taixu/scripts/setup_jadx.sh in the terminal)."
         exit 1
     fi
 fi
 
-# 建立全局软链接
+# Create global symlinks
 if [ -f /opt/jadx/bin/jadx ]; then
     chmod +x /opt/jadx/bin/jadx 2>/dev/null || true
     ln -sf /opt/jadx/bin/jadx /usr/local/bin/jadx 2>/dev/null || true
     ln -sf /opt/jadx/bin/jadx /usr/bin/jadx 2>/dev/null || true
-    echo "==> [TaiXu] JADX-CLI 软链接配置就绪 ($(ls /opt/jadx/lib/jadx-*.jar 2>/dev/null | head -1))"
+    echo "==> [TaiXu] JADX-CLI symlinks are ready ($(ls /opt/jadx/lib/jadx-*.jar 2>/dev/null | head -1))"
 fi
 
-echo "==> [TaiXu] ✅ JADX 逆向分析工具包配置完成！"
+echo "==> [TaiXu] ✅ JADX reverse-engineering toolkit setup completed!"
