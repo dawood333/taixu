@@ -254,10 +254,10 @@ private fun saveSponsorQrToGallery(context: Context, qrRes: Int, namePrefix: Str
     val target = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
     return runCatching {
         val bitmap = BitmapFactory.decodeResource(context.resources, qrRes)
-            ?: error("无法解码赞赏码资源")
+            ?: error("Unable to decode the sponsorship QR code resource")
         resolver.openOutputStream(target)?.use { output ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
-        } ?: error("无法写入目标文件")
+        } ?: error("Unable to write the destination file")
         resolver.update(
             target,
             ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) },
@@ -305,7 +305,7 @@ private fun SponsorQrDialog(
                 ) {
                     SubcomposeAsyncImage(
                         model = qrRes,
-                        contentDescription = "$title 图片",
+                        contentDescription = "$title image",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit,
                         error = {
