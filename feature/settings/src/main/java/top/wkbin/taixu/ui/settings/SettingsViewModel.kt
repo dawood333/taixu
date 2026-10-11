@@ -1308,7 +1308,7 @@ class SettingsViewModel(
             val guestPath = "/attachments/skills/$id"
             val prompt = markdown + "\n\n[Skill resource directory] $guestPath\nBefore running scripts bundled with this skill, inspect their contents and arguments, then invoke them from this directory."
             agentSkillRepository.addCustom(AgentSkill(id, skillName, description, prompt, isBuiltin = false, category = "Custom", resourcePath = target.absolutePath))
-            return "Skill“$skillName”导入成功，脚本资源位于 $guestPath"
+            return "Skill “$skillName” imported successfully. Script resources are located at $guestPath"
         } catch (error: Throwable) {
             target?.let(::deleteOwnedSkillDirectory)
             throw error
@@ -1369,7 +1369,7 @@ class SettingsViewModel(
             val profile = AgentSubagent(
                 id = normalizedId,
                 name = trimmedName,
-                description = description.trim().ifBlank { "Custom子智能体角色" },
+                description = description.trim().ifBlank { "Custom subagent role" },
                 systemPrompt = trimmedPrompt,
                 defaultModelId = normalizedDefaultModelId,
                 defaultModelVariant = normalizedDefaultModelId?.let {
@@ -1418,7 +1418,7 @@ class SettingsViewModel(
             if (enabled) {
                 val distroId = linuxRuntime.activeDistroId.value
                 if (!QemuCompatibilityLayout.isReady(pathManager.taixuRootDir(distroId))) {
-                    _qemuCompatibilityMessage.value = "未检测到 QEMU x86_64 兼容环境，无法开启。请先在插件中心安装 qemu-x86-64-compat 插件。"
+                    _qemuCompatibilityMessage.value = "QEMU x86_64 compatibility environment not detected. Install the qemu-x86-64-compat plugin from Plugin Center first."
                     return@launch
                 }
             }
@@ -1460,18 +1460,18 @@ class SettingsViewModel(
             val discoveryKey = profileWriter.parseApiKeys(apiKey).firstOrNull() ?: providerRepository.readApiKey()
             // 对于要求 API Key 的服务商，空 key 不发请求，直接给出友好提示
             if (!provider.apiKeyOptional && discoveryKey.isNullOrBlank()) {
-                _modelDiscoveryError.value = "该服务商需要 API Key 才能获取模型列表，请先填写 API Key 后再刷新"
+                _modelDiscoveryError.value = "This provider requires an API key to retrieve models. Enter the API key, then refresh."
                 _discoveringModels.value = false
                 return@launch
             }
             runCatching { modelDiscovery.discover(provider, cleanUrl, discoveryKey) }
                 .onSuccess { models ->
                     _discoveredModels.value = models
-                    if (models.isEmpty()) _modelDiscoveryError.value = "端点未返回可用的 Agent 模型"
+                    if (models.isEmpty()) _modelDiscoveryError.value = "The endpoint returned no usable Agent models"
                 }
                 .onFailure {
                     logger.w("Model discovery failed: ${it.message}", it)
-                    _modelDiscoveryError.value = "获取模型列表失败，请检查 Base URL、API Key 与网络后重试"
+                    _modelDiscoveryError.value = "Failed to retrieve models. Check the Base URL, API key, and network, then try again."
                 }
             _discoveringModels.value = false
         }
@@ -1503,10 +1503,10 @@ class SettingsViewModel(
                     providerName = provider?.name,
                 )
             }
-                .onSuccess { _connectionResult.value = "连接成功" }
+                .onSuccess { _connectionResult.value = "Connected successfully" }
                 .onFailure {
                     logger.w("Connection test failed: ${it.message}", it)
-                    _connectionResult.value = "连接失败，请检查接口地址、密钥与网络后重试"
+                    _connectionResult.value = "Connection failed. Check the endpoint URL, API key, and network, then try again."
                 }
             _testingConnection.value = false
         }
@@ -1553,7 +1553,7 @@ class SettingsViewModel(
     ): Boolean {
         val cleanUrl = ProviderEndpointPolicy.normalizeUrl(baseUrl)
         if (!ProviderEndpointPolicy.isSafeBaseUrl(cleanUrl)) {
-            _profileSaveError.value = "Base URL 无效：请填写合法的 http(s) 接口地址，且不能内嵌账号密码"
+            _profileSaveError.value = "Invalid Base URL: enter a valid http(s) endpoint without embedded credentials"
             return false
         }
         _profileSaveError.value = null
@@ -1618,7 +1618,7 @@ class SettingsViewModel(
         // 无法解析）拒绝落库，否则请求期才在 OkHttp 解析处崩溃。
         val cleanUrl = ProviderEndpointPolicy.normalizeUrl(baseUrl)
         if (!ProviderEndpointPolicy.isSafeBaseUrl(cleanUrl)) {
-            _profileSaveError.value = "Base URL 无效：请填写合法的 http(s) 接口地址，且不能内嵌账号密码"
+            _profileSaveError.value = "Invalid Base URL: enter a valid http(s) endpoint without embedded credentials"
             return false
         }
         _profileSaveError.value = null
@@ -1701,14 +1701,14 @@ class SettingsViewModel(
     }
 
     /**
-     * 新增Custom挂载绑定。保存前做与运行时一致的安全校验（StorageMountBinding.validationError），
+     * 新增Custom mount绑定。保存前做与运行时一致的安全校验（StorageMountBinding.validationError），
      * 拒绝越界路径（容器路径必须在 /mnt 或 /sdcard 内、宿主路径必须在共享存储内），
      * 避免历史版本"先入库、会话启动时才崩"的问题再次发生。
      */
     fun addCustomMountBinding(name: String, hostPath: String, guestPath: String): Result<Unit> {
         val binding = StorageMountBinding(
             id = UUID.randomUUID().toString(),
-            name = name.trim().ifBlank { "Custom挂载" },
+            name = name.trim().ifBlank { "Custom mount" },
             hostPath = hostPath.trim(),
             guestPath = if (guestPath.trim().startsWith("/")) guestPath.trim() else "/${guestPath.trim()}",
             enabled = true,
@@ -1816,8 +1816,8 @@ private fun localLoopbackMcpCandidates(): List<DetectedLocalMcpServer> {
             DetectedLocalMcpServer(
                 server = McpServerConfig(
                     id = "local_probe_${port}_$path",
-                    name = "本机 MCP ($port)",
-                    description = "在 127.0.0.1:$port 上自动探测到的 MCP 服务",
+                    name = "Local MCP ($port)",
+                    description = "MCP service automatically discovered at 127.0.0.1:$port",
                     transportType = McpTransportType.SSE,
                     serverUrl = url,
                     isEnabled = true,
