@@ -289,7 +289,7 @@ class LocalLlmViewModel(
             MobileModelPreset(
                 id = "qwen35-2b-q4km",
                 name = "Qwen3.5 2B",
-                purpose = "新一代通用模型 · 当前按文本模式运行",
+                purpose = "Next-generation general-purpose model · currently running in text mode",
                 parameterCount = "2B",
                 quantization = "Q4_K_M",
                 downloadBytes = 1280L * MIB,
@@ -300,7 +300,7 @@ class LocalLlmViewModel(
             MobileModelPreset(
                 id = "qwen25-15b-instruct-q4km",
                 name = "Qwen2.5 1.5B Instruct",
-                purpose = "效果优先 · 适合 6 GB 以上手机",
+                purpose = "Quality-focused · suitable for phones with 6 GB RAM or more",
                 parameterCount = "1.5B",
                 quantization = "Q4_K_M",
                 downloadBytes = 1120L * MIB,
@@ -310,7 +310,7 @@ class LocalLlmViewModel(
             MobileModelPreset(
                 id = "qwen25-coder-15b-instruct-q4km",
                 name = "Qwen2.5 Coder 1.5B",
-                purpose = "移动端编程助手 · 适合 6 GB 以上手机",
+                purpose = "Mobile coding assistant · suitable for phones with 6 GB RAM or more",
                 parameterCount = "1.5B",
                 quantization = "Q4_K_M",
                 downloadBytes = 1120L * MIB,
@@ -320,7 +320,7 @@ class LocalLlmViewModel(
             MobileModelPreset(
                 id = "gemma4-e2b-it-q4km",
                 name = "Gemma 4 E2B IT",
-                purpose = "移动端高质量模型 · 当前按文本模式运行",
+                purpose = "High-quality mobile model · currently running in text mode",
                 parameterCount = "E2B",
                 quantization = "Q4_K_M",
                 downloadBytes = 3185L * MIB,
