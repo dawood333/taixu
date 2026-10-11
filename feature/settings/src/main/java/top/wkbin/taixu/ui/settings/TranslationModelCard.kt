@@ -68,12 +68,12 @@ fun TranslationModelCard(
             }
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = "英语 (en) → 简体中文 (zh-CN)",
+                    text = "English (en) → Simplified Chinese (zh-CN)",
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "Google ML Kit 离线翻译包 (约 60MB)",
+                    text = "Google ML Kit offline translation package (~60 MB)",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -85,7 +85,7 @@ fun TranslationModelCard(
                         color = Color(0xFF10B981).copy(alpha = 0.15f),
                     ) {
                         Text(
-                            text = "已就绪 (离线)",
+                            text = "Ready (offline)",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = Color(0xFF10B981),
@@ -108,7 +108,7 @@ fun TranslationModelCard(
                                 strokeWidth = 1.5.dp,
                             )
                             Text(
-                                text = "下载中 $percent%",
+                                text = "Downloading $percent%",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                                 color = MaterialTheme.colorScheme.primary,
                             )
@@ -117,7 +117,7 @@ fun TranslationModelCard(
                 }
                 is TranslationModelStatus.Checking -> {
                     Text(
-                        text = "检测中...",
+                        text = "Checking…",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -128,7 +128,7 @@ fun TranslationModelCard(
                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
                     ) {
                         Text(
-                            text = "下载失败",
+                            text = "Download failed",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.error,
@@ -141,7 +141,7 @@ fun TranslationModelCard(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     ) {
                         Text(
-                            text = "未下载",
+                            text = "Not downloaded",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -184,20 +184,20 @@ fun TranslationModelCard(
                 )
 
                 Text(
-                    text = "首次配置需从 Google 存储库拉取离线语言包。下载完成后留存本机，不消耗流量即可离线翻译。",
+                    text = "The offline language package is downloaded from Google during initial setup and then kept on-device for offline translation without using mobile data.",
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                 )
             }
         } else if (status is TranslationModelStatus.Error) {
             Text(
-                text = "${status.message}（若网络连接受限，可尝试检查网络或开启代理后重试）",
+                text = "${status.message} (If the connection is restricted, check the network or enable a proxy and try again.)",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.error,
             )
         } else {
             Text(
-                text = "完全在手机端侧运行，不依赖云端，思考流离线秒级转译为中文，保护隐私且不消耗额外 Token。",
+                text = "Runs entirely on-device without cloud services. Translates reasoning streams into Chinese in seconds, protecting privacy without consuming extra tokens.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
             )
@@ -216,7 +216,7 @@ fun TranslationModelCard(
                     ) {
                         RuntimeIcon(RuntimeIconName.Trash, Modifier.size(14.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("删除模型释放空间", style = MaterialTheme.typography.labelMedium)
+                        Text("Delete model to free space", style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 is TranslationModelStatus.Downloading -> {
@@ -232,7 +232,7 @@ fun TranslationModelCard(
                             color = MaterialTheme.colorScheme.onPrimary,
                         )
                         Spacer(Modifier.width(6.dp))
-                        Text("正在下载 ($percent%)", style = MaterialTheme.typography.labelMedium)
+                        Text("Downloading ($percent%)", style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 is TranslationModelStatus.Error -> {
@@ -242,7 +242,7 @@ fun TranslationModelCard(
                     ) {
                         RuntimeIcon(RuntimeIconName.Refresh, Modifier.size(14.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("重试下载 (~60MB)", style = MaterialTheme.typography.labelMedium)
+                        Text("Retry download (~60 MB)", style = MaterialTheme.typography.labelMedium)
                     }
                 }
                 else -> {
@@ -252,7 +252,7 @@ fun TranslationModelCard(
                     ) {
                         RuntimeIcon(RuntimeIconName.Download, Modifier.size(14.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("下载离线模型 (~60MB)", style = MaterialTheme.typography.labelMedium)
+                        Text("Download offline model (~60 MB)", style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
