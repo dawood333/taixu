@@ -916,8 +916,10 @@ class WorkspaceBuildRunner(
         // 切 QEMU 只会用另一套工具链掩盖病灶并多烧几分钟，必须原地报错
         // 让用户去插件中心重装套件。
         if (text.contains("not_elf") ||
-            text.contains("疑似包装脚本") ||\n            text.contains("possible wrapper script") ||
-            text.contains("回环软链") ||\n            text.contains("symlink loop")
+            text.contains("疑似包装脚本") ||
+            text.contains("possible wrapper script") ||
+            text.contains("回环软链") ||
+            text.contains("symlink loop")
         ) {
             return false
         }
@@ -929,10 +931,13 @@ class WorkspaceBuildRunner(
             text.contains("taixu_preflight_fail: aapt2_arch") ||
             text.contains("taixu_preflight_fail: ndk_arch") ||
             text.contains("taixu_preflight_fail: dart_arch") ||
-            text.contains("elf 架构不匹配") ||\n            text.contains("elf architecture mismatch") ||
-            text.contains("不是 arm64 elf") ||\n            text.contains("not an arm64 elf") ||
+            text.contains("elf 架构不匹配") ||
+            text.contains("elf architecture mismatch") ||
+            text.contains("不是 arm64 elf") ||
+            text.contains("not an arm64 elf") ||
             text.contains("aarch64") && text.contains("架构") ||
-            text.contains("主机工具不是可执行") ||\n            text.contains("host tool is not an executable")
+            text.contains("主机工具不是可执行") ||
+            text.contains("host tool is not an executable")
     }
 
     /** Write a complete APK into the public Download directory; returns the file actually written. */
