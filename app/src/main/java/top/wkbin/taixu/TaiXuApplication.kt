@@ -117,7 +117,7 @@ class TaiXuApplication : Application(), Configuration.Provider {
                             )
                         )
                         if (imported.isNotEmpty()) {
-                            Log.i(TAG, "Skill 目录自动发现并导入 ${imported.size} 个：${imported.joinToString { it.name }}")
+                            Log.i(TAG, "Auto-discovered and imported ${imported.size} skills from the skill directory: ${imported.joinToString { it.name }}")
                         }
                     }
                 }
@@ -147,10 +147,10 @@ class TaiXuApplication : Application(), Configuration.Provider {
             runCatching {
                 val recovered = harnessLoop.recoverAllInterruptedSessions()
                 if (recovered > 0) {
-                    Log.i(TAG, "已恢复 $recovered 个被中断的 Agent 会话/任务")
+                    Log.i(TAG, "Restored $recovered interrupted Agent sessions/tasks")
                 }
             }.onFailure {
-                Log.w(TAG, "恢复中断会话失败", it)
+                Log.w(TAG, "Failed to restore interrupted sessions", it)
             }
             // 工作流后台化：启动对账（把进程死亡遗留的非终态运行标为已中断）+ 通知/HUD
             // 控制器 + FGS 联动。工作流 agent 会话由工作流体系自管，已在恢复中排除。
@@ -159,7 +159,7 @@ class TaiXuApplication : Application(), Configuration.Provider {
             workflowRunUiController.start()
             workflowApprovalNotifier.start(this@TaiXuApplication)
             runCatching { workflowRunManager.reconcileInterruptedRuns() }
-                .onFailure { Log.w(TAG, "工作流启动对账失败", it) }
+                .onFailure { Log.w(TAG, "Workflow startup reconciliation failed", it) }
             launch {
                 workflowRunManager.running.collectLatest { running ->
                     if (running) {
